@@ -12,7 +12,7 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="scopes-dark.jpg">
     <source media="(prefers-color-scheme: light)" srcset="scopes.jpg">
-    <img src="scopes.jpg" alt="SCOPES: from code chaos to truth maps" width="600">
+    <img src="scopes.jpg" alt="SCOPES: from code chaos to truth maps - A diagram showing how Scopes transforms chaotic code into organized, evidence-backed documentation" width="600">
   </picture>
 </div>
 
@@ -21,10 +21,18 @@
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/init-scopes-demo-dark.gif">
     <source media="(prefers-color-scheme: light)" srcset="docs/assets/init-scopes-demo.gif">
-    <img src="docs/assets/init-scopes-demo.gif" alt="Demo: /init-scopes-and-update creating Scopes/INDEX.md and Scopes/GRAPH.md" width="800" style="border-radius: 8px;">
+    <img src="docs/assets/init-scopes-demo.gif" alt="Animated demo showing the /init-scopes-and-update command generating Scopes/INDEX.md and Scopes/GRAPH.md files in Cursor" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
   </picture>
   <p><em>Type <code>/init-scopes-and-update</code> → Get evidence-backed docs in seconds</em></p>
 </div>
+
+<!-- 
+  Image assets needed:
+  - scopes.jpg (light theme logo) ✅ exists
+  - scopes-dark.jpg (dark theme logo) - create a dark-optimized version
+  - docs/assets/init-scopes-demo.gif (light theme demo) - record a GIF showing the command
+  - docs/assets/init-scopes-demo-dark.gif (dark theme demo) - record a dark theme version
+-->
 
 ```
 CODE 🧩 → SCOPES 🗺️ → CLARITY 💡
