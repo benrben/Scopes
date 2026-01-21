@@ -8,8 +8,26 @@
 ![Evidence-backed docs](https://img.shields.io/badge/docs-evidence--backed-0ea5e9)
 ![Scopes-first](https://img.shields.io/badge/workflow-scopes--first-22c55e)
 
+<div align="center">
+  <img src="scopes.jpg" alt="SCOPES: from code chaos to truth maps" width="600">
+</div>
+
 ```
 CODE 🧩 → SCOPES 🗺️ → CLARITY 💡
+```
+
+## 🏃‍♂️ TL;DR (One-Minute Quick Summary)
+
+Scopes = evidence-backed behavior docs you generate with Cursor slash commands — no guessing, fewer hallucinations, and receipts linked to code/tests/config.
+
+```text
+CODEBASE
+   ↓
+Scopes/INDEX.md + Scopes/GRAPH.md
+   ↓
+Focused deep dives (with evidence)
+   ↓
+More accurate changes + explanations
 ```
 
 ## 📌 Table of Contents
@@ -113,6 +131,9 @@ The fix? Treat docs like code. Generate from specs, validate in CI/CD, make upda
 
 Fast path: install the commands into a repo you have open in Cursor, then run init.
 
+Optional (nice): add a quick demo GIF to this README showing `/init-scopes-and-update` creating `Scopes/INDEX.md` + `Scopes/GRAPH.md`.
+<!-- Drop a GIF in the repo (e.g., docs/assets/init-scopes-and-update.gif) and link it here when you have one. -->
+
 1. In your target repo (the one you're working on in Cursor), create the commands folder:
    ```bash
    mkdir -p .cursor/commands
@@ -156,12 +177,14 @@ Type this in Cursor:
 
 **Result:** You now have docs that tell the truth. Revolutionary, I know. 🎉
 
-Tiny example of what a Scope claim looks like:
+Example of what a generated Scope claim looks like:
 ```md
 ## Authentication: Login
-- Behavior: creates a session for valid credentials
-- Evidence: `path/to/auth/login.<ext>` (handler), `path/to/auth/login.test.<ext>` (assertions)
-- Notes: `Unknown` until traced end-to-end
+* Behavior: creates a session for valid credentials
+* Evidence:
+  - `path/to/auth/login.<ext>`
+  - `path/to/auth/login.test.<ext>`
+* Notes: traced end-to-end (or tag as `Unknown` / `Partially traced` if you can't prove it)
 ```
 
 <a id="usage"></a>
@@ -613,9 +636,17 @@ Run init once, then generate a role-specific path:
 
 Yes. Scopes are language-agnostic: they describe behavior and evidence, not syntax.
 
+### Can Scopes handle multiple languages in one repo?
+
+Yes. A monorepo with mixed stacks is fine: Scopes point at whatever evidence exists (code/tests/config/schema), regardless of language.
+
 ### Should I commit the generated Scopes?
 
 Yes—especially when they change alongside behavior. The recommended workflow is to do it on a branch, commit Scopes with the code, and merge together.
+
+### Will Scopes regenerate every time I run the command?
+
+Expect updates. Treat Scopes like generated docs: run on a branch, review the diff, and commit what matches reality.
 
 ### How often should I run `/init-scopes-and-update`?
 
