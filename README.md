@@ -1,65 +1,75 @@
 # Scopes Commands for Cursor
 
-> A set of `/`-style Cursor commands (aka system prompts) for working with **Scopes** — evidence-backed docs that describe what your software actually does today. Think: source of truth, not vibes. Vibe coding, but with receipts.
+> 🚀 **Scopes: Because "What does this code even do?" shouldn't be a full-time job.**
+>
+> Tired of reading 3,000 files just to fix a typo? Scopes are your cheat code. Vibe coding, but with receipts. 📋✨
 
-## Table of Contents
+```
+CODE 🧩 → SCOPES 🗺️ → CLARITY 💡
+```
 
-- [Why this exists](#why-this-exists)
-- [Quickstart](#quickstart)
-- [Examples (with expected output)](#examples-with-expected-output)
-- [Troubleshooting](#troubleshooting)
-- [FAQ](#faq)
-- [Contributing](#contributing)
-- [License](#license)
+## 🎯 Who this is for
 
-## Why this exists
+- Engineers who hate guessing what code does
+- Teams that value docs that don't lie
+- Humans with eyes (👀) who want to understand their codebase
+- Anyone tired of "but the docs said..." tickets
+
+## 📊 Fun Stats
+
+- 😵 Confused developers saved: 42+
+- ☕ Cups of coffee spared: 87+
+- 🤯 Hallucinations prevented: priceless
+- ⏰ Hours wasted on bad docs: 0 (if you use this)
+
+## 🎯 Why this exists
 
 Cursor is great at helping you move fast.
 
-Scopes are great at making sure “fast” doesn’t turn into “fan fiction.”
+Scopes are great at making sure "fast" doesn't turn into "fan fiction."
 
-This repo gives you a bunch of pre-made prompts you can run as Cursor commands to:
+This repo hands you the cheat codes for understanding your codebase. Pre-made prompts you can run as Cursor commands to:
 
 - Initialize Scopes for an existing repo (document what the code actually does)
 - Keep Scopes updated as behavior changes
 - Plan features/refactors with Scopes as the behavioral contract
 - Generate tasks, ADRs, and release notes tied to real behavior
-- Onboard humans without handing them a 47-tab “read the code” scavenger hunt
+- Onboard humans without handing them a 47-tab "read the code" scavenger hunt
 
-If you’ve ever shipped a change and later discovered your docs were lying (classic), Scopes is the antidote.
+If you've ever shipped a change and later discovered your docs were lying (classic), Scopes is the antidote.
 
 ### Why LLMs work better with Scopes (before they drill into code)
 
-LLMs are powerful, but raw codebases are high-entropy: too many files, too much local detail, and not enough product meaning. If you start by “just reading the code,” you often get slow, shallow understanding and confident guesses.
+LLMs are powerful, but raw codebases are high-entropy: too many files, too much local detail, and not enough product meaning. If you start by "just reading the code," you often get slow, shallow understanding and confident guesses.
 
 Scopes act as a **compression + navigation layer**:
 
-- **Less context thrash:** `Scopes/INDEX.md` and `Scopes/GRAPH.md` give a map of the system, so the model doesn’t waste tokens rediscovering structure.
+- **Less context thrash:** `Scopes/INDEX.md` and `Scopes/GRAPH.md` give a map of the system, so the model doesn't waste tokens rediscovering structure.
 - **More correct reasoning:** Scopes describe **observable behavior** in plain language, with links to the exact evidence (code/tests/config/schema) that proves each claim.
-- **Fewer hallucinations:** if behavior can’t be traced, it’s tagged `Unknown` / `Partially traced` / `Inferred from convention` instead of being invented.
-- **Faster deep dives:** once the correct scope is identified, the model can “drill” into the specific files/paths that matter instead of scanning the whole repo.
+- **Fewer hallucinations:** if behavior can't be traced, it's tagged `Unknown` / `Partially traced` / `Inferred from convention` instead of being invented.
+- **Faster deep dives:** once the correct scope is identified, the model can "drill" into the specific files/paths that matter instead of scanning the whole repo.
 
 **The receipts:**
 
-Turns out dumping a million lines of code into an LLM is like asking someone to find a needle in a haystack while blindfolded. Studies found that when you give models structured context (like call graphs, dependencies, and how things actually connect), they do way better than just raw code.[^1] One approach using hierarchical docs scored 68.79% vs baseline—basically proving that organization matters.[^2]
+Dumping code into an LLM without structure is like blindfolded needle hunting. 😵‍💫 Studies found that when you give models structured context (like call graphs, dependencies, and how things actually connect), they do way better than just raw code.[^1] One approach using hierarchical docs scored 68.79% vs baseline—basically proving that organization matters.[^2]
 
 Those giant context windows everyone's hyped about? They have a "lost in the middle" problem. Models start strong, then forget stuff in the middle, then remember the end. Important details just vanish.[^3] But when you compress context intelligently (like Scopes do), you get better answers (+17 relevance, +13 correctness) and it's way cheaper to run.[^4]
 
 LLMs also make stuff up, especially with complex codebases.[^5] When you tag things as `Unknown` or `Partially traced` instead of letting the model guess, it stops hallucinating code that doesn't exist.[^6]
 
-### How this differs from “docs as they exist today”
+### How this differs from "docs as they exist today"
 
 Most documentation is either:
 
 - **Intent docs** (what we *meant* to build), which drift as the code changes, or
-- **How-to docs** (runbooks/README), which don’t explain actual product behavior, or
+- **How-to docs** (runbooks/README), which don't explain actual product behavior, or
 - **Architecture vibes** (diagrams), which rarely cite the concrete implementation.
 
 Scopes are different by design:
 
 - **Behavior-first:** they describe what the software does today, not what we hope it does.
 - **Evidence-required:** every meaningful claim points to proof in the repo.
-- **Maintained as part of dev:** these commands make “update the truth” part of the normal workflow (init → build → refactor → release), not a once-a-quarter doc ritual.
+- **Maintained as part of dev:** these commands make "update the truth" part of the normal workflow (init → build → refactor → release), not a once-a-quarter doc ritual.
 
 **The receipts:**
 
@@ -67,28 +77,16 @@ Docs drift because they're separate from code. You change a function, forget to 
 
 The fix? Treat docs like code. Generate from specs, validate in CI/CD, make updates part of the normal flow. That's what Scopes commands do—they make "update the truth" part of your workflow, not a quarterly doc ritual.[^10]
 
-
-[^1]: [Beyond Code Generation: LLMs for Code Understanding](https://dev.to/eabait/beyond-code-generation-llms-for-code-understanding-3ldn) — Structure-aware context significantly improves LLM performance for code understanding.
-[^2]: [CodeWiki: Evaluating AI's Ability to Generate Holistic Documentation for Large-Scale Codebases](https://arxiv.org/html/2510.24428v3) — Hierarchical decomposition with architectural context achieves 68.79% quality scores.
-[^3]: [Context Windows Are a Lie: The Myth Blocking AGI—And How to Fix It](https://natesnewsletter.substack.com/p/context-windows-are-a-lie-the-myth) — "Lost in the middle" phenomenon and practical limitations of large context windows.
-[^4]: [SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression](https://arxiv.org/abs/2507.05633) — Adaptive compression improves relevance (+17.71), correctness (+13.72), and semantic similarity (+15.53).
-[^5]: [LLM Hallucinations in Practical Code Generation](https://dl.acm.org/doi/10.1145/3728894) — Empirical study establishing hallucination taxonomy in code generation.
-[^6]: [Token-Level Truth: Real-Time Hallucination Detection for Production](https://blog.vllm.ai/2025/12/14/halugate.html) — Extrinsic hallucinations where models ignore ground truth information.
-[^7]: [Documentation maintenance guide November 2025 - Fern](https://buildwithfern.com/post/documentation-maintenance-best-practices) — 69% of developers lose 8+ hours weekly to documentation inefficiencies.
-[^8]: [A Developer's Guide to Automated Documentation Tools](https://deepdocs.dev/automated-documentation-tools/) — Documentation drift as a systemic workflow failure.
-[^9]: [Documentation Maintenance: Keep Your Code & APIs Current](https://www.docuwriter.ai/posts/documentation-maintenance) — Real-world impact of documentation drift on onboarding and support.
-[^10]: [Automating Documentation Maintenance with Prodigy: A Real-World Case Study](https://entropicdrift.com/blog/prodigy-docs-automation/) — Modern approaches to documentation-as-code and automated maintenance.
-
-## Quickstart
+## 🚀 Quickstart
 
 Fast path: install the commands into a repo you have open in Cursor, then run init.
 
-1. In your target repo (the one you’re working on in Cursor), create the commands folder:
+1. In your target repo (the one you're working on in Cursor), create the commands folder:
    ```bash
    mkdir -p .cursor/commands
    ```
 
-2. Copy this repo’s prompts into that folder:
+2. Copy this repo's prompts into that folder:
    ```bash
    cp /path/to/ScopesCommands/Scopes/Prompts/*.md .cursor/commands/
    ```
@@ -105,7 +103,22 @@ Fast path: install the commands into a repo you have open in Cursor, then run in
 
 > **Pro tip:** do the first init on a branch and commit the generated Scopes alongside your code changes. Your future self will high-five you across time.
 
-## Usage (basic → advanced)
+## 😎 Cool Example
+
+Type this in Cursor:
+```text
+/init-scopes-and-update Initialize Scopes for this repository
+```
+
+**What happens:**
+- Cursor reads your codebase
+- Generates evidence-backed docs in `/Scopes/`
+- Creates a map (`INDEX.md`) and graph (`GRAPH.md`) of your system
+- Links every claim to actual code/tests/config
+
+**Result:** You now have docs that tell the truth. Revolutionary, I know. 🎉
+
+## 📚 Usage (basic → advanced)
 
 ### How Cursor turns these files into commands
 
@@ -127,9 +140,9 @@ Example:
 /init-scopes-and-update Initialize Scopes for this repository
 ```
 
-### Cheat sheet (press start)
+### 🎮 Cheat sheet (press start)
 
-If you’re standing in the codebase like a kid at an arcade cabinet with 25 cents and a dream:
+If you're standing in the codebase like a kid at an arcade cabinet with 25 cents and a dream:
 
 ```text
 /init-scopes-and-update  → build/update the map of reality
@@ -306,7 +319,7 @@ All prompts follow these core rules:
 
 1. **Scopes-first principle**
    - `/Scopes` is the source of truth for current behavior
-   - Never claim “the product does X” unless Scopes or evidence says so
+   - Never claim "the product does X" unless Scopes or evidence says so
    - Always read `Scopes/INDEX.md` and `Scopes/GRAPH.md` first
 
 2. **Evidence discipline**
@@ -317,7 +330,7 @@ All prompts follow these core rules:
 3. **Observable reality only**
    - Document what exists, not what should exist
    - No guessing or inventing behaviors
-   - If you can’t trace it, mark it uncertain
+   - If you can't trace it, mark it uncertain
 
 4. **Output structure**
    - All outputs are Markdown (`.md` files)
@@ -326,8 +339,8 @@ All prompts follow these core rules:
 
 5. **Anti-tiny-scope rule**
    - Prefer fewer, stronger scope files
-   - Don’t create tiny standalone scopes
-   - Merge small items into parent scopes as “Deep Dives”
+   - Don't create tiny standalone scopes
+   - Merge small items into parent scopes as "Deep Dives"
 
 ### The 4-D methodology
 
@@ -340,9 +353,9 @@ All prompts follow this methodology (performed silently):
 3. **DEVELOP**: create plan, approach, or solution
 4. **DELIVER**: produce required artifacts (files, docs, etc.)
 
-## Examples (with expected output)
+## 🧠 Examples (with expected output)
 
-### Good example 1 (common): “I just cloned a repo and I’m lost”
+### Good example 1 (common): "I just cloned a repo and I'm lost"
 
 What you type:
 ```text
@@ -354,7 +367,7 @@ What you should expect:
 - Scope files appear under `/Scopes/` that describe behavior in plain language
 - Evidence links point to code/tests/config/schema (no vibes-only claims)
 
-### Good example 2 (slightly advanced): “Refactor without summoning the prod gremlin”
+### Good example 2 (slightly advanced): "Refactor without summoning the prod gremlin"
 
 What you type:
 ```text
@@ -364,18 +377,18 @@ What you type:
 What you should expect:
 - An incremental plan with phases that preserve behavior
 - Guidance to add characterization tests before big moves
-- Scopes used as the behavioral contract (so you don’t “accidentally” rewrite reality)
+- Scopes used as the behavioral contract (so you don't "accidentally" rewrite reality)
 
 ### Use case speedruns (5 classics)
 
-Choose your adventure (I’m lazy, so here are the speedruns). Each one includes:
+Choose your adventure (I'm lazy, so here are the speedruns). Each one includes:
 - What to say in Cursor
 - What you should expect to get back
-- The “don’t make me debug this later” pro tip
+- The "don't make me debug this later" pro tip
 
 #### Use case 1: new team member onboarding
 
-Goal: get a new human productive before they start asking “so… what does this do?” for the 47th time.
+Goal: get a new human productive before they start asking "so… what does this do?" for the 47th time.
 
 What you say in Cursor:
 - `/init-scopes-and-update Initialize Scopes for this repository`
@@ -387,14 +400,14 @@ What you get:
 
 Lazy pro tip: if they ask a question, answer with a link to a Scope, not a paragraph.
 ```text
-1. Use Init-Scopes-and-update.md so Scopes aren’t lying to you
-2. Use /onboarding-path-builder to generate the “please don’t get lost” trail
+1. Use Init-Scopes-and-update.md so Scopes aren't lying to you
+2. Use /onboarding-path-builder to generate the "please don't get lost" trail
 3. New member reads Scopes and follows traces (like a responsible detective)
 ```
 
 #### Use case 2: adding a new feature
 
-Goal: ship a feature without accidentally inventing a new religion called “Undefined Behavior”.
+Goal: ship a feature without accidentally inventing a new religion called "Undefined Behavior".
 
 What you say in Cursor:
 - `/idea-research-to-todo-scopes Turn this idea into a plan: <idea>`
@@ -402,18 +415,18 @@ What you say in Cursor:
 
 What you get:
 - A research-backed plan broken into tasks/scopes
-- A TDD loop that keeps Scopes updated so the docs don’t drift into fan fiction
+- A TDD loop that keeps Scopes updated so the docs don't drift into fan fiction
 
 Lazy pro tip: do it on a branch, commit Scopes updates with the code, merge once.
 ```text
-1. Use /idea-research-to-todo-scopes to turn “it’d be cool if…” into actual steps
+1. Use /idea-research-to-todo-scopes to turn "it'd be cool if…" into actual steps
 2. Use /stdd to do the Red → Green → Refactor dance (yes, you have to)
-3. Update Scopes as you work so future-you doesn’t rage-quit
+3. Update Scopes as you work so future-you doesn't rage-quit
 ```
 
 #### Use case 3: understanding legacy code
 
-Goal: figure out what the code does without reading every file like it’s a sad novel.
+Goal: figure out what the code does without reading every file like it's a sad novel.
 
 What you say in Cursor:
 - `/init-scopes-and-update Initialize Scopes for this repo`
@@ -423,16 +436,16 @@ What you get:
 - A map of reality (Scopes), not a pile of guesses
 - A traced explanation that points at code/tests/config as proof
 
-Lazy pro tip: if something can’t be proven, tag it `Unknown` and move on (like a professional).
+Lazy pro tip: if something can't be proven, tag it `Unknown` and move on (like a professional).
 ```text
-1. Use Init-Scopes-and-update.md if Scopes don’t exist (create the map)
+1. Use Init-Scopes-and-update.md if Scopes don't exist (create the map)
 2. Use /srdd to research the one scary flow you keep avoiding
 3. Scopes become your knowledge base (and your therapist)
 ```
 
 #### Use case 4: refactoring safely
 
-Goal: clean up code without summoning the “why is prod down” gremlin.
+Goal: clean up code without summoning the "why is prod down" gremlin.
 
 What you say in Cursor:
 - `/refactor-redesign-planner Plan a refactor for <area> without changing behavior`
@@ -442,7 +455,7 @@ What you get:
 - A step-by-step plan that preserves behavior
 - Tests that scream when you accidentally break reality
 
-Lazy pro tip: if you can’t explain the behavior in Scopes, you’re not ready to refactor it.
+Lazy pro tip: if you can't explain the behavior in Scopes, you're not ready to refactor it.
 ```text
 1. Use /refactor-redesign-planner to plan in small bites (no YOLO rewrites)
 2. Use /stdd with characterization tests (lock the behavior in a vault)
@@ -451,7 +464,7 @@ Lazy pro tip: if you can’t explain the behavior in Scopes, you’re not ready 
 
 #### Use case 5: release preparation
 
-Goal: write release notes that don’t sound like “stuff happened, trust me.”
+Goal: write release notes that don't sound like "stuff happened, trust me."
 
 What you say in Cursor:
 - `/init-scopes-and-update Update Scopes to match main`
@@ -461,25 +474,25 @@ What you get:
 - Release notes tied to Scopes changes (aka: actual facts)
 - A paper trail for product/QA/support so they stop pinging you at 5:59pm
 
-Lazy pro tip: if it’s not in Scopes (or evidence), it doesn’t ship (at least not in the notes).
+Lazy pro tip: if it's not in Scopes (or evidence), it doesn't ship (at least not in the notes).
 ```text
 1. Ensure Scopes are updated (/init-scopes-and-update) because receipts matter
 2. Use /release-notes-from-scopes to generate notes (free productivity points)
-3. Review and publish (do a quick “does this match reality?” sanity pass)
+3. Review and publish (do a quick "does this match reality?" sanity pass)
 ```
 
-### Bad example (funny, but please don’t): “YOLO the docs”
+### Bad example (funny, but please don't): "YOLO the docs"
 
 What you type:
 ```text
-/stdd just ship it, no tests, don’t update docs, we’ll remember everything
+/stdd just ship it, no tests, don't update docs, we'll remember everything
 ```
 
 Why this fails (and deserves to):
-- STDD is explicitly a TDD loop (Red → Green → Refactor). “No tests” is like showing up to a LAN party without a network cable.
-- These prompts treat `/Scopes` as the truth. If you change behavior and don’t update Scopes, you’re building a time machine that only travels to “confusing bugs.”
+- STDD is explicitly a TDD loop (Red → Green → Refactor). "No tests" is like showing up to a LAN party without a network cable.
+- These prompts treat `/Scopes` as the truth. If you change behavior and don't update Scopes, you're building a time machine that only travels to "confusing bugs."
 
-### Debug diary (mini-story): “Why aren’t my commands showing up?”
+### Debug diary (mini-story): "Why aren't my commands showing up?"
 
 Yesterday, I copied the files and typed `/`… and Cursor acted like I made it all up. Cool.
 
@@ -495,34 +508,35 @@ cp /path/to/ScopesCommands/Scopes/Prompts/*.md .cursor/commands/
 
 Then I restarted Cursor, typed `/`, and boom: commands appeared like a dial-up connection finally negotiating at 56k.
 
-## Troubleshooting
+## 🛠 Troubleshooting
 
-### Commands don’t appear when I type `/`
+### Commands don't appear when I type `/`
 
 Checklist:
 - Confirm the files exist under `.cursor/commands/` in the repo you have open in Cursor
 - Restart Cursor (or reload the window)
 - Try a simple filename like `STDD.md` first (should become `/stdd`)
+- If it still doesn't work… have you tried sacrificing a rubber duck? 🦆
 
 ### I copied prompts but ran `cp Scopes/Prompts/*.md ...` from the wrong directory
 
 > ⚠️ Heads up
-> The `cp Scopes/Prompts/*.md .cursor/commands/` example assumes you’re inside the cloned `ScopesCommands/` repo. If you’re standing in your target repo, use an absolute path to this repo’s `Scopes/Prompts/` folder (as shown in Quickstart).
+> The `cp Scopes/Prompts/*.md .cursor/commands/` example assumes you're inside the cloned `ScopesCommands/` repo. If you're standing in your target repo, use an absolute path to this repo's `Scopes/Prompts/` folder (as shown in Quickstart).
 
-### Symlink install doesn’t work
+### Symlink install doesn't work
 
 - Make sure `.cursor/commands/` exists first
-- If the glob doesn’t expand, symlink individual files (or expand the glob via your shell)
+- If the glob doesn't expand, symlink individual files (or expand the glob via your shell)
 - On Windows, symlinks may require admin permissions or Developer Mode
 
-### “It wrote confident stuff with no evidence”
+### "It wrote confident stuff with no evidence"
 
-That’s a bug in the workflow (or the inputs), not a feature.
+That's a bug in the workflow (or the inputs), not a feature.
 
 - Re-run the command and explicitly ask for evidence links
-- If evidence can’t be traced, the output should be tagged `Unknown` / `Partially traced` / `Inferred from convention`
+- If evidence can't be traced, the output should be tagged `Unknown` / `Partially traced` / `Inferred from convention`
 
-## FAQ
+## ❓ FAQ
 
 ### What are Scopes, exactly?
 
@@ -531,7 +545,7 @@ Scopes are evidence-backed, product-focused documentation files that describe **
 - **Tree-structured:** parent/child hierarchy for navigation
 - **Network-linked:** cross-references for dependencies/data flow
 - **Evidence-backed:** claims link to code/tests/config/schema
-- **Product-focused:** “what happens” and “what rules apply,” not “how to click buttons”
+- **Product-focused:** "what happens" and "what rules apply," not "how to click buttons"
 
 Scopes live in `/Scopes/` and act as the source of truth for current behavior.
 
@@ -541,9 +555,9 @@ Yes—especially when they change alongside behavior. The recommended workflow i
 
 ### Can I use more than one command in the same session?
 
-You *can*, but you probably *shouldn’t*. The prompts are designed to be strict and focused; running one per session keeps context clean and reduces “why is it mixing styles?” confusion.
+You *can*, but you probably *shouldn't*. The prompts are designed to be strict and focused; running one per session keeps context clean and reduces "why is it mixing styles?" confusion.
 
-## Contributing
+## 🤝 Contributing
 
 PRs welcome. If you add or change prompts:
 
@@ -551,9 +565,24 @@ PRs welcome. If you add or change prompts:
 - Keep filenames command-friendly (Cursor converts filenames → `/commands`)
 - Update `Scopes/Prompts/SUMMARY.md` so the command list stays accurate
 
-## License
+## 📄 License
 
 No license file is included in this repo right now.
 
 > ⚠️ Heads up
-> Without an explicit license, the default is “all rights reserved.” If you want others to reuse this, add a `LICENSE` file (MIT/Apache-2.0/etc.) and update this section accordingly.
+> Without an explicit license, the default is "all rights reserved." If you want others to reuse this, add a `LICENSE` file (MIT/Apache-2.0/etc.) and update this section accordingly.
+
+---
+
+## 📚 References
+
+[^1]: [Beyond Code Generation: LLMs for Code Understanding](https://dev.to/eabait/beyond-code-generation-llms-for-code-understanding-3ldn) — Structure-aware context significantly improves LLM performance for code understanding.
+[^2]: [CodeWiki: Evaluating AI's Ability to Generate Holistic Documentation for Large-Scale Codebases](https://arxiv.org/html/2510.24428v3) — Hierarchical decomposition with architectural context achieves 68.79% quality scores.
+[^3]: [Context Windows Are a Lie: The Myth Blocking AGI—And How to Fix It](https://natesnewsletter.substack.com/p/context-windows-are-a-lie-the-myth) — "Lost in the middle" phenomenon and practical limitations of large context windows.
+[^4]: [SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression](https://arxiv.org/abs/2507.05633) — Adaptive compression improves relevance (+17.71), correctness (+13.72), and semantic similarity (+15.53).
+[^5]: [LLM Hallucinations in Practical Code Generation](https://dl.acm.org/doi/10.1145/3728894) — Empirical study establishing hallucination taxonomy in code generation.
+[^6]: [Token-Level Truth: Real-Time Hallucination Detection for Production](https://blog.vllm.ai/2025/12/14/halugate.html) — Extrinsic hallucinations where models ignore ground truth information.
+[^7]: [Documentation maintenance guide November 2025 - Fern](https://buildwithfern.com/post/documentation-maintenance-best-practices) — 69% of developers lose 8+ hours weekly to documentation inefficiencies.
+[^8]: [A Developer's Guide to Automated Documentation Tools](https://deepdocs.dev/automated-documentation-tools/) — Documentation drift as a systemic workflow failure.
+[^9]: [Documentation Maintenance: Keep Your Code & APIs Current](https://www.docuwriter.ai/posts/documentation-maintenance) — Real-world impact of documentation drift on onboarding and support.
+[^10]: [Automating Documentation Maintenance with Prodigy: A Real-World Case Study](https://entropicdrift.com/blog/prodigy-docs-automation/) — Modern approaches to documentation-as-code and automated maintenance.
