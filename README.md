@@ -39,6 +39,14 @@ Scopes act as a **compression + navigation layer**:
 - **Fewer hallucinations:** if behavior can’t be traced, it’s tagged `Unknown` / `Partially traced` / `Inferred from convention` instead of being invented.
 - **Faster deep dives:** once the correct scope is identified, the model can “drill” into the specific files/paths that matter instead of scanning the whole repo.
 
+**The receipts:**
+
+Turns out dumping a million lines of code into an LLM is like asking someone to find a needle in a haystack while blindfolded. Studies found that when you give models structured context (like call graphs, dependencies, and how things actually connect), they do way better than just raw code.[^1] One approach using hierarchical docs scored 68.79% vs baseline—basically proving that organization matters.[^2]
+
+Those giant context windows everyone's hyped about? They have a "lost in the middle" problem. Models start strong, then forget stuff in the middle, then remember the end. Important details just vanish.[^3] But when you compress context intelligently (like Scopes do), you get better answers (+17 relevance, +13 correctness) and it's way cheaper to run.[^4]
+
+LLMs also make stuff up, especially with complex codebases.[^5] When you tag things as `Unknown` or `Partially traced` instead of letting the model guess, it stops hallucinating code that doesn't exist.[^6]
+
 ### How this differs from “docs as they exist today”
 
 Most documentation is either:
@@ -52,6 +60,24 @@ Scopes are different by design:
 - **Behavior-first:** they describe what the software does today, not what we hope it does.
 - **Evidence-required:** every meaningful claim points to proof in the repo.
 - **Maintained as part of dev:** these commands make “update the truth” part of the normal workflow (init → build → refactor → release), not a once-a-quarter doc ritual.
+
+**The receipts:**
+
+Docs drift because they're separate from code. You change a function, forget to update the doc, and now it's wrong forever. 69% of devs waste 8+ hours a week because docs are lying to them.[^7] The problem isn't laziness—it's that updating docs requires context switching, and in fast-paced cycles, that always loses priority.[^8] New hires can't trust anything, support gets flooded with "but the docs said..." tickets, and everyone stops believing the docs exist for a reason.[^9]
+
+The fix? Treat docs like code. Generate from specs, validate in CI/CD, make updates part of the normal flow. That's what Scopes commands do—they make "update the truth" part of your workflow, not a quarterly doc ritual.[^10]
+
+
+[^1]: [Beyond Code Generation: LLMs for Code Understanding](https://dev.to/eabait/beyond-code-generation-llms-for-code-understanding-3ldn) — Structure-aware context significantly improves LLM performance for code understanding.
+[^2]: [CodeWiki: Evaluating AI's Ability to Generate Holistic Documentation for Large-Scale Codebases](https://arxiv.org/html/2510.24428v3) — Hierarchical decomposition with architectural context achieves 68.79% quality scores.
+[^3]: [Context Windows Are a Lie: The Myth Blocking AGI—And How to Fix It](https://natesnewsletter.substack.com/p/context-windows-are-a-lie-the-myth) — "Lost in the middle" phenomenon and practical limitations of large context windows.
+[^4]: [SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression](https://arxiv.org/abs/2507.05633) — Adaptive compression improves relevance (+17.71), correctness (+13.72), and semantic similarity (+15.53).
+[^5]: [LLM Hallucinations in Practical Code Generation](https://dl.acm.org/doi/10.1145/3728894) — Empirical study establishing hallucination taxonomy in code generation.
+[^6]: [Token-Level Truth: Real-Time Hallucination Detection for Production](https://blog.vllm.ai/2025/12/14/halugate.html) — Extrinsic hallucinations where models ignore ground truth information.
+[^7]: [Documentation maintenance guide November 2025 - Fern](https://buildwithfern.com/post/documentation-maintenance-best-practices) — 69% of developers lose 8+ hours weekly to documentation inefficiencies.
+[^8]: [A Developer's Guide to Automated Documentation Tools](https://deepdocs.dev/automated-documentation-tools/) — Documentation drift as a systemic workflow failure.
+[^9]: [Documentation Maintenance: Keep Your Code & APIs Current](https://www.docuwriter.ai/posts/documentation-maintenance) — Real-world impact of documentation drift on onboarding and support.
+[^10]: [Automating Documentation Maintenance with Prodigy: A Real-World Case Study](https://entropicdrift.com/blog/prodigy-docs-automation/) — Modern approaches to documentation-as-code and automated maintenance.
 
 ## Quickstart
 
