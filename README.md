@@ -8,31 +8,9 @@
 ![Evidence-backed docs](https://img.shields.io/badge/docs-evidence--backed-0ea5e9)
 ![Scopes-first](https://img.shields.io/badge/workflow-scopes--first-22c55e)
 
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="scopes-dark.jpg">
-    <source media="(prefers-color-scheme: light)" srcset="scopes.jpg">
-    <img src="scopes.jpg" alt="SCOPES: from code chaos to truth maps - A diagram showing how Scopes transforms chaotic code into organized, evidence-backed documentation" width="600">
-  </picture>
-</div>
-
-<div align="center">
-  <h3>✨ One command, instant clarity ✨</h3>
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/init-scopes-demo-dark.gif">
-    <source media="(prefers-color-scheme: light)" srcset="docs/assets/init-scopes-demo.gif">
-    <img src="docs/assets/init-scopes-demo.gif" alt="Animated demo showing the /init-scopes-and-update command generating Scopes/INDEX.md and Scopes/GRAPH.md files in Cursor" width="800" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-  </picture>
-  <p><em>Type <code>/init-scopes-and-update</code> → Get evidence-backed docs in seconds</em></p>
-</div>
-
-<!-- 
-  Image assets needed:
-  - scopes.jpg (light theme logo) ✅ exists
-  - scopes-dark.jpg (dark theme logo) - create a dark-optimized version
-  - docs/assets/init-scopes-demo.gif (light theme demo) - record a GIF showing the command
-  - docs/assets/init-scopes-demo-dark.gif (dark theme demo) - record a dark theme version
--->
+<p align="center">
+  <img src="scopes.jpg" alt="Scopes diagram showing how Scopes transforms a codebase into evidence-backed documentation" width="700" />
+</p>
 
 ```
 CODE 🧩 → SCOPES 🗺️ → CLARITY 💡
@@ -57,6 +35,7 @@ More accurate changes + explanations
 - [Who this is for](#who-this-is-for)
 - [Why this exists](#why-this-exists)
 - [Quickstart](#quickstart)
+- [Images](#images)
 - [Cool example](#cool-example)
 - [Usage](#usage)
 - [Cheat sheet](#cheat-sheet)
@@ -179,6 +158,42 @@ Fast path: install the commands into a repo you have open in Cursor, then run in
 - A starter set of Scope files documenting observable behavior (with evidence links)
 
 > **Pro tip:** do the first init on a branch and commit the generated Scopes alongside your code changes. Your future self will high-five you across time.
+
+<a id="images"></a>
+## 🖼️ Images (logo/GIF)
+
+Use Markdown for simple embeds, and HTML when you need sizing or light/dark variants.
+
+<details>
+  <summary><strong>Examples</strong></summary>
+
+Basic Markdown:
+```md
+![Scopes diagram](scopes.jpg)
+```
+
+Demo GIF (add the file to your repo first, e.g. `docs/assets/`):
+```md
+![Demo: /init-scopes-and-update creates INDEX + GRAPH](docs/assets/init-scopes-and-update.gif)
+```
+
+Resize with HTML:
+```html
+<img src="scopes.jpg" alt="Scopes diagram" width="520" />
+```
+
+Light/dark mode with `<picture>`:
+```html
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/logo-dark.png">
+  <source media="(prefers-color-scheme: light)" srcset="docs/assets/logo-light.png">
+  <img alt="Scopes logo" src="docs/assets/logo-light.png">
+</picture>
+```
+
+Tip: in GitHub’s README editor you can drag-and-drop an image and it will generate the Markdown for you.
+Note: if the path doesn’t exist, you’ll get a broken-image icon in the rendered README.
+</details>
 
 <a id="cool-example"></a>
 ## 😎 Cool Example
