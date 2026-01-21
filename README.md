@@ -7,6 +7,9 @@
 [![Cursor command prompts](https://img.shields.io/badge/Cursor-slash%20commands-111827)](https://www.cursor.com/)
 ![Evidence-backed docs](https://img.shields.io/badge/docs-evidence--backed-0ea5e9)
 ![Scopes-first](https://img.shields.io/badge/workflow-scopes--first-22c55e)
+![Build Status](https://img.shields.io/github/actions/workflow/status/benrben/ScopesCommands/main.yml)
+![License](https://img.shields.io/badge/license-MIT-blue)
+![GitHub stars](https://img.shields.io/github/stars/benrben/ScopesCommands?style=social)
 
 <p align="center">
   <img src="scopes.jpg" alt="Scopes diagram showing how Scopes transforms a codebase into evidence-backed documentation" width="700" />
@@ -197,6 +200,8 @@ Note: if the path doesn’t exist, you’ll get a broken-image icon in the rende
 
 <a id="cool-example"></a>
 ## 😎 Cool Example
+
+![Terminal Demo](docs/assets/terminal_demo.png)
 
 Type this in Cursor:
 ```text
@@ -714,10 +719,7 @@ PRs welcome. If you add or change prompts:
 <a id="license"></a>
 ## 📄 License
 
-No license file is included in this repo right now.
-
-> ⚠️ Heads up
-> Without an explicit license, the default is "all rights reserved." If you want others to reuse this, add a `LICENSE` file (MIT/Apache-2.0/etc.) and update this section accordingly.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
