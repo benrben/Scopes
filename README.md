@@ -4,10 +4,32 @@
 >
 > Tired of reading 3,000 files just to fix a typo? Scopes are your cheat code. Vibe coding, but with receipts. 📋✨
 
+[![Cursor command prompts](https://img.shields.io/badge/Cursor-slash%20commands-111827)](https://www.cursor.com/)
+![Evidence-backed docs](https://img.shields.io/badge/docs-evidence--backed-0ea5e9)
+![Scopes-first](https://img.shields.io/badge/workflow-scopes--first-22c55e)
+
 ```
 CODE 🧩 → SCOPES 🗺️ → CLARITY 💡
 ```
 
+## 📌 Table of Contents
+
+- [Who this is for](#who-this-is-for)
+- [Why this exists](#why-this-exists)
+- [Quickstart](#quickstart)
+- [Cool example](#cool-example)
+- [Usage](#usage)
+- [Cheat sheet](#cheat-sheet)
+- [Available commands](#available-commands)
+- [Rules & constraints](#rules--constraints)
+- [Examples](#examples-with-expected-output)
+- [Troubleshooting](#troubleshooting)
+- [FAQ](#faq)
+- [Contributing](#contributing)
+- [License](#license)
+- [References](#references)
+
+<a id="who-this-is-for"></a>
 ## 🎯 Who this is for
 
 - Engineers who hate guessing what code does
@@ -22,6 +44,7 @@ CODE 🧩 → SCOPES 🗺️ → CLARITY 💡
 - 🤯 Hallucinations prevented: priceless
 - ⏰ Hours wasted on bad docs: 0 (if you use this)
 
+<a id="why-this-exists"></a>
 ## 🎯 Why this exists
 
 Cursor is great at helping you move fast.
@@ -44,6 +67,14 @@ LLMs are powerful, but raw codebases are high-entropy: too many files, too much 
 
 Scopes act as a **compression + navigation layer**:
 
+- **A simple mental model:**
+  ```text
+  CODEBASE
+     ↓
+  Scopes/INDEX.md  +  Scopes/GRAPH.md
+     ↓
+  Focused deep dives (with evidence)
+  ```
 - **Less context thrash:** `Scopes/INDEX.md` and `Scopes/GRAPH.md` give a map of the system, so the model doesn't waste tokens rediscovering structure.
 - **More correct reasoning:** Scopes describe **observable behavior** in plain language, with links to the exact evidence (code/tests/config/schema) that proves each claim.
 - **Fewer hallucinations:** if behavior can't be traced, it's tagged `Unknown` / `Partially traced` / `Inferred from convention` instead of being invented.
@@ -77,6 +108,7 @@ Docs drift because they're separate from code. You change a function, forget to 
 
 The fix? Treat docs like code. Generate from specs, validate in CI/CD, make updates part of the normal flow. That's what Scopes commands do—they make "update the truth" part of your workflow, not a quarterly doc ritual.[^10]
 
+<a id="quickstart"></a>
 ## 🚀 Quickstart
 
 Fast path: install the commands into a repo you have open in Cursor, then run init.
@@ -91,6 +123,11 @@ Fast path: install the commands into a repo you have open in Cursor, then run in
    cp /path/to/ScopesCommands/Scopes/Prompts/*.md .cursor/commands/
    ```
 
+   Optional (advanced): symlink instead of copying, so updates to this repo instantly update your Cursor commands:
+   ```bash
+   for f in /path/to/ScopesCommands/Scopes/Prompts/*.md; do ln -sf "$f" .cursor/commands/; done
+   ```
+
 3. Restart Cursor (or reload the window), then type `/` in chat and run:
    ```text
    /init-scopes-and-update Initialize Scopes for this repository
@@ -103,6 +140,7 @@ Fast path: install the commands into a repo you have open in Cursor, then run in
 
 > **Pro tip:** do the first init on a branch and commit the generated Scopes alongside your code changes. Your future self will high-five you across time.
 
+<a id="cool-example"></a>
 ## 😎 Cool Example
 
 Type this in Cursor:
@@ -118,6 +156,15 @@ Type this in Cursor:
 
 **Result:** You now have docs that tell the truth. Revolutionary, I know. 🎉
 
+Tiny example of what a Scope claim looks like:
+```md
+## Authentication: Login
+- Behavior: creates a session for valid credentials
+- Evidence: `path/to/auth/login.<ext>` (handler), `path/to/auth/login.test.<ext>` (assertions)
+- Notes: `Unknown` until traced end-to-end
+```
+
+<a id="usage"></a>
 ## 📚 Usage (basic → advanced)
 
 ### How Cursor turns these files into commands
@@ -140,6 +187,7 @@ Example:
 /init-scopes-and-update Initialize Scopes for this repository
 ```
 
+<a id="cheat-sheet"></a>
 ### 🎮 Cheat sheet (press start)
 
 If you're standing in the codebase like a kid at an arcade cabinet with 25 cents and a dream:
@@ -159,8 +207,9 @@ If you're standing in the codebase like a kid at an arcade cabinet with 25 cents
 /onboarding-path-builder     → build an onboarding path from Scopes
 ```
 
-For the full list in one table, see `Scopes/Prompts/SUMMARY.md`.
+For the full list in one table, see [`Scopes/Prompts/SUMMARY.md`](Scopes/Prompts/SUMMARY.md).
 
+<a id="available-commands"></a>
 ### Available commands
 
 Commands can be used with a `/` prefix (e.g. `/init-scopes-and-update`) or as system prompts.
@@ -311,6 +360,7 @@ Commands can be used with a `/` prefix (e.g. `/init-scopes-and-update`) or as sy
 
 **Example:** `/onboarding-path-builder Create an onboarding path for a new backend engineer`
 
+<a id="rules--constraints"></a>
 ### Rules & constraints
 
 These are canon. Break them and the timeline splits. Multiverse bugs are not cute.
@@ -353,6 +403,7 @@ All prompts follow this methodology (performed silently):
 3. **DEVELOP**: create plan, approach, or solution
 4. **DELIVER**: produce required artifacts (files, docs, etc.)
 
+<a id="examples-with-expected-output"></a>
 ## 🧠 Examples (with expected output)
 
 ### Good example 1 (common): "I just cloned a repo and I'm lost"
@@ -508,6 +559,7 @@ cp /path/to/ScopesCommands/Scopes/Prompts/*.md .cursor/commands/
 
 Then I restarted Cursor, typed `/`, and boom: commands appeared like a dial-up connection finally negotiating at 56k.
 
+<a id="troubleshooting"></a>
 ## 🛠 Troubleshooting
 
 ### Commands don't appear when I type `/`
@@ -536,6 +588,7 @@ That's a bug in the workflow (or the inputs), not a feature.
 - Re-run the command and explicitly ask for evidence links
 - If evidence can't be traced, the output should be tagged `Unknown` / `Partially traced` / `Inferred from convention`
 
+<a id="faq"></a>
 ## ❓ FAQ
 
 ### What are Scopes, exactly?
@@ -549,14 +602,40 @@ Scopes are evidence-backed, product-focused documentation files that describe **
 
 Scopes live in `/Scopes/` and act as the source of truth for current behavior.
 
+### What if I just want onboarding docs?
+
+Run init once, then generate a role-specific path:
+
+- `/init-scopes-and-update Initialize Scopes for this repository`
+- `/onboarding-path-builder Create an onboarding path for a new <role>`
+
+### Can I use Scopes for frontend + backend?
+
+Yes. Scopes are language-agnostic: they describe behavior and evidence, not syntax.
+
 ### Should I commit the generated Scopes?
 
 Yes—especially when they change alongside behavior. The recommended workflow is to do it on a branch, commit Scopes with the code, and merge together.
+
+### How often should I run `/init-scopes-and-update`?
+
+- After big merges or refactors
+- Before writing release notes
+- Anytime Scopes start feeling "off"
+
+### My repo already has a `/Scopes/` folder. Will this overwrite it?
+
+It will update files under `/Scopes/` to match your codebase. Run it on a branch first so you can review diffs like any other generated artifact.
+
+### Does this require me to paste my whole repo into chat?
+
+No. These prompts are local files that Cursor turns into commands. What Cursor reads/sends depends on your Cursor settings and provider—treat it like any other AI-assisted dev tool and follow your organization's policies.
 
 ### Can I use more than one command in the same session?
 
 You *can*, but you probably *shouldn't*. The prompts are designed to be strict and focused; running one per session keeps context clean and reduces "why is it mixing styles?" confusion.
 
+<a id="contributing"></a>
 ## 🤝 Contributing
 
 PRs welcome. If you add or change prompts:
@@ -564,7 +643,10 @@ PRs welcome. If you add or change prompts:
 - Put prompt files under `Scopes/Prompts/`
 - Keep filenames command-friendly (Cursor converts filenames → `/commands`)
 - Update `Scopes/Prompts/SUMMARY.md` so the command list stays accurate
+- Keep outputs Markdown-friendly and skimmable (headings, bullets, short examples)
+- Keep the workflow strict: Scopes-first, evidence-required, tag unknowns
 
+<a id="license"></a>
 ## 📄 License
 
 No license file is included in this repo right now.
@@ -574,6 +656,7 @@ No license file is included in this repo right now.
 
 ---
 
+<a id="references"></a>
 ## 📚 References
 
 [^1]: [Beyond Code Generation: LLMs for Code Understanding](https://dev.to/eabait/beyond-code-generation-llms-for-code-understanding-3ldn) — Structure-aware context significantly improves LLM performance for code understanding.
