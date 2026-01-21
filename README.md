@@ -9,7 +9,21 @@
 ![Scopes-first](https://img.shields.io/badge/workflow-scopes--first-22c55e)
 
 <div align="center">
-  <img src="scopes.jpg" alt="SCOPES: from code chaos to truth maps" width="600">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="scopes-dark.jpg">
+    <source media="(prefers-color-scheme: light)" srcset="scopes.jpg">
+    <img src="scopes.jpg" alt="SCOPES: from code chaos to truth maps" width="600">
+  </picture>
+</div>
+
+<div align="center">
+  <h3>✨ One command, instant clarity ✨</h3>
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/init-scopes-demo-dark.gif">
+    <source media="(prefers-color-scheme: light)" srcset="docs/assets/init-scopes-demo.gif">
+    <img src="docs/assets/init-scopes-demo.gif" alt="Demo: /init-scopes-and-update creating Scopes/INDEX.md and Scopes/GRAPH.md" width="800" style="border-radius: 8px;">
+  </picture>
+  <p><em>Type <code>/init-scopes-and-update</code> → Get evidence-backed docs in seconds</em></p>
 </div>
 
 ```
@@ -130,9 +144,6 @@ The fix? Treat docs like code. Generate from specs, validate in CI/CD, make upda
 ## 🚀 Quickstart
 
 Fast path: install the commands into a repo you have open in Cursor, then run init.
-
-Optional (nice): add a quick demo GIF to this README showing `/init-scopes-and-update` creating `Scopes/INDEX.md` + `Scopes/GRAPH.md`.
-<!-- Drop a GIF in the repo (e.g., docs/assets/init-scopes-and-update.gif) and link it here when you have one. -->
 
 1. In your target repo (the one you're working on in Cursor), create the commands folder:
    ```bash
