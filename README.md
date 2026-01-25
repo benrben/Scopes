@@ -11,9 +11,22 @@
 ![License](https://img.shields.io/badge/license-MIT-blue)
 ![GitHub stars](https://img.shields.io/github/stars/benrben/ScopesCommands?style=social)
 
+
 <p align="center">
   <img src="scopes.jpg" alt="Scopes diagram showing how Scopes transforms a codebase into evidence-backed documentation" width="700" />
 </p>
+
+## Visualizing the Problem (and the Solution)
+
+| **The Reality** | **The Fix** |
+| :---: | :---: |
+| <img src="docs/assets/spaghetti_reveal.png" width="300" alt="Legacy Backend Spaghetti" /> <br> *What your codebase actually looks like.* | <img src="docs/assets/panic_prism.png" width="300" alt="Chaos to Clarity" /> <br> *Turning the chaos into organized beams of truth.* |
+
+| **The Goal** | **The Vibe** |
+| :---: | :---: |
+| <img src="docs/assets/it_works_seal.png" width="300" alt="It Works Seal" /> <br> *Certified working code.* | <img src="docs/assets/rollercoaster_deploy.png" width="300" alt="Calm Deploy" /> <br> *Deploying on Friday? No sweat.* |
+
+
 
 ```
 CODE 🧩 → SCOPES 🗺️ → CLARITY 💡
@@ -83,6 +96,13 @@ Notes:
 - For prompt standards and the full list, see `Scopes/Prompts/README.md`.
 
 ## Recommended workflows (how commands connect)
+
+<p align="center">
+  <img src="docs/assets/blame_teleport_ui.png" width="400" alt="Blame Teleport" />
+  <br>
+  <em>Stop asking "Who broke prod?" and start fixing it.</em>
+</p>
+
 - **Fix a bug**: `/bug-hunt` → `/write-tasks` → `/dev-loop`
 - **Ship a feature**: `/ideate` → `/plan-idea` → `/write-tasks` → `/dev-loop`
 - **Make a decision**: `/research-loop` → `/write-adr` → `/plan-idea` (or `/write-tasks`)

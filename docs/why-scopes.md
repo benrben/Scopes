@@ -3,9 +3,22 @@
 Scopes are a deliberate answer to a common failure mode: **code changes fast, docs drift faster**.
 
 ## The idea in one paragraph
+<p align="center">
+  <img src="assets/jenga_code_tower.png" width="400" alt="Jenga Code Tower" />
+  <br>
+  <em>Without structure, adding one more feature is... risky.</em>
+</p>
+
 Raw codebases are high-entropy: lots of files, lots of local detail, and not enough product meaning. Scopes act as a **compression + navigation layer**: a map (`Scopes/INDEX.md`) and a graph (`Scopes/GRAPH.md`) plus evidence-backed capability docs (`Scopes/Product/**`) that describe what the system does today.
 
 ## What makes Scopes different
+
+<p align="center">
+  <img src="assets/compass_to_coffee.png" width="400" alt="Navigate to Safety" />
+  <br>
+  <em>The only safe direction is known truth.</em>
+</p>
+
 - **Behavior-first**: describe what the software does today, not what we hope it does.
 - **Evidence-required**: meaningful claims link to proof (code/tests/config/schema).
 - **Maintained as part of dev**: the commands in `Scopes/Prompts/` treat “update the truth” as part of normal work.
