@@ -72,6 +72,21 @@ for f in /path/to/ScopesCommands/Scopes/Prompts/*.md; do ln -sf "$f" .cursor/com
 
 ![Terminal Demo](docs/assets/terminal_demo.png)
 
+## The Prime Command: `/sync-scopes`
+
+`/sync-scopes` is the heartbeat of this entire methodology. It is an agentic command that acts as a **Project Scope Archivist**.
+
+**What it does:**
+1.  **Audits your entire codebase** (code, tests, config).
+2.  **Generates "Source of Truth" docs** inside `Scopes/Product/`.
+3.  **Cross-links everything** into a knowledge graph (`Scopes/GRAPH.md`).
+
+**When to use it:**
+- **Onboarding**: Run it on a legacy code base to get an instant map (`Generation Mode`).
+- **Maintenance**: Run it after shipping a feature to keep docs true (`Update Mode`).
+
+---
+
 ## The Commands (current)
 Cursor turns filenames into slash commands (e.g. `dev-loop.md` → `/dev-loop`).
 
@@ -85,6 +100,7 @@ These are the commands in `Scopes/Prompts/`:
 | `/plan-idea` | `Scopes/Prompts/plan-idea.md` | Turn an idea into a sequenced plan (and create/reuse research if needed) |
 | `/ideate` | `Scopes/Prompts/ideate.md` | Generate scope-anchored ideas that are ready to plan |
 | `/plan-board` | `Scopes/Prompts/plan-board.md` | Turn `Scopes/` into an execution board blueprint |
+| `/sync-scopes` | `Scopes/Prompts/sync-scopes.md` | **The Core Agent**. Generates/updates Scopes (truth) from code. Run this to map the system or after large changes. |
 | `/plan-refactor` | `Scopes/Prompts/plan-refactor.md` | Plan a safe refactor with verification gates and scope maintenance |
 | `/research-loop` | `Scopes/Prompts/research-loop.md` | Research with strict internal-vs-external truth separation |
 | `/write-adr` | `Scopes/Prompts/write-adr.md` | Write ADRs linked to affected scopes (and graph implications) |
@@ -92,7 +108,6 @@ These are the commands in `Scopes/Prompts/`:
 | `/write-onboarding` | `Scopes/Prompts/write-onboarding.md` | Role-based onboarding path driven by scope traces |
 
 Notes:
-- `Scopes/Prompts/sync-scopes.md` is the **gold standard template** (reference), not an interactive command.
 - For prompt standards and the full list, see `Scopes/Prompts/README.md`.
 
 ## Recommended workflows (how commands connect)
