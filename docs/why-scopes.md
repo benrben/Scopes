@@ -21,7 +21,7 @@ Raw codebases are high-entropy: lots of files, lots of local detail, and not eno
 
 - **Behavior-first**: describe what the software does today, not what we hope it does.
 - **Evidence-required**: meaningful claims link to proof (code/tests/config/schema).
-- **Maintained as part of dev**: the commands in `Scopes/Prompts/` treat “update the truth” as part of normal work.
+- **Maintained as part of dev**: the commands in `commands/` treat “update the truth” as part of normal work.
 
 ## References
 If you want to go deeper, these are good starting points:

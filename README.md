@@ -57,13 +57,13 @@ mkdir -p .cursor/commands
 2) Copy (or symlink) this repo’s prompts:
 
 ```bash
-cp /path/to/ScopesCommands/Scopes/Prompts/*.md .cursor/commands/
+cp /path/to/ScopesCommands/commands/*.md .cursor/commands/
 ```
 
 Optional (advanced): symlink so updates follow automatically:
 
 ```bash
-for f in /path/to/ScopesCommands/Scopes/Prompts/*.md; do ln -sf "$f" .cursor/commands/; done
+for f in /path/to/ScopesCommands/commands/*.md; do ln -sf "$f" .cursor/commands/; done
 ```
 
 3) Restart Cursor (or reload window), then type `/` and pick a command.
@@ -90,25 +90,25 @@ for f in /path/to/ScopesCommands/Scopes/Prompts/*.md; do ln -sf "$f" .cursor/com
 ## The Commands (current)
 Cursor turns filenames into slash commands (e.g. `dev-loop.md` → `/dev-loop`).
 
-These are the commands in `Scopes/Prompts/`:
+These are the commands in `commands/`:
 
 | Command | File | What it does |
 |---|---|---|
-| `/dev-loop` | `Scopes/Prompts/dev-loop.md` | Implement a feature/bug via strict TDD and update Scopes as you go |
-| `/bug-hunt` | `Scopes/Prompts/bug-hunt.md` | Find bugs/anti-patterns with evidence; output a bug report (and optional tasks) |
-| `/write-tasks` | `Scopes/Prompts/write-tasks.md` | Turn intent/plans/research/bugs into 1–4 hour engineer-ready tasks |
-| `/plan-idea` | `Scopes/Prompts/plan-idea.md` | Turn an idea into a sequenced plan (and create/reuse research if needed) |
-| `/ideate` | `Scopes/Prompts/ideate.md` | Generate scope-anchored ideas that are ready to plan |
-| `/plan-board` | `Scopes/Prompts/plan-board.md` | Turn `Scopes/` into an execution board blueprint |
-| `/sync-scopes` | `Scopes/Prompts/sync-scopes.md` | **The Core Agent**. Generates/updates Scopes (truth) from code. Run this to map the system or after large changes. |
-| `/plan-refactor` | `Scopes/Prompts/plan-refactor.md` | Plan a safe refactor with verification gates and scope maintenance |
-| `/research-loop` | `Scopes/Prompts/research-loop.md` | Research with strict internal-vs-external truth separation |
-| `/write-adr` | `Scopes/Prompts/write-adr.md` | Write ADRs linked to affected scopes (and graph implications) |
-| `/write-release` | `Scopes/Prompts/write-release.md` | Release notes from scope delta (facts-only) |
-| `/write-onboarding` | `Scopes/Prompts/write-onboarding.md` | Role-based onboarding path driven by scope traces |
+| `/dev-loop` | `commands/dev-loop.md` | Implement a feature/bug via strict TDD and update Scopes as you go |
+| `/bug-hunt` | `commands/bug-hunt.md` | Find bugs/anti-patterns with evidence; output a bug report (and optional tasks) |
+| `/write-tasks` | `commands/write-tasks.md` | Turn intent/plans/research/bugs into 1–4 hour engineer-ready tasks |
+| `/plan-idea` | `commands/plan-idea.md` | Turn an idea into a sequenced plan (and create/reuse research if needed) |
+| `/ideate` | `commands/ideate.md` | Generate scope-anchored ideas that are ready to plan |
+| `/plan-board` | `commands/plan-board.md` | Turn `Scopes/` into an execution board blueprint |
+| `/sync-scopes` | `commands/sync-scopes.md` | **The Core Agent**. Generates/updates Scopes (truth) from code. Run this to map the system or after large changes. |
+| `/plan-refactor` | `commands/plan-refactor.md` | Plan a safe refactor with verification gates and scope maintenance |
+| `/research-loop` | `commands/research-loop.md` | Research with strict internal-vs-external truth separation |
+| `/write-adr` | `commands/write-adr.md` | Write ADRs linked to affected scopes (and graph implications) |
+| `/write-release` | `commands/write-release.md` | Release notes from scope delta (facts-only) |
+| `/write-onboarding` | `commands/write-onboarding.md` | Role-based onboarding path driven by scope traces |
 
 Notes:
-- For prompt standards and the full list, see `Scopes/Prompts/README.md`.
+- For prompt standards and the full list, see `commands/README.md`.
 
 ## Recommended workflows (how commands connect)
 
@@ -125,15 +125,15 @@ Notes:
 - **Onboard someone**: ensure “backbone” scopes exist → `/write-onboarding`
 
 ## Docs
-- **Prompts / commands**: `Scopes/Prompts/README.md`
-- **Template + audit protocol**: `Scopes/Prompts/sync-scopes.md`
+- **Prompts / commands**: `commands/README.md`
+- **Template + audit protocol**: `commands/sync-scopes.md`
 - **Background / why this works**: `docs/why-scopes.md`
 
 ## Contributing
 PRs welcome. If you add/change prompts:
-- Keep them in `Scopes/Prompts/`
+- Keep them in `commands/`
 - Keep filenames command-friendly
-- Update `Scopes/Prompts/README.md`
+- Update `commands/README.md`
 
 ## License
 
