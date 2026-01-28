@@ -28,6 +28,7 @@ Ship release notes that are **true**, **scope-linked**, and **auditable**, while
 ## Required Reads (Before Writing Anything)
 - `Scopes/INDEX.md` (feature map)
 - `Scopes/GRAPH.md` (dependencies + ecosystem changes)
+- `Scopes/DEVELOPER_INFO.md` (ops/build constraints)
 - Relevant Capability Scopes under `Scopes/Product/**` that are part of the release
 - Relevant ADRs under `Scopes/Decisions/ADRs/**` (especially for breaking changes)
 
@@ -64,7 +65,8 @@ Do the method **silently**; output only the release notes file described below.
 
 ### 3) Develop (Silent)
 - Write concise, truth-preserving bullets with links to the capability scope as “current truth”.
-- Include ops notes only when there is an evidenced migration/config requirement.
+- Write concise, truth-preserving bullets with links to the capability scope as “current truth”.
+- Include ops notes only when there is an evidenced migration/config requirement (and link `Scopes/DEVELOPER_INFO.md` if updated).
 - If dependencies changed, call out and link `Scopes/GRAPH.md`.
 
 ### 4) Deliver (Visible)

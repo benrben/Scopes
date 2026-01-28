@@ -15,6 +15,7 @@ Ask the user one simple question before doing anything else:
   - `Scopes/Research/**` (evidence/tradeoffs that led to the decision)
   - `Scopes/Work/Planning/**` (plans that require a decision)
   - Impacted capability scopes under `Scopes/Product/**`
+  - `Scopes/DEVELOPER_INFO.md` (if decision affects workflow)
 - **Downstream outputs**:
   - ADR: `Scopes/Decisions/ADRs/**`
   - Possible follow-up: update `Scopes/GRAPH.md` if the decision changes dependency rules
@@ -31,6 +32,7 @@ Record decisions so that:
 - `Scopes/INDEX.md` (affected capabilities)
 - `Scopes/GRAPH.md` (dependency constraints)
 - Relevant Capability Scopes under `Scopes/Product/**`
+- `Scopes/DEVELOPER_INFO.md` (if tooling decision)
 - Existing ADRs under `Scopes/Decisions/ADRs/**` to avoid duplicates
 
 ## Output Location (Scopes Root Layout)

@@ -19,15 +19,111 @@ Ask the user one simple question before doing anything else:
 - **Downstream outputs**:
   - Session log: `Scopes/Work/STDD/**`
   - Scope maintenance: `Scopes/Product/**` (+ `Scopes/GRAPH.md` when dependencies change)
+  - Developer Info: `Scopes/DEVELOPER_INFO.md` (if scripts/config change)
 
 ## Required Reads (Before Writing Code)
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
+- `Scopes/DEVELOPER_INFO.md` (how to run/test)
 - The relevant Capability Scopes under `Scopes/Product/**`
 - `Scopes/Prompts/sync-scopes.md` (template + audit protocol)
 
 ## Output Root Rules
 - Capability documentation updates live under `Scopes/Product/**`
+- Developer guides live in `Scopes/DEVELOPER_INFO.md`
 - Session logs and execution artifacts live under `Scopes/Work/STDD/**`
+
+## TDD (Uncle Bob’s view)
+
+### How TDD Starts (Uncle Bob’s view)
+TDD does not start with code.  
+It starts with a requirement expressed as a test.
+
+Key idea:
+- You don’t write code unless a failing test forces you to.
+
+So the very first step is:
+- Think about what the system should do
+- Express that behavior in the simplest possible test
+
+No design diagrams.  
+No “let me sketch the architecture first.”  
+Just a tiny slice of behavior.
+
+### The TDD Cycle (Red–Green–Refactor)
+This is the famous loop Uncle Bob pushes hard:
+
+1. **Red 🔴 — Write a failing test**
+   - Write one small test
+   - The test must fail
+   - Compile error is allowed at first
+   - This proves the test can actually catch failure
+
+   Rules here:
+   - Don’t write more than one test
+   - Don’t write production code yet
+   - If the test doesn’t fail, it doesn’t count.
+
+2. **Green 🟢 — Make it pass (as simply as possible)**
+   - Write the minimum amount of production code
+   - No elegance, no optimization
+   - Hard-coding is allowed
+   - Duplication is allowed (for now)
+
+   Goal:
+   - Make the test pass. Nothing more.
+
+   This step is intentionally “ugly”.
+
+3. **Refactor 🔵 — Clean up the mess**
+   - Improve design without changing behavior
+   - Remove duplication
+   - Improve names
+   - Simplify structure
+
+   Rules:
+   - Tests must stay green the entire time
+   - No new behavior here
+
+Then… repeat 🔁
+
+Each loop:
+- Adds one tiny behavior
+- Grows the design organically
+- Keeps the system always working
+
+### Uncle Bob’s Three Laws of TDD
+He’s very explicit about these:
+
+- You may not write production code until you have written a failing unit test
+- You may not write more of a unit test than is sufficient to fail
+- You may not write more production code than is sufficient to pass the failing test
+
+These laws force:
+- Small steps
+- Constant feedback
+- Emergent design
+
+### What TDD Is Really About (per Uncle Bob)
+TDD is not primarily about testing.
+
+It’s about:
+- Design
+- Confidence
+- Fast feedback
+- Fearless refactoring
+
+Tests are a side effect.
+
+Uncle Bob often says:
+- “TDD is a discipline that drives good design.”
+
+### Mental Model to Remember
+Think of TDD like this:
+- 🔴 Ask a question (test)
+- 🟢 Answer it minimally (code)
+- 🔵 Improve the answer (refactor)
+
+Over and over.
 
 ## Loop Diagram (RED → GREEN → REFACTOR → SCOPE)
 ```mermaid
@@ -63,6 +159,7 @@ For each scenario in your test list:
    - Ensure “Evidence” points at the changed/added code.
    - If names changed (functions/files), update Scopes immediately.
    - If dependencies changed, update `Scopes/GRAPH.md` accordingly.
+   - If build/test/run commands changed, update `Scopes/DEVELOPER_INFO.md`.
 
 ### 4) DELIVER (Visible; required per cycle)
 For each cycle, present:

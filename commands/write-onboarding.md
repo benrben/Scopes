@@ -29,6 +29,7 @@ Create onboarding docs that teach the *real system* via `Scopes/`:
 - `Scopes/INDEX.md` (map)
 - `Scopes/GRAPH.md` (relationships)
 - 5–12 core Capability Scopes under `Scopes/Product/**` that represent the “backbone”
+- `Scopes/DEVELOPER_INFO.md` (how to run the project)
 
 ## Output Location (Scopes Root Layout)
 - **Onboarding guides** MUST be written to `Scopes/Onboarding/<role>-path.md`
@@ -107,6 +108,7 @@ Each exercise must reference a specific Capability Scope and make the reader cli
 ## 3. The Ecosystem
 - **Database**: We use Postgres. Schema defined in `[schema.prisma](link)`.
 - **Testing**: We use Jest. Run `npm test`.
+- **Developer Guide**: See `[Scopes/DEVELOPER_INFO.md](link)` for full setup.
 
 ## 4. Your First Task
 *Ready to contribute? Try this:*

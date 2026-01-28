@@ -14,6 +14,7 @@ Ask the user one simple question before doing anything else:
 - **Upstream inputs to look for**:
   - `Scopes/Work/Tasks/**` (if a task is failing, hunt within its scope area)
   - `Scopes/Product/**` + `Scopes/GRAPH.md` (identify hotspots and contracts)
+  - `Scopes/DEVELOPER_INFO.md` (check for correct run/test commands)
 - **Downstream outputs**:
   - Bug report: `Scopes/Work/Bugs/**`
   - Optional tasks: suggest `write-tasks` to turn findings into 1–4 hour work units
@@ -21,6 +22,7 @@ Ask the user one simple question before doing anything else:
 
 ## Required Reads (Before Writing Anything)
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
+- `Scopes/DEVELOPER_INFO.md` (verification commands)
 - The most relevant Capability Scopes under `Scopes/Product/**` for the target area (or 3–7 backbone scopes for a general scan)
 - `Scopes/Prompts/sync-scopes.md` (evidence + traces conventions)
 

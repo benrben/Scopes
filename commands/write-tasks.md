@@ -18,6 +18,7 @@ Ask the user one simple question before doing anything else:
   - `Scopes/Work/Ideas/**` (ideas to turn into small validation/prototype tasks)
 - **Downstream outputs**:
   - Task files: `Scopes/Work/Tasks/**`
+  - Developer Info: `Scopes/DEVELOPER_INFO.md` (if task modifies dev workflows)
 - **Typical next command**:
   - Suggest `dev-loop` to execute the resulting task(s) with TDD.
 
@@ -29,6 +30,7 @@ Produce tasks that:
 
 ## Required Reads (Before Writing Tasks)
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
+- `Scopes/DEVELOPER_INFO.md` (check for existing workflows)
 - The relevant Anchor Capability Scope under `Scopes/Product/**`
 - `Scopes/Prompts/sync-scopes.md` (what “good scope maintenance” looks like)
 

@@ -32,6 +32,7 @@ Answer a research question in a way that (a) is decision-enabling, (b) clearly s
 ## Required Reads (Before Writing Anything)
 - `Scopes/INDEX.md` (what exists)
 - `Scopes/GRAPH.md` (dependencies + relationships)
+- `Scopes/DEVELOPER_INFO.md` (environment/build constraints)
 - Any relevant Capability Scopes under `Scopes/Product/**`
 - Any relevant ADRs under `Scopes/Decisions/ADRs/**`
 
@@ -62,6 +63,7 @@ Do the method **silently**; output only the research report described below.
 ### 2) Diagnose (Silent)
 - Internal audit (repo truth):
   - Read `Scopes/INDEX.md` + `Scopes/GRAPH.md`
+  - Read `Scopes/DEVELOPER_INFO.md` for operational constraints
   - Check relevant `Scopes/Product/**` claims and whether evidence is present or `[Unknown]`
 - Identify precise unknowns and what would prove/disprove each.
 

@@ -28,6 +28,7 @@ Treat `Scopes/` as the single root for all generated artifacts.
   - `Scopes/INDEX.md` — human entrypoint + tree
   - `Scopes/GRAPH.md` — relationships + evidence table
   - `Scopes/GLOSSARY.md` (optional) — terms used across Scopes
+  - `Scopes/DEVELOPER_INFO.md` — practical dev guide (how to run/test/build)
 - **Product reality (capabilities)**
   - `Scopes/Product/<Area>/<Capability>.md`
   - `Scopes/Product/<Area>/<Capability>/<SubCapability>.md` (when needed)
@@ -59,7 +60,30 @@ Treat `Scopes/` as the single root for all generated artifacts.
    - **Extend**: Update existing files rather than creating duplicates.
    - **Preserve**: Keep existing structure unless it is demonstrably incorrect.
    - **Verify**: Re-check existing links. If code moved, update the link; if code is gone, remove the claim.
+   - **Maintain**: Execute <MAINTENANCE_CONTROLS> (sort lists, cleaning).
 </OPERATING_MODES>
+
+<MAINTENANCE_CONTROLS>
+1. **File Ordering**:
+   - In `INDEX.md` and all sub-indices, sort file links **alphabetically** (A-Z) unless a numbered prefix (e.g., `01_Start`) dictates a specific sequence.
+   - Ensure folder structures are clean and hierarchical.
+
+2. **Task Hygiene (`Scopes/Work/Tasks/`)**:
+   - **Scan**: Check all task files in `Scopes/Work/Tasks/`.
+   - **Identify Finished**: Look for status markers like `Status: Done`, `Status: Completed`, or `-[x]` checklist completion.
+   - **Action**: **REMOVE** (delete) any task file that is confirmed finished.
+   - **Cleanup**: Remove any broken links in `INDEX.md` pointing to these deleted tasks.
+
+3. **General Cleaning**:
+   - **Prune**: Detect and remove empty directories under `Scopes/`.
+   - **Orphans**: Identify text files in `Scopes/` that are not linked from any parent/index; either link them or remove them if obsolete.
+   - **Ideas**: If an Idea in `Scopes/Ideas` has been implemented in `Scopes/Product`, remove the Idea file.
+
+4.  **Location Enforcement**:
+   - **Audit**: Check for capability scopes (feature descriptions) sitting loosely in `Scopes/` or wrong folders.
+   - **Action**: **MOVE** them to `Scopes/Product/<Area>/`.
+   - **Rule**: ONLY `INDEX.md`, `GRAPH.md`, and `GLOSSARY.md` are allowed in the root `Scopes/`. All operational scopes MUST be in `Scopes/Product/` or `Scopes/Work/`.
+</MAINTENANCE_CONTROLS>
 
 <HARD_CONSTRAINTS>
 1. **Truth Only:** References to files/lines MUST exist. If you cannot find the code, do not write the claim.
@@ -84,6 +108,19 @@ Treat `Scopes/` as the single root for all generated artifacts.
 - `[Partially Traced]`: Found some links but the chain is broken.
 - `[Inferred]`: Likely by convention but not explicitly proven.
 </EVIDENCE_PROTOCOL>
+
+<DEV_INFO_PROTOCOL>
+**Goal**: Centralize "How to Dev" knowledge found while exploring code.
+**Trigger**: When analyzing code, if you encounter:
+   - Run/Build/Test scripts (package.json, Makefiles, shell scripts)
+   - Environment setup steps
+   - Testing patterns or specific commands for parts of the system
+**Action**: Update `Scopes/DEVELOPER_INFO.md`.
+**Content**:
+   - Keep it practical: "Command → Result".
+   - Link to source: "Found in `[package.json:L5]`".
+   - Do NOT duplicate architecture info here; strict "How-To".
+</DEV_INFO_PROTOCOL>
 
 <WORKFLOW>
 Perform this workflow for every scope you create/update:
@@ -282,6 +319,34 @@ flowchart TD
 | A | B | Calls API | [path:L10-L20](path#L10-L20) |
 ```
 
+
+---
+
+### 4) DEVELOPER_INFO.md TEMPLATE
+**File:** `Scopes/DEVELOPER_INFO.md`
+
+```markdown
+# Developer Info & Commands
+
+## Quick Start
+- **Install**: `command` (`[source]`)
+- **Run Locally**: `command` (`[source]`)
+- **Build**: `command` (`[source]`)
+
+## Test Commands
+| Scope/Area | Command | Source |
+|------------|---------|--------|
+| All | `npm test` | `[package.json:L5]` |
+| Unit | `npm run test:unit` | `[package.json:L6]` |
+
+## Environment & Setup
+- Node Version: ...
+- Env Vars: `...`
+
+## Deployment / CI
+- ...
+```
+
 </TEMPLATES>
 
 <OUTPUT_PROTOCOL>
@@ -311,6 +376,7 @@ Before output, perform this audit (silently) and fix anything that fails:
    - Decisions (ADRs) that constrain it
    - Research notes that influenced it
    - Release notes where it shipped
+8. **Maintenance audit**: Verify `INDEX.md` lists are sorted and no "finished" tasks are present in the output.
 </AUDIT_PROTOCOL>
 
 <FINAL_CHECKLIST_BEFORE_OUTPUT>
