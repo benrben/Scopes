@@ -126,7 +126,7 @@ Notes:
 
 ## Docs
 - **Prompts / commands**: `commands/README.md`
-- **Template + audit protocol**: `commands/sync-scopes.md`
+- **Template + audit protocol**: `commands/sync-scopes.md` (canonical). The `/sync-scopes` prompt also mirrors this into `Scopes/Prompts/sync-scopes.md` inside the target repo so downstream commands can reference a stable in-repo standard.
 - **Background / why this works**: `docs/why-scopes.md`
 
 ## Contributing

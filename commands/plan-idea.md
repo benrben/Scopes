@@ -30,6 +30,14 @@ Convert an idea into a blueprint that is:
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
 - Relevant Capability Scopes under `Scopes/Product/**`
 - `Scopes/Prompts/sync-scopes.md` (capability template: traces, evidence, exactly 2 diagrams)
+  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
+
+## Scopes-first Navigation (Mandatory)
+Before designing a plan:
+1. **Locate the Anchor Scope** (or anchor area): start at `Scopes/INDEX.md`, then select the closest existing capability scope under `Scopes/Product/**`.
+2. **Check graph constraints**: review `Scopes/GRAPH.md` for dependencies that affect sequencing (blockers first).
+3. **Plan from the scope contract**: treat the Anchor Scope’s documented rules/traces as the contract. If the scope is missing or weak, your plan must include a first step to repair/extend it with evidence.
+4. **Every deliverable must include scope maintenance**: for each planned behavior, specify how the capability scope will be updated (use cases, traces, evidence, diagrams, and graph edges if applicable).
 
 ## Output Locations (Scopes Root Layout)
 - **Research/context note**: `Scopes/Research/<YYYY-MM-DD>-<idea>-context.md`
@@ -88,6 +96,13 @@ Do the method **silently**; output only the artifacts described below.
 
 ### 2. Implementation Plan
 **File Path**: `Scopes/Work/Planning/<YYYY-MM-DD>-<idea>-plan.md`
+
+## Output Formatting
+When you output files, use file blocks:
+```
+FILE: Scopes/Work/Planning/<YYYY-MM-DD>-<idea>-plan.md
+...content...
+```
 
 **Structure**:
 ```markdown

@@ -105,12 +105,12 @@ Each exercise must reference a specific Capability Scope and make the reader cli
 | 1 | [Scopes/Product/<Area>/<Capability>.md](link) | Follow Trace row 1 end-to-end and summarize the data shape at each hop. |
 | 2 | [Scopes/Product/<Area>/<Capability>.md](link) | Identify 2 edge cases from the Scope and locate their handling in code via evidence links. |
 
-## 3. The Ecosystem
+## 4. The Ecosystem
 - **Database**: We use Postgres. Schema defined in `[schema.prisma](link)`.
 - **Testing**: We use Jest. Run `npm test`.
 - **Developer Guide**: See `[Scopes/DEVELOPER_INFO.md](link)` for full setup.
 
-## 4. Your First Task
+## 5. Your First Task
 *Ready to contribute? Try this:*
 - [ ] Pick a small scope drift and write a task in `Scopes/Work/Tasks/**`
 - [ ] Run the "Dev Loop" agent (`dev-loop`).

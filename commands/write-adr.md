@@ -94,7 +94,7 @@ Accepted / Proposed / Deprecated
 We are currently using `Redux` for state management `[src/store](link)`.
 - **Problem**: Boilerplate is high. Learning curve is steep.
 - **Constraint**: We need to ship the Mobile view by Q3.
-- **Scope Context**: See `[Scopes/Frontend/State.md](link)`.
+- **Scope Context**: See `[Scopes/Product/Frontend/State.md](link)`.
 
 ## Decision
 We will migrate to `Zustand` for new modules. Old modules remain on Redux until Refactor Phase 2.
@@ -109,7 +109,7 @@ We will migrate to `Zustand` for new modules. Old modules remain on Redux until 
 - Team needs to learn new patterns.
 
 ## Affected Scopes
-- [Scopes/Frontend/State.md](link) (Rules updated to allow Zustand).
-- [Scopes/Frontend/Cart.md](link) (Will use new lib - Update Evidence).
-- [GRAPH.md](link) (New dependency `Cart -> Zustand`).
+- [Scopes/Product/Frontend/State.md](link) (Rules updated to allow Zustand).
+- [Scopes/Product/Frontend/Cart.md](link) (Will use new lib - Update Evidence).
+- [Scopes/GRAPH.md](link) (New dependency `Cart -> Zustand`).
 ```

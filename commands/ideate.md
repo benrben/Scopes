@@ -31,6 +31,13 @@ Generate ideas that are:
 - `Scopes/GRAPH.md`
 - The most relevant Capability Scopes under `Scopes/Product/**`
 
+## Scopes-first Navigation (Mandatory)
+Before generating ideas:
+1. **Anchor to existing scopes**: pick 1–3 existing capability scopes under `Scopes/Product/**` as anchors.
+2. **Use graph reality**: read `Scopes/GRAPH.md` to identify integration points and “orphan”/underlinked areas.
+3. **No speculation about current behavior**: if the anchor scope lacks evidence/traces, recommend repairing it (or running `/sync-scopes`) rather than inventing details.
+4. **Every idea must name its scope impact**: which scope file(s) would be created/updated, and what new traces/evidence would exist post-implementation.
+
 ## Output Location (Scopes Root Layout)
 - Idea files MUST be written to `Scopes/Work/Ideas/<YYYY-MM-DD>-<slug>.md`
 
@@ -83,6 +90,13 @@ Generate ideas in 3 buckets:
 
 ### Idea File
 **File Path**: `Scopes/Work/Ideas/<YYYY-MM-DD>-<slug>.md`
+
+## Output Formatting
+When you output files, use file blocks:
+```
+FILE: Scopes/Work/Ideas/<YYYY-MM-DD>-<slug>.md
+...content...
+```
 
 **Structure**:
 ```markdown

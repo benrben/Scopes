@@ -23,6 +23,24 @@ Raw codebases are high-entropy: lots of files, lots of local detail, and not eno
 - **Evidence-required**: meaningful claims link to proof (code/tests/config/schema).
 - **Maintained as part of dev**: the commands in `commands/` treat “update the truth” as part of normal work.
 
+## How a code assistant should navigate (Scopes-first algorithm)
+When working in a repo that uses Scopes, a copilot should **not** start by grepping code. It should route through Scopes:
+
+1. **Map**: open `Scopes/INDEX.md` and identify the relevant capability area.
+2. **Graph**: open `Scopes/GRAPH.md` to see dependencies, upstream/downstream scopes, and likely integration points.
+3. **Anchor Scope**: open the primary capability file under `Scopes/Product/**`.
+4. **Trace → Evidence → Code**:
+   - Read **Where to Start in Code** (fast entrypoints).
+   - Follow **Usage & Flow Traces** end-to-end.
+   - Use **Code Evidence** links to jump into the exact code/tests/config proving each behavior.
+5. **If the scope is missing or drifty**:
+   - Run `/sync-scopes` to generate/update evidence-backed docs, or
+   - Create a small task to repair the scope (add traces/evidence/required diagrams).
+6. **After changes**:
+   - Update the affected `Scopes/Product/**` docs (traces + evidence + diagrams),
+   - Update `Scopes/GRAPH.md` if relationships changed,
+   - Update `Scopes/DEVELOPER_INFO.md` if dev/test commands changed.
+
 ## References
 If you want to go deeper, these are good starting points:
 

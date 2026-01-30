@@ -36,6 +36,13 @@ Answer a research question in a way that (a) is decision-enabling, (b) clearly s
 - Any relevant Capability Scopes under `Scopes/Product/**`
 - Any relevant ADRs under `Scopes/Decisions/ADRs/**`
 
+## Scopes-first Navigation (Mandatory)
+Before browsing or deep-diving into code:
+1. **Confirm Scopes exist**: if `Scopes/INDEX.md` (or `Scopes/Prompts/sync-scopes.md`) is missing, run `/sync-scopes` first.
+2. **Pick impacted capability scopes**: identify the 1–3 primary `Scopes/Product/**` files this question touches.
+3. **Use traces/evidence to ground constraints**: follow **Usage & Flow Traces** + **Code Evidence** links to capture internal constraints before considering external options.
+4. **Write back**: every recommendation must include an explicit list of scope updates (traces/evidence/diagrams/graph edges) needed to keep internal truth current.
+
 ## Output Location (Scopes Root Layout)
 - **Research reports** MUST be written to `Scopes/Research/<YYYY-MM-DD>-<topic-slug>.md`
 - **If the research implies changes**: explicitly list which Capability Scopes (`Scopes/Product/**`) need updates and what to add (traces/diagrams/evidence).
@@ -96,6 +103,13 @@ Do the method **silently**; output only the research report described below.
 
 ### Research Report
 **File Path**: `Scopes/Research/<YYYY-MM-DD>-<topic-slug>.md`
+
+## Output Formatting
+When you output files, use file blocks:
+```
+FILE: Scopes/Research/<YYYY-MM-DD>-<topic-slug>.md
+...content...
+```
 
 **Structure**:
 ```markdown

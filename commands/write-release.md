@@ -32,6 +32,12 @@ Ship release notes that are **true**, **scope-linked**, and **auditable**, while
 - Relevant Capability Scopes under `Scopes/Product/**` that are part of the release
 - Relevant ADRs under `Scopes/Decisions/ADRs/**` (especially for breaking changes)
 
+## Scopes-first Navigation (Mandatory)
+Before writing release notes:
+1. **Start from scope delta, not code delta**: the authoritative “what shipped” is changes represented in `Scopes/Product/**` (and `Scopes/GRAPH.md` for deps).
+2. **Quality gate**: if a change is not reflected in a capability scope with evidence/traces, it is **Undocumented** and must not be claimed as shipped.
+3. **Cross-link**: every bullet must link to its capability scope; breaking changes link ADRs; dependency changes link `Scopes/GRAPH.md`.
+
 ## Output Location (Scopes Root Layout)
 - **Release notes** MUST be written to `Scopes/Releases/v<Version>.md`
 
@@ -86,6 +92,13 @@ Do the method **silently**; output only the release notes file described below.
 
 ### Release Notes
 **File Path**: `Scopes/Releases/v<Version>.md`
+
+## Output Formatting
+When you output files, use file blocks:
+```
+FILE: Scopes/Releases/v<Version>.md
+...content...
+```
 
 **Structure**:
 ```markdown

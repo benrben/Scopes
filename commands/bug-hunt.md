@@ -25,6 +25,14 @@ Ask the user one simple question before doing anything else:
 - `Scopes/DEVELOPER_INFO.md` (verification commands)
 - The most relevant Capability Scopes under `Scopes/Product/**` for the target area (or 3–7 backbone scopes for a general scan)
 - `Scopes/Prompts/sync-scopes.md` (evidence + traces conventions)
+  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
+
+## Scopes-first Navigation (Mandatory)
+Before hunting through code:
+1. **Locate the Anchor Scope**: start at `Scopes/INDEX.md`, then pick the most relevant capability file under `Scopes/Product/**`.
+2. **Check dependencies**: read `Scopes/GRAPH.md` to identify upstream/downstream scopes that may be involved.
+3. **Use traces/evidence as the router**: in the Anchor Scope, follow **Usage & Flow Traces** and **Code Evidence** links into code/tests/config.
+4. **If Scopes are missing/drifty**: treat that as a first-class finding and recommend either running `/sync-scopes` or creating a task to repair the scope (traces/evidence/diagrams).
 
 ## Output Root Rules
 - Bug reports live under `Scopes/Work/Bugs/**`
@@ -116,5 +124,12 @@ Produce:
 ```
 
 ### 2) Optional Task Files
-If requested or clearly beneficial, generate tasks using `Scopes/Prompts/write-tasks.md` conventions.
+If requested or clearly beneficial, generate tasks using the `write-tasks` command conventions (`commands/write-tasks.md`).
+
+## Output Formatting
+When you output files, use file blocks:
+```
+FILE: Scopes/Work/Bugs/<YYYY-MM-DD>-<slug>.md
+...content...
+```
 

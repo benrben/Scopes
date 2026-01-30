@@ -31,6 +31,14 @@ Turn the `Scopes/` documentation into an execution-ready board where:
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
 - The Capability Scopes under `Scopes/Product/**` that are in-scope for this board
 - `Scopes/Prompts/sync-scopes.md` (quality bar: traces, evidence, exactly 2 diagrams)
+  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
+
+## Scopes-first Navigation (Mandatory)
+Before writing the board:
+1. **Build the scope tree from `Scopes/INDEX.md`**: epics map to capability areas; stories map to capability scope files.
+2. **Sequence with `Scopes/GRAPH.md`**: dependencies determine ordering and blockers.
+3. **Measure maturity from the scope file itself**: use traces/evidence/diagrams and `[Unknown]` markers to derive status (no guessing).
+4. **Prefer “close the documentation gap” tasks**: when a scope is missing traces/evidence/diagram requirements, backlog items should explicitly close those gaps.
 
 ## Output Location
 - Board blueprints MUST be written to `Scopes/Work/Planning/<Board-Name>-blueprint.md`
@@ -80,6 +88,13 @@ Do the method **silently**; output only the board blueprint described below.
 
 ### Board Blueprint
 **File Path**: `Scopes/Work/Planning/<Board-Name>-blueprint.md`
+
+## Output Formatting
+When you output files, use file blocks:
+```
+FILE: Scopes/Work/Planning/<Board-Name>-blueprint.md
+...content...
+```
 
 **Structure**:
 ```markdown

@@ -25,6 +25,14 @@ Ask the user one simple question before doing anything else:
 - The relevant Capability Scopes under `Scopes/Product/**`
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
 - `Scopes/Prompts/sync-scopes.md` (audit protocol for traces/evidence/diagrams)
+  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
+
+## Scopes-first Navigation (Mandatory)
+Before writing a refactor plan:
+1. **Treat the Scope as the contract**: identify the primary `Scopes/Product/**` file(s) whose behavior must remain identical.
+2. **Lock invariants using the scope**: snapshot the scope’s Rules/Traces as the refactor invariants (and add characterization tests if coverage is weak).
+3. **Plan for link-rot**: any move/rename must include a dedicated step to update evidence links + trace line numbers across all impacted scopes.
+4. **Graph-aware sequencing**: use `Scopes/GRAPH.md` to identify downstream dependents and plan safer order of operations.
 
 ## Output Location
 - Refactor plans MUST be written to `Scopes/Work/Refactors/<YYYY-MM-DD>-<slug>.md`
@@ -71,6 +79,13 @@ Do the method **silently**; output only the refactor plan described below.
 
 ### Refactor Plan
 **File Path**: `Scopes/Work/Refactors/<YYYY-MM-DD>-<slug>.md`
+
+## Output Formatting
+When you output files, use file blocks:
+```
+FILE: Scopes/Work/Refactors/<YYYY-MM-DD>-<slug>.md
+...content...
+```
 
 **Structure**:
 ```markdown

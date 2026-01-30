@@ -33,6 +33,14 @@ Produce tasks that:
 - `Scopes/DEVELOPER_INFO.md` (check for existing workflows)
 - The relevant Anchor Capability Scope under `Scopes/Product/**`
 - `Scopes/Prompts/sync-scopes.md` (what “good scope maintenance” looks like)
+  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
+
+## Scopes-first Navigation (Mandatory)
+Before writing tasks:
+1. **Pick an Anchor Scope** under `Scopes/Product/**` (or explicitly create a prerequisite task to establish it).
+2. **Use traces/evidence to define “current state”**: tasks must cite observable evidence links, not assumptions.
+3. **Write acceptance criteria in behavior + verification terms**: include the exact command/test/check to run (prefer commands found in `Scopes/DEVELOPER_INFO.md`).
+4. **Always include scope maintenance**: specify exactly which scope sections will be updated (use cases, traces, evidence, diagrams, and graph edges if applicable).
 
 ## Task Anatomy (Diagram)
 ```mermaid
@@ -79,6 +87,13 @@ Do the method **silently**; output only the task file(s) described below.
 
 ### Task File
 **File Path**: `Scopes/Work/Tasks/<YYYY-MM-DD>-<task-slug>.md`
+
+## Output Formatting
+When you output files, use file blocks:
+```
+FILE: Scopes/Work/Tasks/<YYYY-MM-DD>-<task-slug>.md
+...content...
+```
 
 **Structure**:
 ```markdown
