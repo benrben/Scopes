@@ -40,12 +40,47 @@ Ask the user one simple question next:
 - `Scopes/INDEX.md` (find the right scope “home”)
 - `Scopes/GRAPH.md` (dependency edges + impacts)
 - `Scopes/DEVELOPER_INFO.md` (how to run/test in this repo)
+- `Scopes/Work/Standards/WRITE_STYLE.md` (writing + reuse principles to follow)
 - The relevant Capability Scopes under `Scopes/Product/**` (current contract)
 
 ## Output Root Rules
 - Capability documentation updates live under `Scopes/Product/**`
 - Developer guides live in `Scopes/DEVELOPER_INFO.md`
 - Session logs and execution artifacts live under `Scopes/Work/STDD/**`
+- Shared standards live under `Scopes/Work/Standards/**`
+
+## Session Log as Working Memory (Required)
+The Session Log at `Scopes/Work/STDD/**` is the agent’s **working memory** and must be kept current throughout the dev-loop.
+
+### Memory Model
+Maintain two memory layers inside the Session Log:
+
+#### Short-Term Memory (operational; updated frequently)
+- Current active scenario (one behavior only)
+- Current RED focus: test file + exact focused command
+- Last observed signal: failing/passing snippet (1–3 lines)
+- Current hypothesis (clearly labeled as hypothesis)
+- Next micro-step (one tiny edit you will do next)
+
+#### Long-Term Memory (strategic; updated as it changes)
+- Goal + Definition of Done checklist
+- Test List status (plan vs done)
+- Scope constraints discovered (from `Scopes/Product/**`)
+- Decisions made (naming/API/contract choices) + brief rationale
+- Environment/setup blockers discovered during preflight
+- Known drift items that must be documented
+
+### Memory Hygiene Rules
+- Keep memory concise: prefer bullets; avoid long narrative.
+- Distinguish **Observed** vs **Hypothesis** explicitly.
+- Do not record unverified claims as facts (aligns with “No Hallucinations”).
+
+### Parking Lot (Required)
+If you discover important follow-up work that violates “One Behavior per Cycle”, record it in a Parking Lot section in the Session Log instead of doing it immediately.
+Examples:
+- Additional scenarios to test later
+- Non-essential refactors beyond the current cycle
+- Cleanup tasks not required for the current behavior
 
 ## TDD Summary (What “Strict TDD” Means Here)
 TDD starts with **a requirement expressed as a test**, not with production code.
@@ -65,6 +100,10 @@ TDD starts with **a requirement expressed as a test**, not with production code.
 - **After every production edit**: rerun the **same focused command** and show the pass/fail signal (no batching edits).
 - **Before refactor**: tests are green.
 - **After each refactor step**: rerun the same focused command; it must stay green.
+- **After establishing RED**: update Session Log Short-Term Memory with the focused command and failing signal snippet.
+- **After every GREEN edit + rerun**: update Session Log Short-Term Memory with the last command + pass/fail signal (1–3 lines) and the next micro-step.
+- **After each REFACTOR step + rerun**: update Session Log Short-Term Memory with what refactor changed (structure only) and the green signal snippet.
+- **Before moving to the next scenario**: update Long-Term Memory (Test List status, Decisions, Drift, and any new constraints).
 
 ### Prohibited Moves (strict TDD)
 - Do not write or modify production code “to get ahead” of a test.
@@ -127,13 +166,14 @@ For each cycle, present:
 ## RULES & CONSTRAINTS (Non-Negotiable)
 1. **Scopes First**: Read the relevant Scopes before writing a single line of production code.
    - Concretely: identify the Anchor Scope under `Scopes/Product/**`, then follow its **Usage & Flow Traces** and **Code Evidence** links to choose the first code entrypoint to edit.
-2. **Evidence-Based**: Every change must be backed by a reproducible failing→passing signal.
-3. **Micro-steps**: One tiny edit at a time; rerun the focused test after each edit (no batching).
-4. **Loop Integrity**: Continue until the entire Test List is complete (not just one slice).
-5. **Refactor Required**: A cycle is incomplete until refactor has happened and stayed green.
-6. **Scope Fidelity**: Update Scopes using the standard Scope template format (traces, evidence, exactly 2 diagrams).
-7. **No Hallucinations**: Do not reference files, symbols, or outputs you have not observed.
-8. **One Behavior per Cycle**: Each cycle targets one scenario; one focused failing signal → green → refactor → scope update.
+2. **Follow WRITE_STYLE**: Apply `Scopes/Work/Standards/WRITE_STYLE.md` (prefer reuse, avoid duplication, “less code = better work”).
+3. **Evidence-Based**: Every change must be backed by a reproducible failing→passing signal.
+4. **Micro-steps**: One tiny edit at a time; rerun the focused test after each edit (no batching).
+5. **Loop Integrity**: Continue until the entire Test List is complete (not just one slice).
+6. **Refactor Required**: A cycle is incomplete until refactor has happened and stayed green.
+7. **Scope Fidelity**: Update Scopes using the standard Scope template format (traces, evidence, exactly 2 diagrams).
+8. **No Hallucinations**: Do not reference files, symbols, or outputs you have not observed.
+9. **One Behavior per Cycle**: Each cycle targets one scenario; one focused failing signal → green → refactor → scope update.
 
 ## OUTPUT ARTIFACTS
 
@@ -147,13 +187,37 @@ For each cycle, present:
 ## Context Snapshot
 - **Goal**: <User Goal>
 - **Relevant Scopes**: [Link]
+- **Writing Standards**: [Scopes/Work/Standards/WRITE_STYLE.md](link)
 - **Risks**: ...
+
+
+## Working Memory
+
+### Short-Term (Now)
+- **Active Scenario**: ...
+- **Focused Command**: ...
+- **Last Signal (Observed)**: ...
+- **Hypothesis**: ...
+- **Next Micro-step**: ...
+
+### Long-Term (Track)
+- **Definition of Done**:
+  - [ ] ...
+- **Constraints from Scopes**:
+  - ...
+- **Decisions**:
+  - ...
+- **Drift to Document**:
+  - ...
+- **Env/Setup Notes**:
+  - ...
+## Parking Lot
+- [ ] ...
 
 ## Test List (The Plan)
 - [x] Scenario 1: <Description>
 - [ ] Scenario 2: <Description>
 - [ ] Scenario 3: <Description>
-
 ## Execution Log
 
 ### Cycle 1: <Scenario Name>
@@ -163,7 +227,10 @@ For each cycle, present:
   - *Outcome*: Passed.
 - **REFACTOR**: <Description of improvements>
 - **SCOPE UPDATE**: Updated `Scopes/Product/Auth/Login.md` with new trace and diagram.
-
+#### Micro-steps (Edit → Rerun)
+1) Edit: <file> — <1 sentence>
+   - Rerun: <command> → pass/fail (<signal>)
+2) ...
 ### Cycle 2: ...
 ```
 

@@ -38,6 +38,7 @@ Treat `Scopes/` as the single root for all generated artifacts.
   - `Scopes/Work/Refactors/...` (refactor plans)
   - `Scopes/Work/STDD/...` (session logs, TDD cycles)
   - `Scopes/Work/Ideas/...` (idea captures)
+  - `Scopes/Work/Standards/WRITE_STYLE.md` — shared writing style + engineering reuse principles
 - **Research, Releases, Onboarding, Decisions**
   - `Scopes/Research/...` (research reports)
   - `Scopes/Releases/...` (release notes)
@@ -123,6 +124,21 @@ Treat `Scopes/` as the single root for all generated artifacts.
    - Link to source: "Found in `[package.json:L5]`".
    - Do NOT duplicate architecture info here; strict "How-To".
 </DEV_INFO_PROTOCOL>
+
+<WRITE_STYLE_PROTOCOL>
+**Goal**: Create a single shared standard that keeps future Scopes/work artifacts consistent and encourages reuse over duplication.
+
+**File (always required)**: `Scopes/Work/Standards/WRITE_STYLE.md`
+
+**Rules**
+- This file is **normative** (standards for how to write and how to build), not a description of current system behavior.
+- Do not invent claims about the system here. Keep it principle-based.
+- Keep it short and high-signal. Prefer checklists and “default choices”.
+
+**Trigger**
+- In GENERATION MODE: create it.
+- In UPDATE MODE: read it early and update it only when you discover new recurring patterns worth standardizing.
+</WRITE_STYLE_PROTOCOL>
 
 <WORKFLOW>
 Perform this workflow for every scope you create/update:
@@ -299,6 +315,7 @@ What this documentation set is and how to use it.
 ## Meta
 - [Network Graph](./GRAPH.md)
 - [Glossary](./GLOSSARY.md) (optional)
+- [Writing Style & Engineering Reuse Standards](./Work/Standards/WRITE_STYLE.md)
 ```
 
 ---
@@ -353,6 +370,43 @@ flowchart TD
 
 ## Deployment / CI
 - ...
+```
+
+---
+
+### 5) WRITE_STYLE.md TEMPLATE
+**File:** `Scopes/Work/Standards/WRITE_STYLE.md`
+
+```markdown
+# Writing Style & Engineering Reuse Standards
+
+## Why this exists
+Keep documentation and engineering work consistent, reduce duplication, and bias toward reuse.
+
+## Defaults (use these unless you have a reason not to)
+- **Less code = better work**: prefer deletion, reuse, and small changes over new abstractions.
+- **Prefer reuse over reimplementation**: search for existing utilities/services before adding new ones.
+- **Single source of truth**: if logic is shared, centralize it; avoid copy/paste across areas.
+- **Evidence-first in Product scopes**: capability claims belong in `Scopes/Product/**` and must have evidence links.
+
+## How to write Scopes (documentation style)
+- **Make scopes skimmable**: short summary, “Where to Start in Code”, then flows/tables.
+- **Name things consistently**: use the same terms the code uses (types, modules, route names).
+- **Avoid duplication in docs**: link to a parent/related scope instead of repeating the same explanation.
+- **Cross-link aggressively**: when a scope depends on another, link it in “Scope Network”.
+
+## How to write engineering work (reuse & project principles)
+- **Before coding**
+  - Identify existing functions/classes/modules that already solve part of the task.
+  - Prefer extending a tested path over creating a parallel implementation.
+- **While coding**
+  - Keep changes localized and composable; avoid one-off helpers.
+  - Prefer pure functions and small interfaces that are easy to reuse.
+- **When in doubt**
+  - Consolidate shared logic behind one API and update callers.
+
+## Area-specific notes (optional)
+Add short sections only when an Area has stable conventions that are repeatedly used.
 ```
 
 </TEMPLATES>
