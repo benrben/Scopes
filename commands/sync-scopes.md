@@ -38,7 +38,7 @@ Treat `Scopes/` as the single root for all generated artifacts.
   - `Scopes/Work/Refactors/...` (refactor plans)
   - `Scopes/Work/STDD/...` (session logs, TDD cycles)
   - `Scopes/Work/Ideas/...` (idea captures)
-  - `Scopes/Work/Standards/WRITE_STYLE.md` — shared writing style + engineering reuse principles
+  - `Scopes/Work/Standards/WRITE_STYLE.md` — shared code style + engineering standards (reuse, patterns, maintainability)
 - **Research, Releases, Onboarding, Decisions**
   - `Scopes/Research/...` (research reports)
   - `Scopes/Releases/...` (release notes)
@@ -126,7 +126,7 @@ Treat `Scopes/` as the single root for all generated artifacts.
 </DEV_INFO_PROTOCOL>
 
 <WRITE_STYLE_PROTOCOL>
-**Goal**: Create a single shared standard that keeps future Scopes/work artifacts consistent and encourages reuse over duplication.
+**Goal**: Create a single shared standard for **code style + engineering standards** (reuse, patterns, maintainability) used during implementation work.
 
 **File (always required)**: `Scopes/Work/Standards/WRITE_STYLE.md`
 
@@ -315,7 +315,7 @@ What this documentation set is and how to use it.
 ## Meta
 - [Network Graph](./GRAPH.md)
 - [Glossary](./GLOSSARY.md) (optional)
-- [Writing Style & Engineering Reuse Standards](./Work/Standards/WRITE_STYLE.md)
+- [Code Style & Engineering Standards](./Work/Standards/WRITE_STYLE.md)
 ```
 
 ---
@@ -378,32 +378,41 @@ flowchart TD
 **File:** `Scopes/Work/Standards/WRITE_STYLE.md`
 
 ```markdown
-# Writing Style & Engineering Reuse Standards
+# Code Style & Engineering Standards
 
 ## Why this exists
-Keep documentation and engineering work consistent, reduce duplication, and bias toward reuse.
+Keep engineering changes consistent, maintainable, and easy to review. Reduce duplication and bias toward reuse.
 
 ## Defaults (use these unless you have a reason not to)
 - **Less code = better work**: prefer deletion, reuse, and small changes over new abstractions.
 - **Prefer reuse over reimplementation**: search for existing utilities/services before adding new ones.
 - **Single source of truth**: if logic is shared, centralize it; avoid copy/paste across areas.
-- **Evidence-first in Product scopes**: capability claims belong in `Scopes/Product/**` and must have evidence links.
+- **Follow the grain**: adopt existing conventions in the repo (naming, structure, libraries) unless there’s a clear payoff.
 
-## How to write Scopes (documentation style)
-- **Make scopes skimmable**: short summary, “Where to Start in Code”, then flows/tables.
-- **Name things consistently**: use the same terms the code uses (types, modules, route names).
-- **Avoid duplication in docs**: link to a parent/related scope instead of repeating the same explanation.
-- **Cross-link aggressively**: when a scope depends on another, link it in “Scope Network”.
+## Code style (common practice)
+- **Readability first**: optimize for the next engineer reading this in 6 months.
+- **Naming**: use domain terms; avoid abbreviations; booleans read like predicates (`isEnabled`, `hasAccess`).
+- **Functions**: single responsibility; prefer early returns; avoid deep nesting; keep parameters minimal.
+- **Errors**: handle failures explicitly; don’t swallow errors; include actionable context in messages.
+- **Boundaries**: validate inputs at the edges (API/UI/IO boundaries), keep core logic pure where possible.
+- **Comments**: explain “why” and tradeoffs; delete stale comments; prefer self-explanatory code.
+- **Formatting**: let the repo formatter/linter win; don’t introduce bespoke formatting rules.
 
-## How to write engineering work (reuse & project principles)
-- **Before coding**
-  - Identify existing functions/classes/modules that already solve part of the task.
-  - Prefer extending a tested path over creating a parallel implementation.
-- **While coding**
-  - Keep changes localized and composable; avoid one-off helpers.
-  - Prefer pure functions and small interfaces that are easy to reuse.
-- **When in doubt**
-  - Consolidate shared logic behind one API and update callers.
+## Design & patterns (pick intentionally)
+- **Composition over inheritance**: keep building blocks small and swappable.
+- **Functional core, imperative shell**: isolate IO (DB/network/files) from pure business logic.
+- **Adapter at boundaries**: map external shapes (HTTP/DB/vendor) into internal domain models once.
+- **Small interfaces**: depend on minimal contracts; avoid “god” services/modules.
+- **Consistency beats cleverness**: prefer the repo’s established patterns over novelty.
+
+## Testing & change discipline
+- **Make the smallest behavior change** that satisfies the requirement and is backed by tests.
+- **Avoid overspecified tests**: assert outcomes, not internal steps (unless it’s a true contract).
+- **Refactor after green**: remove duplication and clarify names once behavior is proven.
+
+## Scope docs hygiene (minimal)
+- **Evidence-first**: capability claims belong in `Scopes/Product/**` and must have evidence links.
+- **Avoid duplication**: link to related Scopes instead of repeating explanations.
 
 ## Area-specific notes (optional)
 Add short sections only when an Area has stable conventions that are repeatedly used.

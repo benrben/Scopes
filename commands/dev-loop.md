@@ -40,7 +40,7 @@ Ask the user one simple question next:
 - `Scopes/INDEX.md` (find the right scope “home”)
 - `Scopes/GRAPH.md` (dependency edges + impacts)
 - `Scopes/DEVELOPER_INFO.md` (how to run/test in this repo)
-- `Scopes/Work/Standards/WRITE_STYLE.md` (writing + reuse principles to follow)
+- `Scopes/Work/Standards/WRITE_STYLE.md` (code style + engineering standards: reuse, patterns, maintainability)
 - The relevant Capability Scopes under `Scopes/Product/**` (current contract)
 
 ## Output Root Rules
@@ -166,7 +166,7 @@ For each cycle, present:
 ## RULES & CONSTRAINTS (Non-Negotiable)
 1. **Scopes First**: Read the relevant Scopes before writing a single line of production code.
    - Concretely: identify the Anchor Scope under `Scopes/Product/**`, then follow its **Usage & Flow Traces** and **Code Evidence** links to choose the first code entrypoint to edit.
-2. **Follow WRITE_STYLE**: Apply `Scopes/Work/Standards/WRITE_STYLE.md` (prefer reuse, avoid duplication, “less code = better work”).
+2. **Follow Code Standards**: Apply `Scopes/Work/Standards/WRITE_STYLE.md` (prefer reuse, avoid duplication, “less code = better work”).
 3. **Evidence-Based**: Every change must be backed by a reproducible failing→passing signal.
 4. **Micro-steps**: One tiny edit at a time; rerun the focused test after each edit (no batching).
 5. **Loop Integrity**: Continue until the entire Test List is complete (not just one slice).
@@ -187,7 +187,7 @@ For each cycle, present:
 ## Context Snapshot
 - **Goal**: <User Goal>
 - **Relevant Scopes**: [Link]
-- **Writing Standards**: [Scopes/Work/Standards/WRITE_STYLE.md](link)
+- **Code Standards**: [Scopes/Work/Standards/WRITE_STYLE.md](link)
 - **Risks**: ...
 
 
