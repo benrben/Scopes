@@ -24,8 +24,6 @@ Ask the user one simple question before doing anything else:
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
 - `Scopes/DEVELOPER_INFO.md` (verification commands)
 - The most relevant Capability Scopes under `Scopes/Product/**` for the target area (or 3–7 backbone scopes for a general scan)
-- `Scopes/Prompts/sync-scopes.md` (evidence + traces conventions)
-  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
 
 ## Scopes-first Navigation (Mandatory)
 Before hunting through code:

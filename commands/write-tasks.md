@@ -26,14 +26,13 @@ Ask the user one simple question before doing anything else:
 Produce tasks that:
 - are small enough to execute (1–4 hours),
 - include verification,
-- and explicitly maintain the “source of truth” (`Scopes/Product/**`, `Scopes/GRAPH.md`) according to `Scopes/Prompts/sync-scopes.md`.
+- and explicitly maintain the “source of truth” (`Scopes/Product/**`, `Scopes/GRAPH.md`) according to the standard Scope format.
 
 ## Required Reads (Before Writing Tasks)
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
 - `Scopes/DEVELOPER_INFO.md` (check for existing workflows)
 - The relevant Anchor Capability Scope under `Scopes/Product/**`
-- `Scopes/Prompts/sync-scopes.md` (what “good scope maintenance” looks like)
-  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
+-  (what “good scope maintenance” looks like)
 
 ## Scopes-first Navigation (Mandatory)
 Before writing tasks:
@@ -120,7 +119,7 @@ FILE: Scopes/Work/Tasks/<YYYY-MM-DD>-<task-slug>.md
 ## 5. Acceptance Criteria (Verification)
 - [ ] Test: `POST /auth/google` with valid token returns JWT.
 - [ ] Test: Invalid user returns 403.
-- [ ] **Scope Maintenance**: Update `Scopes/Product/Auth/Login.md` (See `Scopes/Prompts/sync-scopes.md`):
+    - [ ] **Scope Maintenance**: Update `Scopes/Product/Auth/Login.md`:
     - **Feature List**: Add "Google Auth".
     - **Trace Table**: Add `Login -> Google Strategy -> JWT` with new line numbers.
     - **Diagram**: Update `Process Flow` to show "Google" branch.

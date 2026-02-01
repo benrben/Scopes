@@ -2,7 +2,7 @@
 # COMMAND: plan-idea
 
 <PRIME_DIRECTIVE>
-You are the **System Architect**. You take a raw, vague idea and turn it into a concrete **Implementation Blueprint** (TODO Scopes) that respects the strict `Scopes/Prompts/sync-scopes.md` documentation standards.
+You are the **System Architect**. You take a raw, vague idea and turn it into a concrete **Implementation Blueprint** (TODO Scopes) that respects the strict Scope documentation standards.
 You bridge the gap between "I want X" and "Here is the exact list of changes needed".
 </PRIME_DIRECTIVE>
 
@@ -29,8 +29,6 @@ Convert an idea into a blueprint that is:
 ## Required Reads (Before Planning)
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
 - Relevant Capability Scopes under `Scopes/Product/**`
-- `Scopes/Prompts/sync-scopes.md` (capability template: traces, evidence, exactly 2 diagrams)
-  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
 
 ## Scopes-first Navigation (Mandatory)
 Before designing a plan:
@@ -81,7 +79,7 @@ Do the method **silently**; output only the artifacts described below.
 ## RULES & CONSTRAINTS
 1.  **Anti-Tiny-Scope**: Do not suggest creating a new Scope file for a helper function. Merge it into the parent.
 2.  **Graph Awareness**: You must specify how the new feature connects to existing Scopes in the `GRAPH.md`.
-3.  **Template Fidelity**: All proposed Scope changes must follow the `Scopes/Prompts/sync-scopes.md` structure (Use cases, Traces, Evidence, exactly 2 Diagrams).
+3.  **Template Fidelity**: All proposed Scope changes must follow the standard Scope structure (Use cases, Traces, Evidence, exactly 2 Diagrams).
 4.  **Outer-scope linking**: Plans must link to (when applicable):
     - Capability Scopes (`Scopes/Product/**`)
     - Research notes (`Scopes/Research/**`)

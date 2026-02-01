@@ -30,8 +30,6 @@ Turn the `Scopes/` documentation into an execution-ready board where:
 ## Required Reads (Before Planning)
 - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
 - The Capability Scopes under `Scopes/Product/**` that are in-scope for this board
-- `Scopes/Prompts/sync-scopes.md` (quality bar: traces, evidence, exactly 2 diagrams)
-  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap Scopes and mirror the standard prompt into `Scopes/Prompts/`.
 
 ## Scopes-first Navigation (Mandatory)
 Before writing the board:
@@ -82,7 +80,7 @@ Do the method **silently**; output only the board blueprint described below.
 ## RULES & CONSTRAINTS
 1.  **No Orphan Tasks**: Every card must belong to an Epic (Scope Parent).
 2.  **Status Derived from Evidence**: Don't guess status. If tests are missing, it's "In Progress" or "To Do".
-3.  **Scope Alignment**: Plan actions that bring the Scope closer to the `Scopes/Prompts/sync-scopes.md` gold standard.
+3.  **Scope Alignment**: Plan actions that bring the Scope closer to the standard Scope quality bar (traces, evidence, exactly 2 diagrams).
 
 ## OUTPUT ARTIFACTS
 

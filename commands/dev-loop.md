@@ -41,8 +41,6 @@ Ask the user one simple question next:
 - `Scopes/GRAPH.md` (dependency edges + impacts)
 - `Scopes/DEVELOPER_INFO.md` (how to run/test in this repo)
 - The relevant Capability Scopes under `Scopes/Product/**` (current contract)
-- `Scopes/Prompts/sync-scopes.md` (scope template + update/audit protocol)
-  - If `Scopes/Prompts/sync-scopes.md` does not exist yet, run `/sync-scopes` once to bootstrap/mirror prompts into `Scopes/Prompts/`.
 
 ## Output Root Rules
 - Capability documentation updates live under `Scopes/Product/**`
@@ -110,7 +108,7 @@ For each scenario in your test list:
    - *Rule*: Refactoring is not optional. If GREEN introduced duplication, unclear naming, or awkward structure, clean it up now.
    - *Required*: Refactor in tiny increments and rerun the focused test command **after each refactor step** to ensure it stays green.
 4. **SCOPE_MAINTENANCE (mandatory every cycle)**:
-   - Update the relevant `Scopes/Product/**` file(s) using the format in `Scopes/Prompts/sync-scopes.md`.
+   - Update the relevant `Scopes/Product/**` file(s) using the standard Scope template format.
    - Update “Usage & Flow Traces” with correct file/line references.
    - Update “Evidence” to point at changed/added code.
    - If names changed (functions/files), update Scopes immediately.
@@ -133,7 +131,7 @@ For each cycle, present:
 3. **Micro-steps**: One tiny edit at a time; rerun the focused test after each edit (no batching).
 4. **Loop Integrity**: Continue until the entire Test List is complete (not just one slice).
 5. **Refactor Required**: A cycle is incomplete until refactor has happened and stayed green.
-6. **Scope Fidelity**: Update Scopes using the exact template requirements in `Scopes/Prompts/sync-scopes.md`.
+6. **Scope Fidelity**: Update Scopes using the standard Scope template format (traces, evidence, exactly 2 diagrams).
 7. **No Hallucinations**: Do not reference files, symbols, or outputs you have not observed.
 8. **One Behavior per Cycle**: Each cycle targets one scenario; one focused failing signal → green → refactor → scope update.
 
@@ -170,7 +168,7 @@ For each cycle, present:
 ```
 
 ### 2. Updated Scope Examples (Reference)
-When updating a Scope, ensure you follow the **Full Template** from `Scopes/Prompts/sync-scopes.md`:
+When updating a Scope, ensure you follow the **Full Template**:
 - **Diagrams**: Update the Meridian flowcharts if logic changed.
 - **Traces**: Add a new row to the Trace table with `[path:Lx-Ly](path#Lx-Ly)`.
 - **Evidence**: Update the Evidence table.
@@ -192,5 +190,5 @@ When updating a Scope, ensure you follow the **Full Template** from `Scopes/Prom
 - [ ] Tests were re-run after each tiny GREEN edit (no batched changes)
 - [ ] A refactor pass was performed (not skipped)
 - [ ] Tests were re-run after each refactor step and stayed green
-- [ ] All affected Capability Scopes in `Scopes/Product/**` updated (traces + evidence + diagrams as required by `Scopes/Prompts/sync-scopes.md`)
+- [ ] All affected Capability Scopes in `Scopes/Product/**` updated (traces + evidence + diagrams)
 - [ ] Any new dependencies reflected in `Scopes/GRAPH.md` with evidence

@@ -38,7 +38,7 @@ Answer a research question in a way that (a) is decision-enabling, (b) clearly s
 
 ## Scopes-first Navigation (Mandatory)
 Before browsing or deep-diving into code:
-1. **Confirm Scopes exist**: if `Scopes/INDEX.md` (or `Scopes/Prompts/sync-scopes.md`) is missing, run `/sync-scopes` first.
+1. **Confirm Scopes exist**: if `Scopes/INDEX.md` is missing, run `/sync-scopes` first.
 2. **Pick impacted capability scopes**: identify the 1–3 primary `Scopes/Product/**` files this question touches.
 3. **Use traces/evidence to ground constraints**: follow **Usage & Flow Traces** + **Code Evidence** links to capture internal constraints before considering external options.
 4. **Write back**: every recommendation must include an explicit list of scope updates (traces/evidence/diagrams/graph edges) needed to keep internal truth current.
@@ -93,7 +93,7 @@ Do the method **silently**; output only the research report described below.
     - **Internal claims** must cite code as `[path:Lx-Ly](path#Lx-Ly)` (real files, real lines).
     - **External claims** must cite source URLs.
 3.  **No Ambiguity**: If you don't know, say `[Unknown]`. Do not guess.
-4.  **Scope Alignment**: Use the vocabulary and structure defined in `Scopes/Prompts/sync-scopes.md` when proposing updates.
+4.  **Scope Alignment**: Use the standard Scope vocabulary and structure when proposing updates.
 5.  **Cross-linking to “outer scopes”** (MANDATORY): Every research report must include links to:
     - The primary Capability Scope(s) it impacts under `Scopes/Product/**`
     - Any relevant ADR(s) under `Scopes/Decisions/ADRs/**` (existing or proposed)

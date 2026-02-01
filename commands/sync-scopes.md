@@ -299,7 +299,6 @@ What this documentation set is and how to use it.
 ## Meta
 - [Network Graph](./GRAPH.md)
 - [Glossary](./GLOSSARY.md) (optional)
-- [Prompts](./Prompts/) (how to generate and maintain Scopes)
 ```
 
 ---
@@ -378,10 +377,6 @@ DELETE FILE: Scopes/path/to/file.md
 MOVE FILE: Scopes/old/path.md -> Scopes/new/path.md
 ```
 
-**Prompt mirroring (required)**
-Always keep a canonical copy of this prompt available to downstream commands by writing:
-`FILE: Scopes/Prompts/sync-scopes.md`
-with the same contents/standards as this document (it may be a verbatim copy or a stable mirror).
 </OUTPUT_PROTOCOL>
 
 <AUDIT_PROTOCOL>
