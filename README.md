@@ -65,9 +65,9 @@ It will ask:
 - whether you want **Commands**, **Skills**, or **Both**
 - which IDE targets you want (multi-select), e.g. Cursor (`.cursor/...`), Claude (`.claude/...`), Antigravity (`.agent/...`)
 
-It will also install updater scripts under `./scripts/scopes/` for future refreshes:
-- `./scripts/scopes/sync-scopes-commands.sh` (commands)
-- `./scripts/scopes/update-skill.sh` (skills)
+It will also install updater scripts under `./scripts/` for future refreshes:
+- `./scripts/sync-scopes-commands.sh` (commands)
+- `./scripts/update-skill.sh` (skills)
 
 ### Option B: Commands-only (Cursor)
 
@@ -94,12 +94,13 @@ Optional (alternative): keep a sync script in your repo that **syncs the command
 ```bash
 # copy this file into your repo once:
 mkdir -p ./scripts/scopes
-cp /path/to/ScopesCommands/scripts/sync-scopes-commands.sh ./scripts/scopes/sync-scopes-commands.sh
-chmod +x ./scripts/scopes/sync-scopes-commands.sh
+mkdir -p ./scripts
+cp /path/to/ScopesCommands/scripts/sync-scopes-commands.sh ./scripts/sync-scopes-commands.sh
+chmod +x ./scripts/sync-scopes-commands.sh
 
 # then run anytime you want to refresh existing commands:
-bash ./scripts/scopes/sync-scopes-commands.sh --dry-run
-bash ./scripts/scopes/sync-scopes-commands.sh
+bash ./scripts/sync-scopes-commands.sh --dry-run
+bash ./scripts/sync-scopes-commands.sh
 ```
 
 3) Restart Cursor (or reload window), then type `/` and pick a command.
@@ -112,11 +113,12 @@ Create your skills folder, copy `update-skill.sh` into your repo once, then run 
 mkdir -p .cursor/skills
 
 mkdir -p ./scripts/scopes
-cp /path/to/ScopesCommands/scripts/update-skill.sh ./scripts/scopes/update-skill.sh
-chmod +x ./scripts/scopes/update-skill.sh
+mkdir -p ./scripts
+cp /path/to/ScopesCommands/scripts/update-skill.sh ./scripts/update-skill.sh
+chmod +x ./scripts/update-skill.sh
 
-bash ./scripts/scopes/update-skill.sh --dry-run
-bash ./scripts/scopes/update-skill.sh
+bash ./scripts/update-skill.sh --dry-run
+bash ./scripts/update-skill.sh
 ```
 
 Once installed, you’ll also get a bundled skill called **`update-skills`** (installed under `.cursor/skills/update-skills/`) which includes a helper script for refreshing Skills only.

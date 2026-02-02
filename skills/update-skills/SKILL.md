@@ -38,8 +38,6 @@ bash .agent/skills/update-skills/scripts/update-skills.sh
 
 ## Notes
 
-- This skill is intentionally a thin wrapper around the project’s Skills updater script:
-  - `./scripts/scopes/update-skill.sh` (preferred)
-  - `./update-skill.sh` (older installs)
-- If your project doesn’t have those updater scripts yet, re-run the interactive installer (`./install-scopes.sh`) and choose **Skills** (or **Both**).
+- This skill is self-contained. It updates skills by cloning the ScopesCommands repo and regenerating skills from `commands/*.md`, plus syncing any bundled skill folders under `skills/`.
+- If your project doesn’t have the `update-skills` skill yet, re-run the interactive installer (`./install-scopes.sh`) and choose **Skills** (or **Both**).
 

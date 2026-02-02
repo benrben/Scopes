@@ -12,9 +12,9 @@ Interactive installer for Scopes workflows.
 
 - Lets the user install Commands and/or Skills.
 - Supports multiple IDE targets (multi-select).
-- Stores updater scripts under ./scripts/scopes/ (so only install-scopes.sh is user-facing):
-  - Commands updater: ./scripts/scopes/sync-scopes-commands.sh
-  - Skills updater:   ./scripts/scopes/update-skill.sh (and ./scripts/scopes/update-skill)
+- Stores updater scripts under ./scripts/ (so only install-scopes.sh is user-facing):
+  - Commands updater: ./scripts/sync-scopes-commands.sh
+  - Skills updater:   ./scripts/update-skill.sh (and ./scripts/update-skill)
 
 Defaults:
   repo: https://github.com/benrben/Scopes.git
@@ -175,7 +175,7 @@ ensure_updaters_present() {
       git -c advice.detachedHead=false clone --depth 1 --branch "$REF" -- "$REPO_URL" "$tmp_dir/repo" >/dev/null 2>&1
     fi
 
-    scripts_root="./scripts/scopes"
+    scripts_root="./scripts"
 
     if [[ $DRY_RUN -eq 1 ]]; then
       if [[ "$need_commands" == "1" ]]; then
@@ -193,6 +193,13 @@ ensure_updaters_present() {
     if [[ "$need_commands" == "1" ]]; then
       src_sync="$tmp_dir/repo/scripts/sync-scopes-commands.sh"
       if [[ ! -f "$src_sync" ]]; then
+        # Back-compat: older repos used different names/locations.
+        src_sync="$tmp_dir/repo/scripts/sync-cursor-commands.sh"
+      fi
+      if [[ ! -f "$src_sync" ]]; then
+        src_sync="$tmp_dir/repo/sync-cursor-commands.sh"
+      fi
+      if [[ ! -f "$src_sync" ]]; then
         say_err ""
         say_err "Error: selected Commands, but the repo/ref you are installing from does not include sync-scopes-commands.sh."
         say_err "  repo: $REPO_URL"
@@ -200,6 +207,8 @@ ensure_updaters_present() {
         say_err ""
         say_err "Expected one of:"
         say_err "  - scripts/sync-scopes-commands.sh"
+        say_err "  - scripts/sync-cursor-commands.sh (older name)"
+        say_err "  - sync-cursor-commands.sh (older location)"
         exit 1
       fi
 
@@ -310,9 +319,9 @@ ensure_updaters_present "$NEED_COMMANDS" "$NEED_SKILLS"
 if [[ -n "$CMD_TARGETS" ]]; then
   for d in $CMD_TARGETS; do
     if [[ $DRY_RUN -eq 1 ]]; then
-      say "Would run: bash ./scripts/scopes/sync-scopes-commands.sh --repo \"$REPO_URL\" --ref \"$REF\" --target-dir \"$d\""
+      say "Would run: bash ./scripts/sync-scopes-commands.sh --repo \"$REPO_URL\" --ref \"$REF\" --target-dir \"$d\""
     else
-      bash ./scripts/scopes/sync-scopes-commands.sh --repo "$REPO_URL" --ref "$REF" --target-dir "$d"
+      bash ./scripts/sync-scopes-commands.sh --repo "$REPO_URL" --ref "$REF" --target-dir "$d"
     fi
   done
 fi
@@ -320,9 +329,9 @@ fi
 if [[ -n "$SKILL_TARGETS" ]]; then
   for d in $SKILL_TARGETS; do
     if [[ $DRY_RUN -eq 1 ]]; then
-      say "Would run: bash ./scripts/scopes/update-skill.sh --repo \"$REPO_URL\" --ref \"$REF\" --target-dir \"$d\""
+      say "Would run: bash ./scripts/update-skill.sh --repo \"$REPO_URL\" --ref \"$REF\" --target-dir \"$d\""
     else
-      bash ./scripts/scopes/update-skill.sh --repo "$REPO_URL" --ref "$REF" --target-dir "$d"
+      bash ./scripts/update-skill.sh --repo "$REPO_URL" --ref "$REF" --target-dir "$d"
     fi
   done
 fi
