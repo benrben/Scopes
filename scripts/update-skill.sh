@@ -181,6 +181,8 @@ while IFS= read -r -d '' src_file; do
     printf "%s\n" "disable-model-invocation: true"
     printf "%s\n" "---"
     printf "\n"
+    printf "%s\n" "## Instructions"
+    printf "\n"
     cat "$src_file"
   } >"$tmp_skill"
 
