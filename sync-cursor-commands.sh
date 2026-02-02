@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+say() { printf '%s\n' "$*" || true; }
+say_err() { printf '%s\n' "$*" >&2 || true; }
+
 usage() {
   cat <<'EOF'
 sync-cursor-commands.sh
 
-Download Cursor command prompt files from a git repo and overwrite ONLY
-the command files that already exist in your project's .cursor/commands/.
+Download Cursor command prompt files from a git repo and sync them into
+your project's .cursor/commands/ (overwrite existing + add missing).
 
 Defaults:
   repo:   https://github.com/benrben/Scopes.git
@@ -60,92 +63,101 @@ while [[ $# -gt 0 ]]; do
       usage; exit 0
       ;;
     *)
-      echo "Unknown argument: $1" >&2
-      echo "Run with --help for usage." >&2
+      say_err "Unknown argument: $1"
+      say_err "Run with --help for usage."
       exit 2
       ;;
   esac
 done
 
 if [[ -z "$REPO_URL" || -z "$REF" || -z "$TARGET_DIR" || -z "$SOURCE_SUBDIR" ]]; then
-  echo "Error: missing required configuration (repo/ref/target/source)." >&2
-  echo "Run with --help for usage." >&2
+  say_err "Error: missing required configuration (repo/ref/target/source)."
+  say_err "Run with --help for usage."
   exit 2
 fi
 
 if ! command -v git >/dev/null 2>&1; then
-  echo "Error: git is required but was not found on PATH." >&2
+  say_err "Error: git is required but was not found on PATH."
   exit 1
 fi
 
-if [[ ! -d "$TARGET_DIR" ]]; then
-  echo "Error: target directory does not exist: $TARGET_DIR" >&2
-  echo "Nothing to update (this script only overwrites existing files)." >&2
-  exit 1
-fi
+mkdir -p "$TARGET_DIR"
 
 TMP_DIR="$(mktemp -d)"
 cleanup() { rm -rf "$TMP_DIR"; }
 trap cleanup EXIT
 
 if [[ $VERBOSE -eq 1 ]]; then
-  echo "Cloning $REPO_URL (ref: $REF)..." >&2
+  say_err "Cloning $REPO_URL (ref: $REF)..."
+fi
+
+if ! git ls-remote --exit-code "$REPO_URL" >/dev/null 2>&1; then
+  # Back-compat: older script versions used ScopesCommands.git (doesn't exist).
+  if [[ "$REPO_URL" == "https://github.com/benrben/ScopesCommands.git" ]]; then
+    REPO_URL="https://github.com/benrben/Scopes.git"
+  fi
+
+  if ! git ls-remote --exit-code "$REPO_URL" >/dev/null 2>&1; then
+    say_err "Error: cannot access repo (bad URL, no network, or auth required)."
+    say_err "  repo: $REPO_URL"
+    exit 1
+  fi
+fi
+
+if ! git ls-remote --exit-code --heads --tags "$REPO_URL" "$REF" >/dev/null 2>&1; then
+  say_err "Error: ref not found in repo (branch/tag)."
+  say_err "  repo: $REPO_URL"
+  say_err "  ref:  $REF"
+  exit 1
 fi
 
 if [[ $VERBOSE -eq 1 ]]; then
   git -c advice.detachedHead=false clone --depth 1 --branch "$REF" -- "$REPO_URL" "$TMP_DIR/repo"
 else
   if ! git -c advice.detachedHead=false clone --depth 1 --branch "$REF" -- "$REPO_URL" "$TMP_DIR/repo" >/dev/null 2>&1; then
-    echo "Error: failed to clone repo." >&2
-    echo "  repo: $REPO_URL" >&2
-    echo "  ref:  $REF" >&2
+    say_err "Error: failed to clone repo."
+    say_err "  repo: $REPO_URL"
+    say_err "  ref:  $REF"
     exit 1
   fi
 fi
 
 SRC_ROOT="$TMP_DIR/repo/$SOURCE_SUBDIR"
 if [[ ! -d "$SRC_ROOT" ]]; then
-  echo "Error: source subdir not found in repo: $SOURCE_SUBDIR" >&2
+  say_err "Error: source subdir not found in repo: $SOURCE_SUBDIR"
   exit 1
 fi
 
+ADDED=0
 UPDATED=0
-SKIPPED_NO_UPSTREAM=0
 
-while IFS= read -r -d '' target_file; do
-  rel="${target_file#"$TARGET_DIR"/}"
-  src_file="$SRC_ROOT/$rel"
+while IFS= read -r -d '' src_file; do
+  rel="${src_file#"$SRC_ROOT"/}"
+  dest_file="$TARGET_DIR/$rel"
 
-  if [[ -f "$src_file" ]]; then
+  mkdir -p "$(dirname "$dest_file")"
+
+  if [[ -f "$dest_file" ]]; then
     if [[ $DRY_RUN -eq 1 ]]; then
-      echo "Would update: $TARGET_DIR/$rel"
+      say "Would update: $dest_file"
     else
-      cp "$src_file" "$target_file"
-      echo "Updated: $TARGET_DIR/$rel"
+      cp "$src_file" "$dest_file"
+      say "Updated: $dest_file"
     fi
     UPDATED=$((UPDATED + 1))
   else
-    SKIPPED_NO_UPSTREAM=$((SKIPPED_NO_UPSTREAM + 1))
-    if [[ $VERBOSE -eq 1 ]]; then
-      echo "No upstream match; skipped: $TARGET_DIR/$rel" >&2
+    if [[ $DRY_RUN -eq 1 ]]; then
+      say "Would add: $dest_file"
+    else
+      cp "$src_file" "$dest_file"
+      say "Added: $dest_file"
     fi
+    ADDED=$((ADDED + 1))
   fi
-done < <(find "$TARGET_DIR" -type f -name '*.md' -print0)
+done < <(find "$SRC_ROOT" -type f -name '*.md' -print0)
 
 if [[ $DRY_RUN -eq 1 ]]; then
-  if [[ $UPDATED -eq 0 ]]; then
-    echo "Done. No matching existing command files would be updated."
-  else
-    echo "Done. Would update $UPDATED file(s)."
-  fi
+  say "Done. Would add $ADDED file(s), would update $UPDATED file(s)."
 else
-  if [[ $UPDATED -eq 0 ]]; then
-    echo "Done. No matching existing command files were updated."
-  else
-    echo "Done. Updated $UPDATED file(s)."
-  fi
-fi
-
-if [[ $VERBOSE -eq 1 && $SKIPPED_NO_UPSTREAM -gt 0 ]]; then
-  echo "Skipped $SKIPPED_NO_UPSTREAM file(s) with no upstream match." >&2
+  say "Done. Added $ADDED file(s), updated $UPDATED file(s)."
 fi
