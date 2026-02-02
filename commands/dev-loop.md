@@ -12,6 +12,7 @@ If the repo has tests, run them first to understand the current status.
 - **Do not** change any code during preflight.
 - **How**:
   - Read `Scopes/DEVELOPER_INFO.md` to find the canonical test command(s).
+  - Read `Scopes/Onboarding/TECH_STACK.md` to understand the repo’s runtimes/test tooling stack (helps pick the right suite/engine and avoid guessing).
   - Identify **all distinct test suites** mentioned (e.g., frontend, backend, packages, services) and the **runner/engine** each uses.
   - If multiple suites and/or different test engines exist, run the canonical command for **each suite** (don’t assume one command covers all).
   - Prefer the **fastest canonical** command per suite (unit/smoke) *if and only if* it is documented as the suite’s baseline; otherwise run the default documented command.
@@ -35,13 +36,18 @@ Ask the user one simple question next:
   - Session log: `Scopes/Work/STDD/**`
   - Scope maintenance: `Scopes/Product/**` (and `Scopes/GRAPH.md` if dependencies change)
   - Developer Info: `Scopes/DEVELOPER_INFO.md` (if run/test scripts or config changes)
+  - Tech Stack inventory: `Scopes/Onboarding/TECH_STACK.md` (if dependencies/tooling change, or if you relied on new external docs to understand core libs/tools)
 
 ## Required Reads (Before Writing Code)
 - `Scopes/INDEX.md` (find the right scope “home”)
 - `Scopes/GRAPH.md` (dependency edges + impacts)
 - `Scopes/DEVELOPER_INFO.md` (how to run/test in this repo)
+- `Scopes/Onboarding/TECH_STACK.md` (what we use + official docs links; use this to avoid mismatched assumptions)
 - `Scopes/Work/Standards/WRITE_STYLE.md` (code style + engineering standards: reuse, patterns, maintainability)
 - The relevant Capability Scopes under `Scopes/Product/**` (current contract)
+- Any relevant ADRs under `Scopes/Decisions/ADRs/**` (only if referenced/needed; “why” must be evidenced)
+
+If `Scopes/Onboarding/TECH_STACK.md` is missing, treat it as drift and create it early (evidence-backed) before making tool/framework assumptions.
 
 ## Output Root Rules
 - Capability documentation updates live under `Scopes/Product/**`
@@ -150,9 +156,11 @@ For each scenario in your test list:
    - Update the relevant `Scopes/Product/**` file(s) using the standard Scope template format.
    - Update “Usage & Flow Traces” with correct file/line references.
    - Update “Evidence” to point at changed/added code.
+   - Ensure the Scope’s “Tech Stack & Skills” stays accurate (what we use + how, plus docs links you relied on).
    - If names changed (functions/files), update Scopes immediately.
    - If dependencies changed, update `Scopes/GRAPH.md`.
    - If build/test/run commands changed, update `Scopes/DEVELOPER_INFO.md`.
+   - If dependencies/tooling changed, update `Scopes/Onboarding/TECH_STACK.md` (with evidence + docs links).
 
 ### 4) DELIVER (Visible; required per cycle)
 For each cycle, present:
@@ -187,6 +195,7 @@ For each cycle, present:
 ## Context Snapshot
 - **Goal**: <User Goal>
 - **Relevant Scopes**: [Link]
+- **Tech Stack**: [Scopes/Onboarding/TECH_STACK.md](link)
 - **Code Standards**: [Scopes/Work/Standards/WRITE_STYLE.md](link)
 - **Risks**: ...
 
@@ -259,3 +268,4 @@ When updating a Scope, ensure you follow the **Full Template**:
 - [ ] Tests were re-run after each refactor step and stayed green
 - [ ] All affected Capability Scopes in `Scopes/Product/**` updated (traces + evidence + diagrams)
 - [ ] Any new dependencies reflected in `Scopes/GRAPH.md` with evidence
+- [ ] `Scopes/Onboarding/TECH_STACK.md` updated if dependencies/tooling/docs changed (evidence + docs links)

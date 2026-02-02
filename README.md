@@ -95,6 +95,7 @@ These are the commands in `commands/`:
 | Command | File | What it does |
 |---|---|---|
 | `/dev-loop` | `commands/dev-loop.md` | Implement a feature/bug via strict TDD and update Scopes as you go |
+| `/develop` | `commands/develop.md` | Implement a feature/bug via a verify-as-you-go loop (no strict TDD) and update Scopes as you go |
 | `/bug-hunt` | `commands/bug-hunt.md` | Find bugs/anti-patterns with evidence; output a bug report (and optional tasks) |
 | `/write-tasks` | `commands/write-tasks.md` | Turn intent/plans/research/bugs into 1–4 hour engineer-ready tasks |
 | `/plan-idea` | `commands/plan-idea.md` | Turn an idea into a sequenced plan (and create/reuse research if needed) |
