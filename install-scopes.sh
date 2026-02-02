@@ -310,3 +310,7 @@ fi
 
 say "Done."
 
+if [[ -n "$SKILL_TARGETS" ]] && [[ "$SKILL_TARGETS" == *".cursor/skills"* ]]; then
+  say ""
+  say "In Cursor: skills are under .cursor/skills only. If the editor opens .claude/skills/... by mistake, close that tab—use .cursor/skills/... instead."
+fi
