@@ -93,7 +93,7 @@ Optional (alternative): keep a sync script in your repo that **syncs the command
 
 ```bash
 # copy this file into your repo once:
-cp /path/to/ScopesCommands/sync-cursor-commands.sh ./sync-cursor-commands.sh
+cp /path/to/ScopesCommands/scripts/sync-cursor-commands.sh ./sync-cursor-commands.sh
 chmod +x ./sync-cursor-commands.sh
 
 # then run anytime you want to refresh existing commands:
@@ -110,12 +110,14 @@ Create your skills folder, copy `update-skill.sh` into your repo once, then run 
 ```bash
 mkdir -p .cursor/skills
 
-cp /path/to/ScopesCommands/update-skill.sh ./update-skill.sh
+cp /path/to/ScopesCommands/scripts/update-skill.sh ./update-skill.sh
 chmod +x ./update-skill.sh
 
 bash ./update-skill.sh --dry-run
 bash ./update-skill.sh
 ```
+
+Once installed, you’ll also get a bundled skill called **`update-skills`** (installed under `.cursor/skills/update-skills/`) which includes a helper script for refreshing Skills only.
 
 ## Demo
 

@@ -133,6 +133,10 @@ UPDATED=0
 
 while IFS= read -r -d '' src_file; do
   rel="${src_file#"$SRC_ROOT"/}"
+  # Docs-only file (not a slash command).
+  if [[ "$rel" == "README.md" ]]; then
+    continue
+  fi
   dest_file="$TARGET_DIR/$rel"
 
   mkdir -p "$(dirname "$dest_file")"
@@ -161,3 +165,4 @@ if [[ $DRY_RUN -eq 1 ]]; then
 else
   say "Done. Added $ADDED file(s), updated $UPDATED file(s)."
 fi
+

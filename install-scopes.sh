@@ -14,7 +14,7 @@ Interactive installer for Scopes workflows.
 - Supports multiple IDE targets (multi-select).
 - Drops the chosen updater scripts into the project root so future updates are easy:
   - Commands: ./sync-cursor-commands.sh
-  - Skills:   ./update-skill.sh
+  - Skills:   ./update-skill (or ./update-skill.sh)
 
 Defaults:
   repo: https://github.com/benrben/Scopes.git
@@ -170,15 +170,42 @@ ensure_updaters_present() {
     fi
 
     if [[ "$need_commands" == "1" ]]; then
-      cp "$tmp_dir/repo/sync-cursor-commands.sh" ./sync-cursor-commands.sh
+      src_sync="$tmp_dir/repo/scripts/sync-cursor-commands.sh"
+      if [[ ! -f "$src_sync" ]]; then
+        # Back-compat for older refs (script lived in repo root).
+        src_sync="$tmp_dir/repo/sync-cursor-commands.sh"
+      fi
+      if [[ ! -f "$src_sync" ]]; then
+        say_err ""
+        say_err "Error: selected Commands, but the repo/ref you are installing from does not include sync-cursor-commands.sh."
+        say_err "  repo: $REPO_URL"
+        say_err "  ref:  $REF"
+        say_err ""
+        say_err "Expected one of:"
+        say_err "  - scripts/sync-cursor-commands.sh"
+        say_err "  - sync-cursor-commands.sh"
+        exit 1
+      fi
+
+      cp "$src_sync" ./sync-cursor-commands.sh
       chmod +x ./sync-cursor-commands.sh
     fi
     if [[ "$need_skills" == "1" ]]; then
-      if [[ ! -f "$tmp_dir/repo/update-skill.sh" ]]; then
+      src_update_skill_sh="$tmp_dir/repo/scripts/update-skill.sh"
+      if [[ ! -f "$src_update_skill_sh" ]]; then
+        # Back-compat for older refs (script lived in repo root).
+        src_update_skill_sh="$tmp_dir/repo/update-skill.sh"
+      fi
+
+      if [[ ! -f "$src_update_skill_sh" ]]; then
         say_err ""
         say_err "Error: selected Skills, but the repo/ref you are installing from does not include update-skill.sh."
         say_err "  repo: $REPO_URL"
         say_err "  ref:  $REF"
+        say_err ""
+        say_err "Expected one of:"
+        say_err "  - scripts/update-skill.sh"
+        say_err "  - update-skill.sh"
         say_err ""
         say_err "Fix:"
         say_err "  - Use a newer ref that contains update-skill.sh, OR"
@@ -189,13 +216,18 @@ ensure_updaters_present() {
         exit 1
       fi
 
-      cp "$tmp_dir/repo/update-skill.sh" ./update-skill.sh
-      # Friendly wrapper name (requested).
-      if [[ -f "$tmp_dir/repo/update-skill" ]]; then
-        cp "$tmp_dir/repo/update-skill" ./update-skill
+      cp "$src_update_skill_sh" ./update-skill.sh
+      chmod +x ./update-skill.sh
+
+      # Friendly wrapper name (optional).
+      src_update_skill="$tmp_dir/repo/scripts/update-skill"
+      if [[ ! -f "$src_update_skill" ]]; then
+        src_update_skill="$tmp_dir/repo/update-skill"
+      fi
+      if [[ -f "$src_update_skill" ]]; then
+        cp "$src_update_skill" ./update-skill
         chmod +x ./update-skill
       fi
-      chmod +x ./update-skill.sh
     fi
   )
 }

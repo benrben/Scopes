@@ -160,6 +160,10 @@ UPDATED=0
 
 while IFS= read -r -d '' src_file; do
   base="$(basename "$src_file")"
+  # Docs-only file (not a skill).
+  if [[ "$base" == "README.md" ]]; then
+    continue
+  fi
   name="${base%.md}"
 
   dest_dir="$TARGET_DIR/$name"
@@ -198,6 +202,32 @@ while IFS= read -r -d '' src_file; do
     ADDED=$((ADDED + 1))
   fi
 done < <(find "$SRC_ROOT" -type f -name '*.md' -print0)
+
+# Also sync any bundled skill folders (optional).
+# This allows a small set of "real skill packages" (scripts/assets/references) to ship
+# without duplicating every command prompt as hand-maintained skills.
+EXTRA_SKILLS_ROOT="$TMP_DIR/repo/skills"
+if [[ -d "$EXTRA_SKILLS_ROOT" ]]; then
+  shopt -s nullglob
+  for skill_dir in "$EXTRA_SKILLS_ROOT"/*; do
+    [[ -d "$skill_dir" ]] || continue
+    skill_name="$(basename "$skill_dir")"
+    dest_dir="$TARGET_DIR/$skill_name"
+
+    if [[ $DRY_RUN -eq 1 ]]; then
+      if [[ -d "$dest_dir" ]]; then
+        say "Would update: $dest_dir/"
+      else
+        say "Would add: $dest_dir/"
+      fi
+    else
+      rm -rf "$dest_dir"
+      cp -R "$skill_dir" "$dest_dir"
+      say "Synced: $dest_dir/"
+    fi
+  done
+  shopt -u nullglob
+fi
 
 if [[ $DRY_RUN -eq 1 ]]; then
   say "Done. Would add $ADDED skill(s), would update $UPDATED skill(s)."

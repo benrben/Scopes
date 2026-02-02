@@ -25,5 +25,5 @@ This folder contains prompt files that Cursor (and other tools) can expose as sl
 
 This repo treats `commands/*.md` as the **single source of truth**.
 
-If users prefer Skills, generate skills from these commands using `./update-skill.sh` (no duplicated hand-maintained content).
+If users prefer Skills, generate skills from these commands using `scripts/update-skill.sh` (no duplicated hand-maintained content).
 
