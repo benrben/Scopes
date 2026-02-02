@@ -57,6 +57,17 @@ if [[ -z "$TARGET_DIR" ]]; then
   TARGET_DIR="$(CDPATH='' cd -- "$scripts_dir/../.." && pwd)"
 fi
 
+if [[ -x "./scripts/scopes/update-skill" ]]; then
+  ./scripts/scopes/update-skill --target-dir "$TARGET_DIR" "${ARGS[@]:-}"
+  exit 0
+fi
+
+if [[ -f "./scripts/scopes/update-skill.sh" ]]; then
+  bash ./scripts/scopes/update-skill.sh --target-dir "$TARGET_DIR" "${ARGS[@]:-}"
+  exit 0
+fi
+
+# Back-compat (older installs).
 if [[ -x "./update-skill" ]]; then
   ./update-skill --target-dir "$TARGET_DIR" "${ARGS[@]:-}"
   exit 0
@@ -67,10 +78,12 @@ if [[ -f "./update-skill.sh" ]]; then
   exit 0
 fi
 
-say_err "Error: update-skill updater not found in project root."
+say_err "Error: update-skill updater not found in project."
 say_err "Expected one of:"
-say_err "  - ./update-skill"
-say_err "  - ./update-skill.sh"
+say_err "  - ./scripts/scopes/update-skill"
+say_err "  - ./scripts/scopes/update-skill.sh"
+say_err "  - ./update-skill (older installs)"
+say_err "  - ./update-skill.sh (older installs)"
 say_err ""
 say_err "Fix:"
 say_err "  - Run ./install-scopes.sh and choose Skills (or Both), then retry."

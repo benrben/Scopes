@@ -12,9 +12,9 @@ Interactive installer for Scopes workflows.
 
 - Lets the user install Commands and/or Skills.
 - Supports multiple IDE targets (multi-select).
-- Drops the chosen updater scripts into the project root so future updates are easy:
-  - Commands: ./sync-cursor-commands.sh
-  - Skills:   ./update-skill (or ./update-skill.sh)
+- Stores updater scripts under ./scripts/scopes/ (so only install-scopes.sh is user-facing):
+  - Commands updater: ./scripts/scopes/sync-scopes-commands.sh
+  - Skills updater:   ./scripts/scopes/update-skill.sh (and ./scripts/scopes/update-skill)
 
 Defaults:
   repo: https://github.com/benrben/Scopes.git
@@ -112,6 +112,7 @@ choose_targets() {
     say_err "Install commands into which IDE folders? (space-separated numbers)"
     say_err "  1) Cursor: .cursor/commands"
     say_err "  2) Claude: .claude/commands"
+    say_err "  3) All (Cursor + Claude)"
     local ans
     ans="$(prompt_one "Selection" "1")"
     printf "%s" "$ans"
@@ -122,6 +123,7 @@ choose_targets() {
   say_err "  1) Cursor: .cursor/skills"
   say_err "  2) Claude: .claude/skills"
   say_err "  3) Antigravity: .agent/skills"
+  say_err "  4) All (Cursor + Claude + Antigravity)"
   local ans
   ans="$(prompt_one "Selection" "1")"
   printf "%s" "$ans"
@@ -134,13 +136,28 @@ targets_to_paths() {
     case "$kind:$tok" in
       commands:1) out="$out .cursor/commands" ;;
       commands:2) out="$out .claude/commands" ;;
+      commands:3) out="$out .cursor/commands .claude/commands" ;;
       skills:1) out="$out .cursor/skills" ;;
       skills:2) out="$out .claude/skills" ;;
       skills:3) out="$out .agent/skills" ;;
+      skills:4) out="$out .cursor/skills .claude/skills .agent/skills" ;;
       *) ;;
     esac
   done
   printf "%s" "$out"
+}
+
+validate_tokens() {
+  local kind="$1"; shift
+  local tok
+  for tok in "$@"; do
+    case "$kind:$tok" in
+      commands:1|commands:2|commands:3) ;;
+      skills:1|skills:2|skills:3|skills:4) ;;
+      *) say_err "Invalid selection for $kind: $tok"; return 1 ;;
+    esac
+  done
+  return 0
 }
 
 ensure_updaters_present() {
@@ -158,37 +175,36 @@ ensure_updaters_present() {
       git -c advice.detachedHead=false clone --depth 1 --branch "$REF" -- "$REPO_URL" "$tmp_dir/repo" >/dev/null 2>&1
     fi
 
+    scripts_root="./scripts/scopes"
+
     if [[ $DRY_RUN -eq 1 ]]; then
       if [[ "$need_commands" == "1" ]]; then
-        say "Would write: ./sync-cursor-commands.sh"
+        say "Would write: $scripts_root/sync-scopes-commands.sh"
       fi
       if [[ "$need_skills" == "1" ]]; then
-        say "Would write: ./update-skill.sh"
-        say "Would write: ./update-skill"
+        say "Would write: $scripts_root/update-skill.sh"
+        say "Would write: $scripts_root/update-skill"
       fi
       exit 0
     fi
 
+    mkdir -p "$scripts_root"
+
     if [[ "$need_commands" == "1" ]]; then
-      src_sync="$tmp_dir/repo/scripts/sync-cursor-commands.sh"
-      if [[ ! -f "$src_sync" ]]; then
-        # Back-compat for older refs (script lived in repo root).
-        src_sync="$tmp_dir/repo/sync-cursor-commands.sh"
-      fi
+      src_sync="$tmp_dir/repo/scripts/sync-scopes-commands.sh"
       if [[ ! -f "$src_sync" ]]; then
         say_err ""
-        say_err "Error: selected Commands, but the repo/ref you are installing from does not include sync-cursor-commands.sh."
+        say_err "Error: selected Commands, but the repo/ref you are installing from does not include sync-scopes-commands.sh."
         say_err "  repo: $REPO_URL"
         say_err "  ref:  $REF"
         say_err ""
         say_err "Expected one of:"
-        say_err "  - scripts/sync-cursor-commands.sh"
-        say_err "  - sync-cursor-commands.sh"
+        say_err "  - scripts/sync-scopes-commands.sh"
         exit 1
       fi
 
-      cp "$src_sync" ./sync-cursor-commands.sh
-      chmod +x ./sync-cursor-commands.sh
+      cp "$src_sync" "$scripts_root/sync-scopes-commands.sh"
+      chmod +x "$scripts_root/sync-scopes-commands.sh"
     fi
     if [[ "$need_skills" == "1" ]]; then
       src_update_skill_sh="$tmp_dir/repo/scripts/update-skill.sh"
@@ -216,8 +232,8 @@ ensure_updaters_present() {
         exit 1
       fi
 
-      cp "$src_update_skill_sh" ./update-skill.sh
-      chmod +x ./update-skill.sh
+      cp "$src_update_skill_sh" "$scripts_root/update-skill.sh"
+      chmod +x "$scripts_root/update-skill.sh"
 
       # Friendly wrapper name (optional).
       src_update_skill="$tmp_dir/repo/scripts/update-skill"
@@ -225,8 +241,8 @@ ensure_updaters_present() {
         src_update_skill="$tmp_dir/repo/update-skill"
       fi
       if [[ -f "$src_update_skill" ]]; then
-        cp "$src_update_skill" ./update-skill
-        chmod +x ./update-skill
+        cp "$src_update_skill" "$scripts_root/update-skill"
+        chmod +x "$scripts_root/update-skill"
       fi
     fi
   )
@@ -263,6 +279,13 @@ if [[ -n "$SKILL_SELECTION" ]]; then
   for t in $SKILL_SELECTION; do SKILL_TOKENS+=("$t"); done
 fi
 
+if [[ ${#CMD_TOKENS[@]} -gt 0 ]]; then
+  validate_tokens commands "${CMD_TOKENS[@]}" || exit 2
+fi
+if [[ ${#SKILL_TOKENS[@]} -gt 0 ]]; then
+  validate_tokens skills "${SKILL_TOKENS[@]}" || exit 2
+fi
+
 CMD_TARGETS="$(targets_to_paths commands "${CMD_TOKENS[@]:-}")"
 SKILL_TARGETS="$(targets_to_paths skills "${SKILL_TOKENS[@]:-}")"
 
@@ -287,9 +310,9 @@ ensure_updaters_present "$NEED_COMMANDS" "$NEED_SKILLS"
 if [[ -n "$CMD_TARGETS" ]]; then
   for d in $CMD_TARGETS; do
     if [[ $DRY_RUN -eq 1 ]]; then
-      say "Would run: bash ./sync-cursor-commands.sh --repo \"$REPO_URL\" --ref \"$REF\" --target-dir \"$d\""
+      say "Would run: bash ./scripts/scopes/sync-scopes-commands.sh --repo \"$REPO_URL\" --ref \"$REF\" --target-dir \"$d\""
     else
-      bash ./sync-cursor-commands.sh --repo "$REPO_URL" --ref "$REF" --target-dir "$d"
+      bash ./scripts/scopes/sync-scopes-commands.sh --repo "$REPO_URL" --ref "$REF" --target-dir "$d"
     fi
   done
 fi
@@ -297,9 +320,9 @@ fi
 if [[ -n "$SKILL_TARGETS" ]]; then
   for d in $SKILL_TARGETS; do
     if [[ $DRY_RUN -eq 1 ]]; then
-      say "Would run: bash ./update-skill.sh --repo \"$REPO_URL\" --ref \"$REF\" --target-dir \"$d\""
+      say "Would run: bash ./scripts/scopes/update-skill.sh --repo \"$REPO_URL\" --ref \"$REF\" --target-dir \"$d\""
     else
-      bash ./update-skill.sh --repo "$REPO_URL" --ref "$REF" --target-dir "$d"
+      bash ./scripts/scopes/update-skill.sh --repo "$REPO_URL" --ref "$REF" --target-dir "$d"
     fi
   done
 fi

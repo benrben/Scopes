@@ -6,10 +6,10 @@ say_err() { printf '%s\n' "$*" >&2 || true; }
 
 usage() {
   cat <<'EOF'
-sync-cursor-commands.sh
+sync-scopes-commands.sh
 
-Download Cursor command prompt files from a git repo and sync them into
-your project's .cursor/commands/ (overwrite existing + add missing).
+Download Scopes command prompt files from a git repo and sync them into a target
+commands directory (overwrite existing + add missing).
 
 Defaults:
   repo:   https://github.com/benrben/Scopes.git
@@ -18,10 +18,10 @@ Defaults:
   source: commands
 
 Usage:
-  ./sync-cursor-commands.sh
-  ./sync-cursor-commands.sh --repo <git-url> --ref <branch-or-tag>
-  ./sync-cursor-commands.sh --target-dir <path> --source-subdir <path>
-  ./sync-cursor-commands.sh --dry-run
+  ./sync-scopes-commands.sh
+  ./sync-scopes-commands.sh --repo <git-url> --ref <branch-or-tag>
+  ./sync-scopes-commands.sh --target-dir <path> --source-subdir <path>
+  ./sync-scopes-commands.sh --dry-run
 
 Environment overrides:
   SCOPES_COMMANDS_REPO

@@ -65,9 +65,9 @@ It will ask:
 - whether you want **Commands**, **Skills**, or **Both**
 - which IDE targets you want (multi-select), e.g. Cursor (`.cursor/...`), Claude (`.claude/...`), Antigravity (`.agent/...`)
 
-It will also drop updater scripts into your repo root for future refreshes:
-- `./sync-cursor-commands.sh` (commands)
-- `./update-skill` / `./update-skill.sh` (skills)
+It will also install updater scripts under `./scripts/scopes/` for future refreshes:
+- `./scripts/scopes/sync-scopes-commands.sh` (commands)
+- `./scripts/scopes/update-skill.sh` (skills)
 
 ### Option B: Commands-only (Cursor)
 
@@ -93,12 +93,13 @@ Optional (alternative): keep a sync script in your repo that **syncs the command
 
 ```bash
 # copy this file into your repo once:
-cp /path/to/ScopesCommands/scripts/sync-cursor-commands.sh ./sync-cursor-commands.sh
-chmod +x ./sync-cursor-commands.sh
+mkdir -p ./scripts/scopes
+cp /path/to/ScopesCommands/scripts/sync-scopes-commands.sh ./scripts/scopes/sync-scopes-commands.sh
+chmod +x ./scripts/scopes/sync-scopes-commands.sh
 
 # then run anytime you want to refresh existing commands:
-bash ./sync-cursor-commands.sh --dry-run
-bash ./sync-cursor-commands.sh
+bash ./scripts/scopes/sync-scopes-commands.sh --dry-run
+bash ./scripts/scopes/sync-scopes-commands.sh
 ```
 
 3) Restart Cursor (or reload window), then type `/` and pick a command.
@@ -110,11 +111,12 @@ Create your skills folder, copy `update-skill.sh` into your repo once, then run 
 ```bash
 mkdir -p .cursor/skills
 
-cp /path/to/ScopesCommands/scripts/update-skill.sh ./update-skill.sh
-chmod +x ./update-skill.sh
+mkdir -p ./scripts/scopes
+cp /path/to/ScopesCommands/scripts/update-skill.sh ./scripts/scopes/update-skill.sh
+chmod +x ./scripts/scopes/update-skill.sh
 
-bash ./update-skill.sh --dry-run
-bash ./update-skill.sh
+bash ./scripts/scopes/update-skill.sh --dry-run
+bash ./scripts/scopes/update-skill.sh
 ```
 
 Once installed, you’ll also get a bundled skill called **`update-skills`** (installed under `.cursor/skills/update-skills/`) which includes a helper script for refreshing Skills only.

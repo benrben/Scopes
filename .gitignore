@@ -1,2 +1,13 @@
 .obsidian
 .DS_Store
+
+# Local installs (this repo is the source, not the target).
+.cursor/
+.claude/
+.agent/
+
+# Older installer versions dropped these in repo root.
+/sync-cursor-commands.sh
+/sync-scopes-commands.sh
+/update-skill
+/update-skill.sh
