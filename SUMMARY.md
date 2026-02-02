@@ -10,6 +10,7 @@ This repo ships **Cursor slash-command prompts** (in `commands/`) that implement
 | `/dev-loop` | `commands/dev-loop.md` | Implement features/bugs via strict TDD while keeping Scopes synced | Code + tests, `Scopes/Work/STDD/**`, updates to `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md` |
 | `/develop` | `commands/develop.md` | Implement features/bugs via verify-as-you-go (no strict TDD) while keeping Scopes synced | Code + optional tests, `Scopes/Work/DEV/**`, updates to `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md` |
 | `/bug-hunt` | `commands/bug-hunt.md` | Find proven bugs/foot-guns with evidence and recommend minimal fixes | `Scopes/Work/Bugs/**` (+ optional `Scopes/Work/Tasks/**`) |
+| `/ask-scopes` | `commands/ask-scopes.md` | Answer questions about the project using `Scopes/` as truth (repair drift only when required) | Q&A answer (and optional minimal scope repairs) |
 | `/write-tasks` | `commands/write-tasks.md` | Convert intent/plans/research/bugs into 1–4 hour engineer-ready tasks | `Scopes/Work/Tasks/**` |
 | `/plan-idea` | `commands/plan-idea.md` | Turn an idea into a sequenced implementation blueprint | `Scopes/Work/Planning/**` (+ optional `Scopes/Research/**`) |
 | `/ideate` | `commands/ideate.md` | Generate scope-anchored ideas ready for planning | `Scopes/Work/Ideas/**` |

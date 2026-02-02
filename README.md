@@ -46,7 +46,30 @@ Key files:
 
 ## Quickstart
 
-Install these prompts into the repo you have open in Cursor:
+Install these prompts into the repo you have open in Cursor (commands), or install them as Skills (for tools that support Skills), or both.
+
+### Option A: Interactive installer (recommended)
+
+Copy this installer into the repo you want to use Scopes in, then run it:
+
+```bash
+# copy once into your target repo:
+cp /path/to/ScopesCommands/install-scopes.sh ./install-scopes.sh
+chmod +x ./install-scopes.sh
+
+# run (interactive):
+./install-scopes.sh
+```
+
+It will ask:
+- whether you want **Commands**, **Skills**, or **Both**
+- which IDE targets you want (multi-select), e.g. Cursor (`.cursor/...`), Claude (`.claude/...`), Antigravity (`.agent/...`)
+
+It will also drop updater scripts into your repo root for future refreshes:
+- `./sync-cursor-commands.sh` (commands)
+- `./update-skill` / `./update-skill.sh` (skills)
+
+### Option B: Commands-only (Cursor)
 
 1) Create the commands folder:
 
@@ -79,6 +102,20 @@ bash ./sync-cursor-commands.sh
 ```
 
 3) Restart Cursor (or reload window), then type `/` and pick a command.
+
+### Option C: Skills-only
+
+Create your skills folder, copy `update-skill.sh` into your repo once, then run it:
+
+```bash
+mkdir -p .cursor/skills
+
+cp /path/to/ScopesCommands/update-skill.sh ./update-skill.sh
+chmod +x ./update-skill.sh
+
+bash ./update-skill.sh --dry-run
+bash ./update-skill.sh
+```
 
 ## Demo
 
@@ -116,6 +153,7 @@ These are the commands in `commands/`:
 | `/sync-scopes` | `commands/sync-scopes.md` | **The Core Agent**. Generates/updates Scopes (truth) from code. Run this to map the system or after large changes. |
 | `/plan-refactor` | `commands/plan-refactor.md` | Plan a safe refactor with verification gates and scope maintenance |
 | `/research-loop` | `commands/research-loop.md` | Research with strict internal-vs-external truth separation |
+| `/ask-scopes` | `commands/ask-scopes.md` | Answer questions about the project using `Scopes/` as truth (repair drift only when required) |
 | `/write-adr` | `commands/write-adr.md` | Write ADRs linked to affected scopes (and graph implications) |
 | `/write-release` | `commands/write-release.md` | Release notes from scope delta (facts-only) |
 | `/write-onboarding` | `commands/write-onboarding.md` | Role-based onboarding path driven by scope traces |
