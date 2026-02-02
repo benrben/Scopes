@@ -17,7 +17,7 @@ Usage:
   bash <skills-root>/update-skills/scripts/update-skills.sh --target-dir <skills-root>
 
 Options:
-  --repo <git-url>            (default: https://github.com/benrben/ScopesCommands.git)
+  --repo <git-url>            (default: https://github.com/benrben/Scopes.git)
   --ref <branch-or-tag>       (default: main)
   --source-subdir <path>      (default: commands)
   --dry-run
@@ -26,7 +26,7 @@ EOF
 }
 
 TARGET_DIR=""
-REPO_URL="${SCOPES_COMMANDS_REPO:-https://github.com/benrben/ScopesCommands.git}"
+REPO_URL="${SCOPES_COMMANDS_REPO:-https://github.com/benrben/Scopes.git}"
 REF="${SCOPES_COMMANDS_REF:-main}"
 SOURCE_SUBDIR="${SCOPES_COMMANDS_SOURCE_SUBDIR:-commands}"
 DRY_RUN=0
