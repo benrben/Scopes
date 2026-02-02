@@ -1,6 +1,6 @@
 ---
 name: update-skills
-description: Updates the installed Scopes skills (not commands) in this project. Use when you want to refresh Skills under .cursor/.claude/.agent.
+description: 'Updates the installed Scopes skills (not commands) in this project. Use when you want to refresh Skills under .cursor/.claude/.agent.'
 disable-model-invocation: true
 ---
 
@@ -35,6 +35,8 @@ bash .agent/skills/update-skills/scripts/update-skills.sh
 - Cursor skills: `.cursor/skills`
 - Claude skills: `.claude/skills`
 - Antigravity skills: `.agent/skills`
+
+**In Cursor**, use `.cursor/skills` only. If a link or tab opens `.claude/skills/...`, that path is for Claude; close it and use the same skill under `.cursor/skills/...`.
 
 ## Notes
 

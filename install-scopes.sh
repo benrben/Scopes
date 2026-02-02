@@ -17,7 +17,7 @@ Interactive installer for Scopes workflows.
   - Skills refresh: use the bundled update-skills skill (e.g. .cursor/skills/update-skills/scripts/update-skills.sh)
 
 Defaults:
-  repo: https://github.com/benrben/Scopes.git
+  repo: https://github.com/benrben/ScopesCommands.git
   ref:  main
 
 Usage:
@@ -31,7 +31,7 @@ Environment overrides:
 EOF
 }
 
-REPO_URL="${SCOPES_COMMANDS_REPO:-https://github.com/benrben/Scopes.git}"
+REPO_URL="${SCOPES_COMMANDS_REPO:-https://github.com/benrben/ScopesCommands.git}"
 REF="${SCOPES_COMMANDS_REF:-main}"
 
 DRY_RUN=0
@@ -227,8 +227,9 @@ ensure_updaters_present() {
         say_err "  repo: $repo_url"
         say_err "  ref:  $ref"
         say_err ""
-        say_err "Fix: Rerun with --repo pointing at a local checkout that contains scripts/update-skill.sh"
-        say_err "  Example: ./install-scopes.sh --repo /path/to/ScopesCommands --ref main"
+        say_err "Fix: Use a repo that has scripts/update-skill.sh (e.g. ScopesCommands)."
+        say_err "  Example: ./install-scopes.sh --repo https://github.com/benrben/ScopesCommands.git --ref main"
+        say_err "  Or local: ./install-scopes.sh --repo /path/to/ScopesCommands --ref main"
         exit 1
       fi
       for d in $skill_targets; do

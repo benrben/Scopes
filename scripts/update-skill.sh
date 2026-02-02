@@ -14,7 +14,7 @@ into a target skills directory (overwrite existing + add missing).
 This intentionally keeps `commands/*.md` as the single source of truth.
 
 Defaults:
-  repo:   https://github.com/benrben/Scopes.git
+  repo:   https://github.com/benrben/ScopesCommands.git
   ref:    main
   target: .cursor/skills
   source: commands
@@ -33,7 +33,7 @@ Environment overrides:
 EOF
 }
 
-REPO_URL="${SCOPES_COMMANDS_REPO:-https://github.com/benrben/Scopes.git}"
+REPO_URL="${SCOPES_COMMANDS_REPO:-https://github.com/benrben/ScopesCommands.git}"
 REF="${SCOPES_COMMANDS_REF:-main}"
 TARGET_DIR="${SCOPES_SKILLS_TARGET_DIR:-.cursor/skills}"
 SOURCE_SUBDIR="${SCOPES_COMMANDS_SOURCE_SUBDIR:-commands}"
