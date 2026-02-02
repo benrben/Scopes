@@ -66,6 +66,17 @@ Optional (advanced): symlink so updates follow automatically:
 for f in /path/to/ScopesCommands/commands/*.md; do ln -sf "$f" .cursor/commands/; done
 ```
 
+Optional (alternative): keep a sync script in your repo that updates **only the commands you already have** in `.cursor/commands/`:
+
+```bash
+# copy this file into your repo once:
+cp /path/to/ScopesCommands/sync-cursor-commands.sh ./sync-cursor-commands.sh
+
+# then run anytime you want to refresh existing commands:
+bash ./sync-cursor-commands.sh --dry-run
+bash ./sync-cursor-commands.sh
+```
+
 3) Restart Cursor (or reload window), then type `/` and pick a command.
 
 ## Demo
