@@ -8,6 +8,7 @@ This folder contains prompt files that Cursor (and other tools) can expose as sl
 |---|---|---|
 | `/ask-scopes` | `commands/ask-scopes.md` | Answer questions about the project using `Scopes/` as truth (repair drift only when required) |
 | `/bug-hunt` | `commands/bug-hunt.md` | Find bugs/anti-patterns with evidence; output a bug report (and optional tasks) |
+| `/create-HLD` | `commands/create-HLD.md` | Create High-Level Design docs from a mission using Scopes + web research (supports custom templates) |
 | `/dev-loop` | `commands/dev-loop.md` | Implement a feature/bug via strict TDD and update Scopes as you go |
 | `/develop` | `commands/develop.md` | Implement a feature/bug via verify-as-you-go (no strict TDD) and update Scopes as you go |
 | `/ideate` | `commands/ideate.md` | Generate scope-anchored ideas that are ready to plan |
