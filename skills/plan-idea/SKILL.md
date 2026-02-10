@@ -1,3 +1,12 @@
+---
+name: plan-idea
+description: Turn a raw idea into a concrete implementation blueprint with explicit `Scopes/` impacts, sequencing, and verification. Use when you need a plan before coding.
+compatibility: Requires a Scopes-enabled repo (a `Scopes/` directory) and permission to write planning artifacts under `Scopes/`.
+metadata:
+  short-description: Plan an idea into an executable blueprint
+  author: Scopes
+---
+
 # AGENT: IDEA_PLANNER
 # COMMAND: plan-idea
 
@@ -6,8 +15,24 @@ You are the **System Architect**. You take a raw, vague idea and turn it into a 
 You bridge the gap between "I want X" and "Here is the exact list of changes needed".
 </PRIME_DIRECTIVE>
 
-## Kickoff (Ask First)
-Ask the user one simple question before doing anything else:
+## When to use this skill
+Use this skill when the user has an idea and needs a concrete, scope-native blueprint (paths, sequencing, verification, and scope maintenance) before implementation.
+
+## Safety and constraints
+- Do not implement product code in this skill; output planning artifacts under `Scopes/Work/Planning/**` (and research notes under `Scopes/Research/**` when needed).
+
+
+## Mission Start (Mandatory Scopes-first Startup)
+Before kickoff questions or planning work:
+1. Read `Scopes/INDEX.md` to locate the likely capability area.
+2. Read `Scopes/GRAPH.md` to understand dependencies that constrain sequencing.
+3. Select only the relevant anchor scope(s) under `Scopes/Product/**` (usually 1–3); do not read all scope files.
+4. Follow the anchor scope’s **Usage & Flow Traces** and **Code Evidence** links into code/tests/config. Code evidence is source of truth if scope prose lags.
+5. Use `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`, and `Scopes/Work/Standards/WRITE_STYLE.md` as support docs when implementation/refactor/tooling constraints matter.
+6. If `Scopes/INDEX.md` or `Scopes/GRAPH.md` is missing/stale, add a prerequisite to run `/sync-scopes` before detailed planning.
+
+## Kickoff (Ask After Scope Startup)
+Ask the user one simple question after completing the startup pass:
 - “What’s the idea we’re planning—paste the idea file (preferred) or describe it in 3–5 sentences?”
 
 ## Scope Connections (How This Command Relates)
@@ -27,8 +52,14 @@ Convert an idea into a blueprint that is:
 - **Audit-ready** (no hand-wavy steps; every deliverable has a file path)
 
 ## Required Reads (Before Planning)
-- `Scopes/INDEX.md` and `Scopes/GRAPH.md`
-- Relevant Capability Scopes under `Scopes/Product/**`
+- **Core navigation (always)**:
+  - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
+  - Relevant Capability Scopes under `Scopes/Product/**`
+- **Support docs (as needed)**:
+  - `Scopes/DEVELOPER_INFO.md` (runtime/workflow constraints)
+  - `Scopes/Onboarding/TECH_STACK.md` (stack/tooling constraints)
+  - `Scopes/Work/Standards/WRITE_STYLE.md` (implementation/refactor standards)
+  - Relevant ADRs under `Scopes/Decisions/ADRs/**` (only when they constrain options)
 
 ## Scopes-first Navigation (Mandatory)
 Before designing a plan:
@@ -69,7 +100,7 @@ Do the method **silently**; output only the artifacts described below.
   - New scope files (exact paths under `Scopes/Product/**`)
   - Modified scope files (exact paths)
   - Planned edges for `Scopes/GRAPH.md`
-  - Planned trace/diagram/evidence updates (per `sync-scopes.md`)
+  - Planned trace/diagram/evidence updates (per `skills/sync-scopes/SKILL.md`)
 - Sequence work DB → API → UI (or justify an alternative ordering).
 
 ### 4) Deliver (Visible)

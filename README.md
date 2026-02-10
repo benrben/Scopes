@@ -1,197 +1,113 @@
-# Scopes Commands for Cursor
+# Scopes — Skills & Agents for Agentic IDEs
 
 > **Scopes: Because "What does this code even do?" shouldn't be a full-time job.**
 >
-> Evidence-backed docs + workflows, packaged as Cursor slash commands.
+> Evidence-backed docs + implementation workflows, packaged as copy-paste skills and agents.
 
-[![Cursor command prompts](https://img.shields.io/badge/Cursor-slash%20commands-111827)](https://www.cursor.com/)
+![Scopes skills](https://img.shields.io/badge/Scopes-skills-111827)
 ![Evidence-backed docs](https://img.shields.io/badge/docs-evidence--backed-0ea5e9)
 ![Scopes-first](https://img.shields.io/badge/workflow-scopes--first-22c55e)
-![Build Status](https://img.shields.io/github/actions/workflow/status/benrben/ScopesCommands/main.yml)
 ![License](https://img.shields.io/badge/license-MIT-blue)
-![GitHub stars](https://img.shields.io/github/stars/benrben/ScopesCommands?style=social)
-
 
 <p align="center">
-  <img src="scopes.jpg" alt="Scopes diagram showing how Scopes transforms a codebase into evidence-backed documentation" width="700" />
+  <img src="docs/assets/scopes.jpg" alt="Scopes diagram showing how Scopes transforms a codebase into evidence-backed documentation" width="700" />
 </p>
-
-## Visualizing the Problem (and the Solution)
-
-| **The Reality** | **The Fix** |
-| :---: | :---: |
-| <img src="docs/assets/spaghetti_reveal.png" width="300" alt="Legacy Backend Spaghetti" /> <br> *What your codebase actually looks like.* | <img src="docs/assets/panic_prism.png" width="300" alt="Chaos to Clarity" /> <br> *Turning the chaos into organized beams of truth.* |
-
-| **The Goal** | **The Vibe** |
-| :---: | :---: |
-| <img src="docs/assets/it_works_seal.png" width="300" alt="It Works Seal" /> <br> *Certified working code.* | <img src="docs/assets/rollercoaster_deploy.png" width="300" alt="Calm Deploy" /> <br> *Deploying on Friday? No sweat.* |
-
-
-
-```
-CODE 🧩 → SCOPES 🗺️ → CLARITY 💡
-```
 
 ## TL;DR
-Scopes are **behavior docs with receipts** (links into code/tests/config). This repo provides a set of Cursor commands that help you:
 
-- Create/maintain Scopes (your map of the system)
-- Turn ideas/research into plans/tasks
-- Execute changes via a strict workflow while keeping Scopes honest
+Scopes are **behavior docs with receipts** (links into code/tests/config). This repo ships skills and agents so teams can:
 
-Key files:
-- `Scopes/INDEX.md`: the map (tree)
-- `Scopes/GRAPH.md`: the relationships (graph)
-- `Scopes/Product/**`: capability truth (what the product does today)
+- Create and maintain `Scopes/` as a reliable system map.
+- Convert ideas/research/findings into executable plans and tasks.
+- Implement safely while keeping documentation synchronized.
 
-## Quickstart
+Core artifacts in target repos:
+- `Scopes/INDEX.md`
+- `Scopes/GRAPH.md`
+- `Scopes/Product/**`
 
-Install these prompts into the repo you have open in Cursor (commands), or install them as Skills (for tools that support Skills), or both.
+## Install
 
-### Option A: Interactive installer (recommended)
+Copy the folders into your project's IDE config directory:
 
-Copy this installer into the repo you want to use Scopes in, then run it:
-
-```bash
-# copy once into your target repo:
-cp /path/to/ScopesCommands/install-scopes.sh ./install-scopes.sh
-chmod +x ./install-scopes.sh
-
-# run (interactive):
-./install-scopes.sh
-```
-
-It will ask:
-- whether you want **Commands**, **Skills**, or **Both**
-- which IDE targets you want (multi-select), e.g. Cursor (`.cursor/...`), Claude (`.claude/...`), Antigravity (`.agent/...`)
-
-It will also install updater scripts under `./scripts/` for future refreshes:
-- `./scripts/sync-scopes-commands.sh` (commands)
-- `./scripts/update-skill.sh` (skills)
-
-### Option B: Commands-only (Cursor)
-
-1) Create the commands folder:
+### Cursor
 
 ```bash
-mkdir -p .cursor/commands
+# From your project root:
+cp -r /path/to/Scopes/skills/ .cursor/skills/
+cp -r /path/to/Scopes/agents/ .cursor/agents/
 ```
 
-2) Copy (or symlink) this repo’s prompts:
+### Claude Code
 
 ```bash
-cp /path/to/ScopesCommands/commands/*.md .cursor/commands/
+cp -r /path/to/Scopes/skills/ .claude/skills/
+cp -r /path/to/Scopes/agents/ .claude/agents/
 ```
 
-Optional (advanced): symlink so updates follow automatically:
+### Antigravity
 
 ```bash
-for f in /path/to/ScopesCommands/commands/*.md; do ln -sf "$f" .cursor/commands/; done
+cp -r /path/to/Scopes/skills/ .agent/skills/
+cp -r /path/to/Scopes/agents/ .agent/agents/
 ```
 
-Optional (alternative): keep a sync script in your repo that **syncs the commands into** `.cursor/commands/` (overwrite existing + add new ones):
+### Update installed skills
+
+Once installed, the `update-skills` skill can refresh itself from upstream:
 
 ```bash
-# copy this file into your repo once:
-mkdir -p ./scripts/scopes
-mkdir -p ./scripts
-cp /path/to/ScopesCommands/scripts/sync-scopes-commands.sh ./scripts/sync-scopes-commands.sh
-chmod +x ./scripts/sync-scopes-commands.sh
-
-# then run anytime you want to refresh existing commands:
-bash ./scripts/sync-scopes-commands.sh --dry-run
-bash ./scripts/sync-scopes-commands.sh
+bash .cursor/skills/update-skills/scripts/update-skills.sh
 ```
 
-3) Restart Cursor (or reload window), then type `/` and pick a command.
+## Skill Catalog
 
-### Option C: Skills-only
+| Skill | Purpose |
+|---|---|
+| `sync-scopes` | Generate/update Scopes truth from code/config with git baseline + diff tracking |
+| `ask-scopes` | Answer project questions by navigating Scopes first, then code evidence |
+| `dev-tdd` | Strict TDD implementation loop with scope maintenance |
+| `dev-verify` | Verify-as-you-go implementation loop with scope maintenance |
+| `bug-hunt` | Evidence-backed bug and foot-gun discovery |
+| `write-tasks` | Turn intent/research/findings into engineer-ready tasks |
+| `plan-idea` | Convert ideas into sequenced implementation plans |
+| `plan-refactor` | Safe phased refactor planning |
+| `research-loop` | Internal-vs-external truth separated research reports |
+| `write-adr` | Architecture decision records linked to Scopes |
+| `update-skills` | Refresh installed skills from upstream |
 
-Create your skills folder, copy `update-skill.sh` into your repo once, then run it:
+## Agent Catalog
 
-```bash
-mkdir -p .cursor/skills
+Agents are sub-agents that run in their own context window, keeping verbose output out of your main conversation.
 
-mkdir -p ./scripts/scopes
-mkdir -p ./scripts
-cp /path/to/ScopesCommands/scripts/update-skill.sh ./scripts/update-skill.sh
-chmod +x ./scripts/update-skill.sh
+| Agent | Purpose |
+|---|---|
+| `scope-auditor` | Validates evidence freshness and link integrity |
+| `scope-navigator` | Maps requests to relevant scope files and dependencies |
+| `scope-writer` | Creates/updates scope documentation with evidence links |
+| `tdd-runner` | Runs Red→Green→Refactor TDD cycles in isolated context |
+| `bug-scanner` | Static analysis with scope-aware blast radius context |
+| `plan-researcher` | Background research across code, git history, and ADRs |
 
-bash ./scripts/update-skill.sh --dry-run
-bash ./scripts/update-skill.sh
-```
+## Recommended Workflows
 
-Once installed, you’ll also get a bundled skill called **`update-skills`** (installed under `.cursor/skills/update-skills/`) which includes a helper script for refreshing Skills only.
-
-## Demo
-
-![Terminal Demo](docs/assets/terminal_demo.png)
-
-## The Prime Command: `/sync-scopes`
-
-`/sync-scopes` is the heartbeat of this entire methodology. It is an agentic command that acts as a **Project Scope Archivist**.
-
-**What it does:**
-1.  **Audits your entire codebase** (code, tests, config).
-2.  **Generates "Source of Truth" docs** inside `Scopes/Product/`.
-3.  **Cross-links everything** into a knowledge graph (`Scopes/GRAPH.md`).
-
-**When to use it:**
-- **Onboarding**: Run it on a legacy code base to get an instant map (`Generation Mode`).
-- **Maintenance**: Run it after shipping a feature to keep docs true (`Update Mode`).
-
----
-
-## The Commands (current)
-Cursor turns filenames into slash commands (e.g. `dev-loop.md` → `/dev-loop`).
-
-These are the commands in `commands/`:
-
-| Command | File | What it does |
-|---|---|---|
-| `/dev-loop` | `commands/dev-loop.md` | Implement a feature/bug via strict TDD and update Scopes as you go |
-| `/develop` | `commands/develop.md` | Implement a feature/bug via a verify-as-you-go loop (no strict TDD) and update Scopes as you go |
-| `/bug-hunt` | `commands/bug-hunt.md` | Find bugs/anti-patterns with evidence; output a bug report (and optional tasks) |
-| `/write-tasks` | `commands/write-tasks.md` | Turn intent/plans/research/bugs into 1–4 hour engineer-ready tasks |
-| `/plan-idea` | `commands/plan-idea.md` | Turn an idea into a sequenced plan (and create/reuse research if needed) |
-| `/ideate` | `commands/ideate.md` | Generate scope-anchored ideas that are ready to plan |
-| `/plan-board` | `commands/plan-board.md` | Turn `Scopes/` into an execution board blueprint |
-| `/sync-scopes` | `commands/sync-scopes.md` | **The Core Agent**. Generates/updates Scopes (truth) from code. Run this to map the system or after large changes. |
-| `/plan-refactor` | `commands/plan-refactor.md` | Plan a safe refactor with verification gates and scope maintenance |
-| `/research-loop` | `commands/research-loop.md` | Research with strict internal-vs-external truth separation |
-| `/ask-scopes` | `commands/ask-scopes.md` | Answer questions about the project using `Scopes/` as truth (repair drift only when required) |
-| `/write-adr` | `commands/write-adr.md` | Write ADRs linked to affected scopes (and graph implications) |
-| `/write-release` | `commands/write-release.md` | Release notes from scope delta (facts-only) |
-| `/write-onboarding` | `commands/write-onboarding.md` | Role-based onboarding path driven by scope traces |
-
-Notes:
-- For prompt standards and the full list, see `commands/README.md`.
-
-## Recommended workflows (how commands connect)
-
-<p align="center">
-  <img src="docs/assets/blame_teleport_ui.png" width="400" alt="Blame Teleport" />
-  <br>
-  <em>Stop asking "Who broke prod?" and start fixing it.</em>
-</p>
-
-- **Fix a bug**: `/bug-hunt` → `/write-tasks` → `/dev-loop`
-- **Ship a feature**: `/ideate` → `/plan-idea` → `/write-tasks` → `/dev-loop`
-- **Make a decision**: `/research-loop` → `/write-adr` → `/plan-idea` (or `/write-tasks`)
-- **Prepare a release**: ensure `Scopes/Product/**` is up to date → `/write-release`
-- **Onboard someone**: ensure “backbone” scopes exist → `/write-onboarding`
+- Understand current behavior quickly: `ask-scopes` → `dev-verify` or `dev-tdd`
+- Fix a bug: `bug-hunt` → `write-tasks` → `dev-tdd`
+- Ship a feature: `plan-idea` → `write-tasks` → `dev-tdd` or `dev-verify`
+- Make a decision: `research-loop` → `write-adr` → `write-tasks`
+- Plan a structural change: `plan-refactor` → `write-tasks` → `dev-tdd`
 
 ## Docs
-- **Prompts / commands**: `commands/README.md`
-- **Template + audit protocol**: `commands/sync-scopes.md` (canonical). The `/sync-scopes` prompt also mirrors this into `Scopes/Prompts/sync-scopes.md` inside the target repo so downstream commands can reference a stable in-repo standard.
-- **Background / why this works**: `docs/why-scopes.md`
+
+- Background and methodology: [`docs/why-scopes.md`](docs/why-scopes.md)
 
 ## Contributing
-PRs welcome. If you add/change prompts:
-- Keep them in `commands/`
-- Keep filenames command-friendly
-- Update `commands/README.md`
+
+- Keep skill packages under `skills/<name>/`.
+- Keep agent definitions under `agents/<name>.md`.
+- Keep each skill self-contained (`SKILL.md`, optional `scripts/`, `references/`, `assets/`).
+- Update this README when adding or renaming skills/agents.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License — see the `LICENSE` file for details.

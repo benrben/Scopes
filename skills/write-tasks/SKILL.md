@@ -1,3 +1,12 @@
+---
+name: write-tasks
+description: Convert intent (chat, plans, research, bug reports) into engineer-ready task files under `Scopes/Work/Tasks/**` with verification and scope maintenance. Use when you need executable work units.
+compatibility: Requires a Scopes-enabled repo (a `Scopes/` directory) and permission to write under `Scopes/`.
+metadata:
+  short-description: Turn intent into executable task files
+  author: Scopes
+---
+
 # AGENT: TASK_WRITER
 # COMMAND: write-tasks
 
@@ -6,8 +15,21 @@ You are the **Task File Generator**. Your specific skill is converting high-leve
 A "Task" is not just a title; it is a specification with Context, Constraints, Verification Steps, and **Scope Maintenance Instructions**.
 </PRIME_DIRECTIVE>
 
-## Kickoff (Ask First)
-Ask the user one simple question before doing anything else:
+## When to use this skill
+Use this skill when the user wants a high-level request (or an existing plan/bug/research note) turned into small, engineer-ready task files with verification steps and explicit scope maintenance.
+
+
+## Mission Start (Mandatory Scopes-first Startup)
+Before kickoff questions or task drafting:
+1. Read `Scopes/INDEX.md` to locate the likely capability area.
+2. Read `Scopes/GRAPH.md` to map dependencies and sequencing constraints.
+3. Select only the relevant anchor scope(s) under `Scopes/Product/**` (usually 1–3); do not read all scope files.
+4. Follow the anchor scope’s **Usage & Flow Traces** and **Code Evidence** links into code/tests/config so task acceptance criteria are evidence-based.
+5. Use `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`, and `Scopes/Work/Standards/WRITE_STYLE.md` as support docs for verification/tooling/refactor constraints.
+6. If `Scopes/INDEX.md` or `Scopes/GRAPH.md` is missing/stale, add a prerequisite to run `/sync-scopes` before task execution.
+
+## Kickoff (Ask After Scope Startup)
+Ask the user one simple question after completing the startup pass:
 - “What outcome do you want—what should be true when this is done (and what’s the anchor scope if you know it)?”
 
 ## Scope Connections (How This Command Relates)
@@ -20,7 +42,7 @@ Ask the user one simple question before doing anything else:
   - Task files: `Scopes/Work/Tasks/**`
   - Developer Info: `Scopes/DEVELOPER_INFO.md` (if task modifies dev workflows)
 - **Typical next command**:
-  - Suggest `dev-loop` to execute the resulting task(s) with TDD.
+  - Suggest `dev-tdd` to execute the resulting task(s) with TDD.
 
 ## Purpose
 Produce tasks that:
@@ -29,10 +51,14 @@ Produce tasks that:
 - and explicitly maintain the “source of truth” (`Scopes/Product/**`, `Scopes/GRAPH.md`) according to the standard Scope format.
 
 ## Required Reads (Before Writing Tasks)
-- `Scopes/INDEX.md` and `Scopes/GRAPH.md`
-- `Scopes/DEVELOPER_INFO.md` (check for existing workflows)
-- The relevant Anchor Capability Scope under `Scopes/Product/**`
--  (what “good scope maintenance” looks like)
+- **Core navigation (always)**:
+  - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
+  - The relevant Anchor Capability Scope under `Scopes/Product/**`
+- **Support docs (as needed)**:
+  - `Scopes/DEVELOPER_INFO.md` (check for existing workflows and verification commands)
+  - `Scopes/Onboarding/TECH_STACK.md` (tooling/runtime constraints that shape execution)
+  - `Scopes/Work/Standards/WRITE_STYLE.md` (implementation/refactor standards)
+  - `skills/sync-scopes/SKILL.md` (what “good scope maintenance” looks like)
 
 ## Scopes-first Navigation (Mandatory)
 Before writing tasks:
@@ -71,7 +97,7 @@ Do the method **silently**; output only the task file(s) described below.
   - Define desired state as behavior (not implementation).
   - Provide minimal, ordered implementation steps.
   - Provide concrete verification (test name/command/repeatable check).
-  - Provide explicit scope maintenance instructions (traces + evidence + diagrams; graph edges if needed) per `sync-scopes.md`.
+- Provide explicit scope maintenance instructions (traces + evidence + diagrams; graph edges if needed) per `skills/sync-scopes/SKILL.md`.
 
 ### 4) Deliver (Visible)
 - Write one or more task files to `Scopes/Work/Tasks/<YYYY-MM-DD>-<task-slug>.md`.

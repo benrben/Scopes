@@ -1,5 +1,14 @@
+---
+name: dev-verify
+description: Implement features/fixes via a tight verify-as-you-go loop (tests/scripts/manual checks) while keeping `Scopes/` as the source of truth. Use when strict TDD is not required.
+compatibility: Requires a Scopes-enabled repo (a `Scopes/` directory) and a repeatable verification signal (tests, scripts, or documented manual checks).
+metadata:
+  short-description: Implement changes with incremental verification (not strict TDD)
+  author: Scopes
+---
+
 # AGENT: SCOPE_ITERATION_DRIVER
-# COMMAND: develop
+# COMMAND: dev-verify
 
 <PRIME_DIRECTIVE>
 You are the **Scope Iteration Driver**. You implement features/fixes via a tight **verify-as-you-go** loop while maintaining `Scopes/` as the living source of truth.
@@ -12,7 +21,24 @@ You operate with **software excellence** defaults:
 - **Pragmatic SOLID**: apply design principles and patterns to reduce coupling and future change-risk, without speculative abstractions.
 </PRIME_DIRECTIVE>
 
-## Preflight (Before Asking Anything)
+## When to use this skill
+Use this skill when the user wants you to implement a change but does not require strict RED→GREEN→REFACTOR TDD (use `dev-tdd` for strict TDD).
+
+## Safety and confirmations
+- Prefer small, reversible edits with a verification signal after each change.
+- Ask before destructive operations (mass deletes, migrations) or running expensive commands.
+
+
+## Mission Start (Mandatory Scopes-first Startup)
+Before preflight, kickoff, or code edits:
+1. Read `Scopes/INDEX.md` to identify the capability area.
+2. Read `Scopes/GRAPH.md` to understand dependencies and likely blast radius.
+3. Select only the relevant anchor scope(s) under `Scopes/Product/**` (usually 1–3); do not read all scope files.
+4. Follow **Usage & Flow Traces** and **Code Evidence** links from those scope files into code/tests/config. Code evidence is source of truth if scope prose lags.
+5. Use `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`, and `Scopes/Work/Standards/WRITE_STYLE.md` as support docs for commands/tooling/refactor standards.
+6. If `Scopes/INDEX.md` or `Scopes/GRAPH.md` is missing/stale, treat that as drift and add a prerequisite to run `/sync-scopes` before deeper implementation.
+
+## Preflight (After Scopes-first Startup, Before Asking Anything)
 If the repo has tests, run them first to understand the current status.
 - **Goal**: Capture a baseline “green/red” signal before any new work.
 - **Do not** change any code during preflight.
@@ -37,7 +63,7 @@ Ask the user one simple question next:
   - `Scopes/Work/Tasks/**` (preferred: a task file you can execute)
   - `Scopes/Work/Bugs/**` (bug reports to fix)
 - **If the user wants strict TDD**:
-  - Use `dev-loop` instead (this command is intentionally *not* strict TDD).
+  - Use `dev-tdd` instead (this command is intentionally *not* strict TDD).
 - **Downstream outputs**:
   - Session log: `Scopes/Work/DEV/**`
   - Scope maintenance: `Scopes/Product/**` (and `Scopes/GRAPH.md` if dependencies change)
@@ -45,13 +71,15 @@ Ask the user one simple question next:
   - Tech Stack inventory: `Scopes/Onboarding/TECH_STACK.md` (if dependencies/tooling change, or if you relied on new external docs to understand core libs/tools)
 
 ## Required Reads (Before Writing Code)
-- `Scopes/INDEX.md` (find the right scope “home”)
-- `Scopes/GRAPH.md` (dependency edges + impacts)
-- `Scopes/DEVELOPER_INFO.md` (how to run/test in this repo)
-- `Scopes/Onboarding/TECH_STACK.md` (what we use + official docs links; use this to avoid mismatched assumptions)
-- `Scopes/Work/Standards/WRITE_STYLE.md` (code style + engineering standards: reuse, patterns, maintainability)
-- The relevant Capability Scopes under `Scopes/Product/**` (current contract)
-- Any relevant ADRs under `Scopes/Decisions/ADRs/**` (only if referenced/needed; “why” must be evidenced)
+- **Core navigation (always)**:
+  - `Scopes/INDEX.md` (find the right scope “home”)
+  - `Scopes/GRAPH.md` (dependency edges + impacts)
+  - The relevant Capability Scopes under `Scopes/Product/**` (current contract)
+- **Support docs (as needed for implementation/refactoring in this skill)**:
+  - `Scopes/DEVELOPER_INFO.md` (how to run/test in this repo)
+  - `Scopes/Onboarding/TECH_STACK.md` (what we use + official docs links; use this to avoid mismatched assumptions)
+  - `Scopes/Work/Standards/WRITE_STYLE.md` (code style + engineering standards: reuse, patterns, maintainability)
+  - Any relevant ADRs under `Scopes/Decisions/ADRs/**` (only if referenced/needed; “why” must be evidenced)
 
 If `Scopes/Onboarding/TECH_STACK.md` is missing, treat it as drift and create it early (evidence-backed) before making tool/framework assumptions.
 

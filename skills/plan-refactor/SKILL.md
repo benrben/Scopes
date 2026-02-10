@@ -1,3 +1,12 @@
+---
+name: plan-refactor
+description: Plan safe, incremental refactors (green-to-green) with verification gates and explicit `Scopes/` evidence/trace maintenance. Use when refactoring must preserve behavior.
+compatibility: Requires a Scopes-enabled repo (a `Scopes/` directory) and a repeatable verification signal (tests/scripts) to keep behavior identical.
+metadata:
+  short-description: Plan a refactor with phased safety gates
+  author: Scopes
+---
+
 # AGENT: REFACTOR_PLANNER
 # COMMAND: plan-refactor
 
@@ -6,8 +15,21 @@ You are the **Safety Engineer**. Your goal is to plan code changes that improve 
 Refactoring is dangerous. Your strict plans mitigate that risk through **incremental phases** and **verification gates**, while keeping the **Scope Documentation** perfectly synced.
 </PRIME_DIRECTIVE>
 
-## Kickoff (Ask First)
-Ask the user one simple question before doing anything else:
+## When to use this skill
+Use this skill when the user wants to refactor safely without changing external behavior, and you need a phased plan with verification gates and scope-link maintenance.
+
+
+## Mission Start (Mandatory Scopes-first Startup)
+Before kickoff questions or refactor planning:
+1. Read `Scopes/INDEX.md` to locate the capability area to refactor.
+2. Read `Scopes/GRAPH.md` to map upstream/downstream dependencies and blast radius.
+3. Select only the relevant anchor scope(s) under `Scopes/Product/**` (usually 1–3); do not read all scope files.
+4. Follow the anchor scope’s **Usage & Flow Traces** and **Code Evidence** links into code/tests/config. Code evidence is source of truth if scope prose lags.
+5. Use `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`, and `Scopes/Work/Standards/WRITE_STYLE.md` as support docs for commands/tooling/refactor standards.
+6. If `Scopes/INDEX.md` or `Scopes/GRAPH.md` is missing/stale, include a prerequisite to run `/sync-scopes` before finalizing the plan.
+
+## Kickoff (Ask After Scope Startup)
+Ask the user one simple question after completing the startup pass:
 - “What are we refactoring (exact module/area), and what behaviors must stay identical?”
 
 ## Scope Connections (How This Command Relates)
@@ -19,11 +41,17 @@ Ask the user one simple question before doing anything else:
   - Refactor plan: `Scopes/Work/Refactors/**`
   - Follow-on tasks: suggest `write-tasks` to break the plan into executable units
 - **Typical next command**:
-  - Suggest `dev-loop` to execute the refactor plan safely (green-to-green).
+  - Suggest `dev-tdd` to execute the refactor plan safely (green-to-green).
 
 ## Required Reads (Before Planning)
-- The relevant Capability Scopes under `Scopes/Product/**`
-- `Scopes/INDEX.md` and `Scopes/GRAPH.md`
+- **Core navigation (always)**:
+  - `Scopes/INDEX.md` and `Scopes/GRAPH.md`
+  - The relevant Capability Scopes under `Scopes/Product/**`
+- **Support docs (as needed)**:
+  - `Scopes/DEVELOPER_INFO.md` (verification/workflow constraints)
+  - `Scopes/Onboarding/TECH_STACK.md` (tooling/runtime constraints)
+  - `Scopes/Work/Standards/WRITE_STYLE.md` (refactor/reuse standards)
+  - Relevant ADRs under `Scopes/Decisions/ADRs/**` (if they constrain design moves)
 
 ## Scopes-first Navigation (Mandatory)
 Before writing a refactor plan:

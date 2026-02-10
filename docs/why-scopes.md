@@ -1,4 +1,4 @@
-# Why Scopes (and why these commands exist)
+# Why Scopes (and why these skills exist)
 
 Scopes are a deliberate answer to a common failure mode: **code changes fast, docs drift faster**.
 
@@ -21,7 +21,7 @@ Raw codebases are high-entropy: lots of files, lots of local detail, and not eno
 
 - **Behavior-first**: describe what the software does today, not what we hope it does.
 - **Evidence-required**: meaningful claims link to proof (code/tests/config/schema).
-- **Maintained as part of dev**: the commands in `commands/` treat “update the truth” as part of normal work.
+- **Maintained as part of dev**: the Scopes skills treat “update the truth” as part of normal work.
 
 ## How a code assistant should navigate (Scopes-first algorithm)
 When working in a repo that uses Scopes, a copilot should **not** start by grepping code. It should route through Scopes:
@@ -34,7 +34,7 @@ When working in a repo that uses Scopes, a copilot should **not** start by grepp
    - Follow **Usage & Flow Traces** end-to-end.
    - Use **Code Evidence** links to jump into the exact code/tests/config proving each behavior.
 5. **If the scope is missing or drifty**:
-   - Run `/sync-scopes` to generate/update evidence-backed docs, or
+  - Run the `sync-scopes` skill to generate/update evidence-backed docs, or
    - Create a small task to repair the scope (add traces/evidence/required diagrams).
 6. **After changes**:
    - Update the affected `Scopes/Product/**` docs (traces + evidence + diagrams),
@@ -47,4 +47,3 @@ If you want to go deeper, these are good starting points:
 - [Beyond Code Generation: LLMs for Code Understanding](https://dev.to/eabait/beyond-code-generation-llms-for-code-understanding-3ldn)
 - [CodeWiki: Evaluating AI's Ability to Generate Holistic Documentation for Large-Scale Codebases](https://arxiv.org/html/2510.24428v3)
 - [SARA: Selective and Adaptive Retrieval-augmented Generation with Context Compression](https://arxiv.org/abs/2507.05633)
-
