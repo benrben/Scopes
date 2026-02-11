@@ -68,40 +68,19 @@ Capture what matters to modify/extend safely:
 
 ## Output Contract
 
-Return a comprehensive analysis with specific file paths and line numbers:
+Return a tight trace with specific file paths and line numbers (≤ 18 lines).
 ```
-## Feature Analysis
-
-**Scope Context Used:**
-- `Scopes/Product/...`
-- `Scopes/GRAPH.md` — <relevant dependency edges>
-
-## Entry Points
-- `path/to/file.ts:Lx-Ly` — <what enters here>
-
-## Execution Flow (Step-by-step)
-1. `path/to/a.ts:Lx-Ly` — <call + data in/out>
-2. `path/to/b.ts:Lx-Ly` — <transformation>
-...
-
-## Architecture Layers
-- Presentation/API:
-- Domain/Business logic:
-- Data/IO:
-
-## Key Components
-- `path/to/component` — responsibility + interface
-
-## Dependencies
-- Internal: ...
-- External: ...
-
-## Observations
-- Strengths:
-- Risks / opportunities:
-
-## Essential Files (minimum set)
-- `...`
+## Feature Trace
+**Goal:** <one sentence>
+**Scopes:** <1–3 scope paths, or “(none detected)”>
+**Entry:** `path/to/file.ts:Lx-Ly` — <entrypoint>
+**Flow:**
+1. `path/to/a.ts:Lx-Ly` — <what happens>
+2. `path/to/b.ts:Lx-Ly` — <what happens>
+3. ... (max 7 steps)
+**Key deps:** internal=<0–3>, external=<0–3>
+**Essential files:** `<f1>`, `<f2>`, `<f3>` (max 10)
+**Unknowns:** <only if blocked; one line>
 ```
 
 ## Rules

@@ -88,7 +88,7 @@ sed -n '<line>p' <referenced-file>
 
 ## Output Contract
 
-Return:
+Return (≤ 10 lines; do not paste scope contents):
 ```
 ## Scope Written
 

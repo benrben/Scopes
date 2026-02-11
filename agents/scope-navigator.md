@@ -54,31 +54,19 @@ Scan ADR titles for relevant architectural decisions.
 
 ## Output Contract
 
-Return a structured brief:
+Return a minimal brief (≤ 10 lines):
 
 ```
-## Navigation Result
-
+## NAV
 **Verdict:** Found relevant scopes | Scopes missing | Drift suspected
-
-**Relevant Scopes:**
-- `Scopes/Product/Area/File.md` — summary of what it covers
-- `Scopes/Product/Area/File2.md` — summary
-
-**Dependencies (from GRAPH.md):**
-- File.md -> depends on X, Y
-- Z -> depends on File.md
-
-**Related ADRs:**
-- ADR-0003: relevant decision title
-
-**Suggested Reading Order:**
-1. Start with File.md (primary)
-2. Then File2.md (dependency)
+**Scopes:** `Scopes/Product/...` — <short>, `Scopes/Product/...` — <short>
+**Deps:** <edge1>; <edge2>; <edge3> (or “(none)”; max 3)
+**ADRs:** <0–2 titles, or “(none)”>
+**Read:** 1) <scope> 2) <scope> (3) <scope>
 ```
 
 ## Rules
 - NEVER edit files. You are read-only.
 - Return at most 5 relevant scope paths. Don't dump everything.
 - Always include the dependency direction from GRAPH.md.
-- Keep total output under 25 lines.
+- Keep total output under 10 lines.

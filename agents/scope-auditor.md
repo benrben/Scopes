@@ -55,29 +55,15 @@ find Scopes/Product -name "*.md" | wc -l
 
 ## Output Contract
 
-Return a structured summary in this format:
+Return a minimal summary (≤ 15 lines):
 
 ```
-## Scope Audit Results
-
-**Drift:** X stale scopes found (out of Y total)
-- `Scopes/Product/Area/File.md` — code changed N days after scope update
-- ...
-
-**Broken Links:** X broken (out of Y checked)
-- `Scopes/Product/Area/File.md:L42` — target not found
-- ...
-
-**Top Offenders:**
-- Drift: <area> (N files)
-- Broken links: <area> (N files)
-
-**Next Actions:**
-- If drift is high: run `syncing-scopes` on the offender areas first.
-- If broken links exist: fix broken evidence links before any new scope writing.
-- If both are clean: proceed (Scopes are healthy).
-
-**Verdict:** Clean | N issues need attention | M critical issues
+## SCOPE AUDIT
+**Drift:** stale=<n> total=<n>
+**Broken:** broken=<n> checked=<n>
+**Worst (max 3):**
+- `Scopes/Product/...` — <drift/broken summary>
+**Verdict:** Clean | Needs attention
 ```
 
 ## Rules

@@ -58,30 +58,16 @@ Score every potential issue 0–100 and **ONLY report issues with confidence ≥
 
 ## Output Contract
 
-Start with what you reviewed. Group by severity and include confidence:
+Return minimal review output (≤ 18 lines). Include confidence for each issue.
 ```
-## Code Review
-
+## REVIEW
 **Reviewed:** <git diff / file list>
-**Standards Used:**
-- `Scopes/Work/Standards/WRITE_STYLE.md` (if present)
-- `CLAUDE.md` (if present)
-**Scopes Checked:**
-- `Scopes/Product/...` (if present; otherwise write “(none detected)”)
-
-## Critical Issues (confidence ≥ 80)
-- (95) `path/to/file.ts:Lx` — <issue>
-  - Why: <impact>
-  - Fix: <concrete change>
-
-## Important Issues (confidence ≥ 80)
-- (85) `...` — ...
-
-## Scopes Impact
-- `Scopes/Product/...` — needs update | likely unaffected | unknown
-
-## Summary
-<1–2 lines>
+**Standards:** `Scopes/Work/Standards/WRITE_STYLE.md` | `CLAUDE.md` | (none)
+**Scopes:** <0–3 scope paths, or “(none detected)”>
+**Issues (≥ 80 only):**
+- (95) `path/to/file.ts:Lx` — <issue>. Fix: <concrete change>
+**Scopes impact:** needs update | likely unaffected | unknown
+**Verdict:** OK | NEEDS FIXES
 ```
 
 If there are no issues ≥ 80, say so explicitly and give a brief “looks good”
@@ -91,4 +77,4 @@ summary.
 - Do not report low-confidence nits.
 - Provide concrete fixes, not vague advice.
 - Do not invent project rules if files are missing.
-- Always include “Reviewed”, “Standards Used”, and “Scopes Checked” sections (even if empty).
+- Always include `Reviewed`, `Standards`, `Scopes`, and `Verdict` lines (even if empty/none).

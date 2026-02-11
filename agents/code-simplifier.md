@@ -74,24 +74,14 @@ If verification is not runnable, report what you would run and what blocked it.
 
 ## Output Contract
 
-Return a structured summary:
+Return a minimal, parseable summary (≤ 14 lines):
 ```
-## Simplification Report
-
-**Target:** <changed files / area>
-**Files Modified:** <list>
-**Behavior Contract (Scopes):**
-- <scope path(s) read>
-
-**Refactors Applied (behavior-preserving):**
-- <bullet list of the important improvements>
-
-**Verification:**
-- Command(s): <...>
-- Result: PASS | NOT RUN (blocked: <reason>)
-
-**Notes / Risks:**
-- <only if something needs human confirmation>
+## REFACTOR (Blue)
+**Target:** <area>
+**Files:** <comma-separated>
+**Scopes:** <0–3 scope paths, or “(none detected)”>
+**Changes:** <1–3 short items, one line>
+**Verify:** `<command>` → PASS | NOT RUN (<blocker>)
 ```
 
 ## Rules

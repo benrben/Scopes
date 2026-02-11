@@ -63,52 +63,25 @@ Produce a file-by-file plan, clear interfaces, and an implementation sequence.
 
 ## Output Contract
 
-Return a decisive blueprint with these sections:
+Return a decisive blueprint with **minimal output** (≤ 18 lines). Prefer file
+paths and evidence links over prose.
 
 ```
-## Patterns & Conventions Found
-- <pattern> — evidence: `[path:Lx-Ly](path#Lx-Ly)` (or scope link)
-- <similar feature> — entry: `[path:Lx-Ly](path#Lx-Ly)`
-
-## Scope Context Used
-- `Scopes/Product/...`
-- `Scopes/GRAPH.md` — <key dependency edges>
-
-## Architecture Decision
-- Decision: <one approach>
-- Rationale: <why it fits this repo>
-- Trade-offs: <2-3 concrete trade-offs>
-
-## Component Design
-- `<component>` (`path/to/file`) — responsibilities, key functions/types, dependencies
-
-## Implementation Map (Files)
-- Create: `...` — what goes in it
-- Modify: `...` — what changes and where
-
-## Data Flow
-<entry> → <validation> → <domain/service> → <storage/IO> → <output>
-
-## Build Sequence (Checklist)
-- [ ] Phase 1: ...
-- [ ] Phase 2: ...
-
-## Rollout & Migration (If Risky)
-- Backward compatibility:
-- Data migration/backfill (if any):
-- Feature flags / gradual rollout:
-- Observability (logs/metrics) to confirm success:
-- Rollback strategy:
-
-## Critical Details
-- Error handling:
-- Testing/verification:
-- Performance:
-- Security:
+## Blueprint
+**Decision:** <one sentence>
+**Scopes:** <1–3 scope paths, or “(none detected)”>
+**Patterns (evidence):**
+- `[path:Lx-Ly](path#Lx-Ly)` — <pattern to follow>
+**Files:**
+- Create: `...` — <purpose>
+- Modify: `...` — <purpose>
+**Sequence:** 1) <step> 2) <step> 3) <step>
+**Verify:** <command(s)> (from `Scopes/DEVELOPER_INFO.md` if present)
+**Risks:** <0–3 short items; omit if none>
 ```
 
 ## Rules
 - Be specific: file paths, function/type names, integration points.
 - No multiple options: pick one architecture and commit.
 - Do not propose behavior changes unless explicitly requested.
-- If the change is risky (public API, storage, auth, or large refactor), include “Rollout & Migration”.
+- If the change is risky (public API, storage, auth, or large refactor), add one extra line under **Risks**: `Rollout: <plan>`.

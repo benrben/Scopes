@@ -50,10 +50,22 @@ Only include agents with **Need ≥ 9**.
 | Agent | How it uses it | Need (1–10) |
 |---|---|---:|
 | `scope-navigator` | Find relevant scopes, dependency graph, and anchor files before starting TDD | 9 |
+| `code-explorer` | If you need a deeper trace of existing behavior/patterns before writing the failing test | 9 |
+| `code-architect` | If the change is non-trivial, produce a decisive blueprint that fits existing patterns before coding | 9 |
 | `code-simplifier` | After tests are green, simplify recent changes while preserving behavior and staying aligned to the Scopes contract | 9 |
 | `code-reviewer` | After changes are complete, review `git diff` and report only confidence ≥ 80 issues vs Scopes + standards | 9 |
+| `scope-writer` | After implementation is verified, update affected `Scopes/**` with evidence links and traces | 9 |
+| `scope-auditor` | After scope updates, validate drift + broken evidence links to keep Scopes trustworthy | 9 |
 
 ---
+
+### Suggested Handoff Order (Minimal)
+1. `scope-navigator` (anchor scopes + deps)
+2. *(Optional)* `code-explorer` (trace existing behavior/tests)
+3. *(Optional)* `code-architect` (blueprint if non-trivial)
+4. Main agent (RED → GREEN → REFACTOR → SCOPE, with terminal evidence)
+5. *(Optional)* `code-simplifier` → *(Optional)* `code-reviewer`
+6. *(If Scopes touched)* `scope-writer` → `scope-auditor`
 
 ## TDD Cycle: RED -> GREEN -> REFACTOR -> SCOPE (MANDATORY, NO EXCEPTIONS)
 

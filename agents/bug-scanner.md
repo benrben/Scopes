@@ -83,27 +83,18 @@ Use the current date and scanned area in the filename.
 ## Output Contract
 
 Write the full report to `Scopes/Work/Bugs/scan-<YYYY-MM-DD>-<area>.md` AND
-return a compact summary to the parent:
+return a minimal summary to the parent (≤ 14 lines):
 
 ```
-## Bug Scan Results
-
-**Report saved:** `Scopes/Work/Bugs/scan-2026-02-11-auth.md`
-**Hotspots Found:** X findings (Y HIGH, Z MED)
-
-**Critical (must fix):**
-- `src/path:L42` — `eval()` usage (HIGH)
-  - Scope: `Scopes/Product/Area/File.md`
-  - Blast radius: 3 dependent scopes
-
-**Warnings:**
-- `src/path:L88` — hardcoded secret pattern (MED)
-
-**Documentation Health:**
-- Scope `File.md` is stale (code changed 14 days after last scope update)
-- Scope `File2.md` is current
-
-**Verdict:** X issues in Y files, Z scopes need refresh
+## BUG SCAN
+**Report:** `Scopes/Work/Bugs/scan-YYYY-MM-DD-<area>.md`
+**Counts:** HIGH=<n> MED=<n> LOW=<n>
+**Top:**
+- `path:Lx` — <one-line finding> (<sev>)
+- `path:Lx` — <one-line finding> (<sev>)
+- `path:Lx` — <one-line finding> (<sev>)
+**Docs:** drift=<n> broken_links=<n>
+**Verdict:** Clean | Needs fixes
 ```
 
 ## Rules
