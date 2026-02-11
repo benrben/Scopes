@@ -31,10 +31,10 @@ Ask the user one simple question:
 ## Scope Connections
 - **Upstream inputs**: `Scopes/Work/Tasks/**`, `Scopes/Product/**` + `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`
 - **Downstream outputs**: Bug report (`Scopes/Work/Bugs/**`), optional tasks via `writing-tasks`, fixes via `developing-tdd`
+- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration (Prefer Parallel)
-
-Only include agents with **Need ≥ 9**.
+Invoke agents only when needed.
 
 | Agent | How it uses it | Need (1–10) |
 |---|---|---:|
@@ -75,6 +75,10 @@ Look for high-signal issue classes:
 ### 4) Deliver (Visible)
 Produce a bug report under `Scopes/Work/Bugs/**` and optional task files.
 
+Mandatory post-step (keep Scopes trustworthy):
+- `python3 skills/syncing-scopes/scripts/check_evidence_links.py --broken-only --summary`
+Include the summary counts in the bug report.
+
 ## Severity Rubric (Use consistently)
 - **High**: security/authz issues, data loss/corruption, crashes, money-impacting bugs, privilege escalation, or broad production outages.
 - **Medium**: incorrect behavior in common paths, denial-of-service risks without data loss, broken retries/timeouts, or high-frequency reliability issues.
@@ -82,7 +86,7 @@ Produce a bug report under `Scopes/Work/Bugs/**` and optional task files.
 
 ## Bug Report Template
 
-**File Path**: `Scopes/Work/Bugs/<YYYY-MM-DD>-<slug>.md`
+**File Path**: `Scopes/Work/Bugs/bug-hunt-<YYYY-MM-DD>-<slug>.md`
 
 ```markdown
 # Bug Hunt: <Title>
@@ -111,4 +115,30 @@ Produce a bug report under `Scopes/Work/Bugs/**` and optional task files.
 - [ ] Commands run are listed verbatim with key output signal
 - [ ] Fix suggestions are minimal and testable
 - [ ] Scope drift is explicitly listed with target files
+
+## When to Stop (Mandatory)
+- Stop once you have a ranked top 3-10 findings with evidence (or you can state "no findings with evidence").
+- Default caps: 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; mark gaps as `[Unknown]`.
+- If the request is too broad, ask one narrowing question and stop with `Verdict: Needs Narrowing`.
+
+## Blocked Runbook (Mandatory)
+- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes` first.
+- No runnable commands / missing environment: record the exact blocker + what you'd run; set `Verdict: Blocked`.
+- Evidence cannot be found: mark `[Unknown]` and stop (do not guess).
+
+## Output Contract
+
+Return <= 20 lines:
+
+```markdown
+## BUG HUNT
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary>
+Evidence:
+- `Scopes/Work/Bugs/bug-hunt-YYYY-MM-DD-<slug>.md`
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. create tasks or hand off to developing-tdd>
+Artifact: `Scopes/Work/Bugs/bug-hunt-YYYY-MM-DD-<slug>.md`
+```
 ```

@@ -20,6 +20,7 @@ Based on [Zach Wills' three core principles](https://zachwills.net/how-to-use-cl
 | `code-simplifier` | Simplify recent changes | Refinement | Yes | No |
 | `scope-writer` | Update Scopes documentation | Documentation | Docs only | No |
 | `scope-auditor` | Validate Scopes accuracy | Validation | No (readonly) | Yes |
+| `context-summarizer` | Stabilize working set | Support | Docs only | No |
 
 ---
 
@@ -33,6 +34,34 @@ conversation only receives structured summaries, keeping it sharp and focused.
 
 Parallelism is a bonus: when agents are independent, run them concurrently.
 When they depend on each other, chain them sequentially.
+
+---
+
+## When to Delegate vs Keep in Lead
+
+| Situation | Use a subagent? | Recommended agent(s) |
+|---|---|---|
+| Need 1-3 scope entry points fast | Yes | `scope-navigator` |
+| Need deep end-to-end trace | Yes | `code-explorer` |
+| Need decisive architecture + file plan | Yes | `code-architect` |
+| Need mechanical hotspot scan | Yes | `bug-scanner` |
+| Need behavior-preserving cleanup | Yes | `code-simplifier` |
+| Need drift/link validation | Yes | `scope-auditor` |
+| Tool-heavy phase just finished; need stable summary | Yes | `context-summarizer` |
+| Tight edit -> verify -> edit loop | No | main agent |
+| Needs user choice / product decision | No | main agent |
+
+## Summarization Checkpoint (Mandatory Pattern)
+
+After any tool-heavy phase or multi-agent burst, stabilize the working set:
+- Goals
+- Constraints
+- Current plan
+- Key findings (with evidence)
+- Unknowns (use `[Unknown]`)
+- Next action
+
+If the summary would be long, invoke `context-summarizer` to write a durable note to `Scopes/Work/Notes/**` and return only a pointer.
 
 ---
 

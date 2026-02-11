@@ -1,64 +1,63 @@
 ---
 name: updating-skills
-description: Refreshes installed Scopes skills in a project by syncing packaged skill folders from upstream. Use when the user wants the latest upstream skills, needs to update or refresh skills, or sync skill versions.
+description: Refreshes installed Scopes skills in a project by syncing packaged skill folders from upstream. Use when the user wants to update or refresh their installed skills version.
 ---
 
 # Updating Skills
 
-This skill refreshes **Skills only**.
+This skill refreshes **Skills only** (and optionally `agents/` if the user requests).
 
 ## When to use this skill
 Use when installed Scopes skills are stale and you want to refresh them locally from upstream.
 
-## Safety and confirmations
-- This workflow clones a repo and overwrites target folders; ask before running if the user has local modifications.
-- Always run `--dry-run` first and keep a backup copy of the existing skills folder before syncing.
+## Prerequisites
+- A target skills root directory (e.g. `.cursor/skills/`, `.claude/skills/`, `.agent/skills/`).
+- Network access and git access to the upstream repo (if required by your update method).
 
-## Helper scripts
-- `scripts/update-skills.sh`: Refresh installed skills from upstream `skills/`.
+## Safety and confirmations
+- This workflow can overwrite target folders; ask before running if the user has local modifications.
+- Always run `--dry-run` first and keep backups enabled unless explicitly disabled.
+
+## Mission Start
+This is a maintenance workflow, but still follow the shared protocol reference for consistency: `skills/_shared/SCOPES_PROTOCOL.md`.
+Do not assume repo tooling; discover the correct skills root and update method from observable files/paths.
+
+## Kickoff (Ask Next)
+- "Where are your skills installed (e.g. `.cursor/skills/`), and should we update `agents/` too?"
+
+## Scope Connections
+- **Upstream inputs**: current installed skills directory
+- **Downstream outputs**: refreshed skill folders; optional note under `Scopes/Work/Notes/**` (only if the target repo has Scopes)
+
+## When to Stop (Mandatory)
+- Stop once the update is complete and you've verified the canonical protocol file exists in the target: `skills/_shared/SCOPES_PROTOCOL.md`.
+- If `--dry-run` shows unexpected deletes/overwrites, stop and ask for confirmation.
+
+## Blocked Runbook (Mandatory)
+- No network/git auth: record the exact error; set `Verdict: Blocked`; suggest the smallest credential fix.
+- Target skills root unknown: set `Verdict: Needs Narrowing` and ask for the exact path.
+- Local modifications detected: set `Verdict: Needs Narrowing` and ask whether to proceed, merge, or abort.
+
+## Output Contract
+
+Return <= 20 lines:
+
+```markdown
+## UPDATE
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary of what was updated>
+Evidence:
+- <target skills root path>
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. reload assistant/plugin>
+Artifact: (none)
+```
 
 ## Suggested Update Flow (Safe)
-1. **Dry run** (see what would change): `bash <skills-root>/updating-skills/scripts/update-skills.sh --dry-run -v`
-2. **Backup safety**: by default the script backs up overwritten folders under `<target>/.scopes-backups/<timestamp>/` (disable with `--no-backup`).
-3. **Sync**: `bash <skills-root>/updating-skills/scripts/update-skills.sh -v`
-4. **Post-update validation**:
+1. Dry run: `bash <skills-root>/updating-skills/scripts/update-skills.sh --dry-run -v`
+2. Backup safety: verify backups are enabled (or explicitly approved to disable).
+3. Sync: `bash <skills-root>/updating-skills/scripts/update-skills.sh -v`
+4. Post-update checks:
    - Verify `skills/_shared/SCOPES_PROTOCOL.md` exists in the target skills root.
-   - Spot-check one skill: confirm “Mission Start” still points to the shared protocol.
-   - If your assistant caches skills/plugins, reload/restart it.
-
-## Scopes-first Policy Check (Post-update)
-After syncing skills, verify that execution/planning/research skills keep this startup contract:
-- Start every mission by navigating `Scopes/INDEX.md` and `Scopes/GRAPH.md`.
-- Read only relevant anchor capability scopes under `Scopes/Product/**`.
-- Follow scope trace/evidence links into code/tests/config before acting.
-- Treat `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`, and `Scopes/Work/Standards/WRITE_STYLE.md` as supporting docs.
-
-## Usage
-
-From your project root, run the script from the folder you installed this skill into:
-
-- Cursor:
-```bash
-bash .cursor/skills/updating-skills/scripts/update-skills.sh
-```
-
-- Claude:
-```bash
-bash .claude/skills/updating-skills/scripts/update-skills.sh
-```
-
-- Antigravity:
-```bash
-bash .agent/skills/updating-skills/scripts/update-skills.sh
-```
-
-### Common targets
-- Cursor skills: `.cursor/skills`
-- Claude skills: `.claude/skills`
-- Antigravity skills: `.agent/skills`
-
-**In Cursor**, use `.cursor/skills` only. If a link opens `.claude/skills/...`, close it and use the same skill under `.cursor/skills/...`.
-
-## Notes
-- This skill is self-contained. It updates skills by cloning the Scopes repo and syncing packaged skill folders.
-- If your project doesn't have this skill yet, copy `skills/updating-skills/` from the repo.
+   - Spot-check one skill: confirm its Mission Start references the canonical protocol path.

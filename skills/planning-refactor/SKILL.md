@@ -24,10 +24,10 @@ Ask the user one simple question:
 - **Upstream inputs**: `Scopes/Work/Bugs/**`, `Scopes/Work/Tasks/**`, capability scopes under `Scopes/Product/**`
 - **Downstream outputs**: Refactor plan (`Scopes/Work/Refactors/**`), follow-on tasks via `writing-tasks`
 - **Typical next command**: `developing-tdd` to execute the plan safely.
+- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration (Prefer Parallel)
-
-Only include agents with **Need ≥ 9**.
+Invoke agents only when needed.
 
 | Agent | How it uses it | Need (1–10) |
 |---|---|---:|
@@ -87,6 +87,7 @@ Before planning any structural change, you MUST discover the project's existing 
 2. **No Logic Changes**: Structural only. Do not mix with feature work.
 3. **Pattern Preservation**: Refactors MUST preserve established project patterns or explicitly plan their migration.
 4. **Scope Updates (MANDATORY)**: Update evidence links, traces, and diagrams after moves/renames.
+5. **Post-move/rename checklist (MANDATORY)**: after any move/rename, run `check_evidence_links.py --broken-only --summary` (or invoke `scope-auditor`) and record results in the plan.
 
 ## Refactor Plan Template
 
@@ -135,3 +136,29 @@ Before planning any structural change, you MUST discover the project's existing 
 - [ ] Rollback plan included if refactor moves files or changes public interfaces
 - [ ] All impacted `Scopes/Product/**` evidence links updated after moves/renames
 - [ ] Exactly 2 diagrams remain in each substantial Capability Scope
+
+## When to Stop (Mandatory)
+- Stop once phases, verification gates, rollback plan, and scope maintenance steps are complete.
+- Avoid over-phasing: keep it to the minimum number of green-to-green checkpoints.
+- Default caps: 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; mark gaps as `[Unknown]`.
+
+## Blocked Runbook (Mandatory)
+- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes`.
+- No runnable verification signal: record exact blocker + suggested command; set `Verdict: Blocked`.
+- Refactor goal is too broad: ask one narrowing question; if not narrowed, set `Verdict: Needs Narrowing`.
+
+## Output Contract
+
+Return <= 20 lines:
+
+```markdown
+## REFACTOR PLAN
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary of the refactor target + strategy>
+Evidence:
+- `Scopes/Work/Refactors/YYYY-MM-DD-<slug>.md`
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. hand off to writing-tasks or developing-tdd>
+Artifact: `Scopes/Work/Refactors/YYYY-MM-DD-<slug>.md`
+```

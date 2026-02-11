@@ -7,6 +7,9 @@ description: >
   contract and project standards as the style source of truth.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: opus
+readonly: false
+allowed_output_roots:
+  - .
 maxTurns: 20
 ---
 
@@ -77,15 +80,26 @@ If verification is not runnable, report what you would run and what blocked it.
 Return a minimal, parseable summary (≤ 14 lines):
 ```
 ## REFACTOR (Blue)
-**Target:** <area>
-**Files:** <comma-separated>
-**Scopes:** <0–3 scope paths, or “(none detected)”>
-**Changes:** <1–3 short items, one line>
-**Verify:** `<command>` → PASS | NOT RUN (<blocker>)
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary of what was simplified>
+Evidence:
+- `<file>` — <what changed>
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; include scope maintenance handoff if Scopes likely affected>
+Artifact: (none)
+Verify: `<command>` -> PASS | NOT RUN (<blocker>)
 ```
+
+## When to Stop (Mandatory)
+- Stop once the target files are simplified and at least one verification signal is run (or a concrete blocker is recorded).
+- Do not broaden beyond the provided file list / `git diff` without explicit instruction.
+- If a change would risk behavior differences, stop and set `Verdict: Needs Narrowing`.
 
 ## Rules
 - Do NOT change external behavior (inputs/outputs/errors/side-effects).
+- Do not change public APIs unless explicitly requested.
 - If a “simplification” might change behavior, stop and propose it instead.
 - Stay focused on recently modified code unless explicitly directed otherwise.
 - The Verification section is mandatory: run at least one command OR state the exact blocker and the command you would run.
+- Scope maintenance handoff: if behavior-affecting files referenced by Scopes evidence changed, call out exact `Scopes/Product/**` files to update.

@@ -25,7 +25,7 @@ python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --lim
 If `drift_detector.py` is not available, fall back to:
 ```bash
 # Compare scope update times vs source file update times
-for f in $(find Scopes/Product -name "*.md" -maxdepth 3); do
+find Scopes/Product -name "*.md" -maxdepth 3 -print0 | while IFS= read -r -d '' f; do
   echo "--- $f ---"
   git log -1 --format="%ai" -- "$f"
 done
@@ -55,19 +55,28 @@ find Scopes/Product -name "*.md" | wc -l
 
 ## Output Contract
 
-Return a minimal summary (≤ 15 lines):
+Return a minimal summary (<= 15 lines):
 
 ```
 ## SCOPE AUDIT
-**Drift:** stale=<n> total=<n>
-**Broken:** broken=<n> checked=<n>
-**Worst (max 3):**
-- `Scopes/Product/...` — <drift/broken summary>
-**Verdict:** Clean | Needs attention
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence; e.g. "Broken links and drift detected">
+Evidence:
+- `Scopes/Product/...` — <worst item 1>
+- `Scopes/Product/...` — <worst item 2>
+- `Scopes/Product/...` — <worst item 3>
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. run syncing-scopes or update the worst scopes>
+Artifact: (none)
 ```
+
+## When to Stop (Mandatory)
+- Stop after you have the counts + worst 3 scope files.
+- Do not expand into full explanations; offload to an artifact if needed.
 
 ## Rules
 - NEVER edit scope files. You are read-only. Report findings only.
-- Keep output under 30 lines. Use `--limit` flags aggressively.
+- Use `--limit` flags aggressively.
 - If everything passes, say "All scopes clean" in one line.
 - Run from the repo root directory.

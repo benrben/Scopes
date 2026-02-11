@@ -83,7 +83,8 @@ This repository is the **source package** for Scopes skills/agents you install i
 - `querying-scopes` — answer "how/where/what depends on what" from `Scopes/` + evidence
 - `planning-idea` — turn an idea into a scope-native implementation blueprint
 - `writing-tasks` — convert intent into engineer-ready tasks under `Scopes/Work/Tasks/**`
-- `developing-verified` / `developing-tdd` — implement changes with verification gates (and update Scopes as part of the workflow)
+- `developing-verified` — implement changes with sandbox verification (no new test files)
+- `developing-tdd` — implement changes via strict TDD (failing test first)
 - `planning-refactor` — plan safe green-to-green refactors with scope link maintenance
 - `hunting-bugs` — evidence-backed bug scanning → reports + tasks
 - `writing-adr` — record decisions under `Scopes/Decisions/ADRs/**`
@@ -105,6 +106,7 @@ This repository is the **source package** for Scopes skills/agents you install i
 - `scope-auditor` — detect drift + broken evidence links (read-only)
 - `bug-scanner` — hotspot scan + scope context (read-only)
 - `code-reviewer` — review diffs and report only high-confidence issues
+- `context-summarizer` — stabilize a working-set summary after tool-heavy phases
 
 ---
 
@@ -206,3 +208,31 @@ Scopes doesn't make models smarter.
 It makes them **better grounded**: they know what you mean, where to look, what changed, and what is proven—so they can help with real Day‑2 engineering work: refactors, bugs, plans, tasks, and decisions.
 
 **Build better. Document automatically. Scope everything.**
+
+---
+
+## Quality Gates (This Repo)
+
+Run the repo linters locally:
+
+```bash
+make lint
+```
+
+What this enforces:
+- Skills and agents follow `docs/contracts.md` (frontmatter, budgets, stop conditions, verdict vocabulary, output contracts).
+- Package consistency: README lists match `skills/*` + `agents/*`; commands reference valid skills; canonical protocol references exist.
+
+## Pre-Merge Validation (For Repos With `Scopes/`)
+
+Before merging changes that touch `Scopes/**` or files referenced by scope evidence:
+
+```bash
+python3 skills/syncing-scopes/scripts/check_evidence_links.py --broken-only --summary
+python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 20
+```
+
+## Canonical Paths + Compatibility Aliases
+
+- Canonical shared protocol: `skills/_shared/SCOPES_PROTOCOL.md`
+ 

@@ -27,10 +27,10 @@ Ask the user one simple question:
 - **Upstream inputs**: `Scopes/Work/Ideas/**`, `Scopes/Research/**`
 - **If research needed and missing**: Trigger `researching-decisions` first.
 - **Downstream outputs**: Plan (`Scopes/Work/Planning/**`), follow-on tasks via `writing-tasks`
+- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration (Prefer Parallel)
-
-Only include agents with **Need ≥ 9**.
+Invoke agents only when needed.
 
 | Agent | How it uses it | Need (1–10) |
 |---|---|---:|
@@ -137,3 +137,29 @@ Implementation of <Idea> using <Strategy>.
 - [ ] Plan includes explicit verification steps
 - [ ] Plan lists exact Scope maintenance tasks
 - [ ] Graph edges planned with evidence locations
+
+## When to Stop (Mandatory)
+- Stop once the plan contains: Risk Register, Scope Registry Impact, sequenced TODO Scopes, verification gates, and Definition of Done.
+- Default caps: 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; mark gaps as `[Unknown]`.
+- If the idea cannot be scoped to an area/capability, stop and set `Verdict: Needs Narrowing`.
+
+## Blocked Runbook (Mandatory)
+- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes` first.
+- Research required but web access blocked: run `researching-decisions` in offline mode and proceed with `[Blocked]` external section.
+- Evidence for existing patterns cannot be found: mark `[Unknown]` and constrain the blueprint to what is provable.
+
+## Output Contract
+
+Return <= 20 lines:
+
+```markdown
+## PLAN
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary of the chosen strategy>
+Evidence:
+- `Scopes/Work/Planning/YYYY-MM-DD-<idea>-plan.md`
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. hand off to writing-tasks>
+Artifact: `Scopes/Work/Planning/YYYY-MM-DD-<idea>-plan.md`
+```

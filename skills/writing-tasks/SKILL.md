@@ -24,6 +24,7 @@ Ask the user one simple question:
 - **Upstream inputs**: `Scopes/Work/Planning/**`, `Scopes/Research/**`, `Scopes/Work/Bugs/**`, `Scopes/Work/Ideas/**`
 - **Downstream outputs**: Task files (`Scopes/Work/Tasks/**`), `Scopes/DEVELOPER_INFO.md` if workflow changes
 - **Typical next command**: `developing-tdd` to execute tasks.
+- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration (Prefer Parallel)
 
@@ -83,6 +84,36 @@ Before writing task steps, you MUST discover the project's existing patterns (se
 4. **Pattern Reference Required**: Every task that creates code MUST reference an existing implementation as the pattern to follow.
 5. **Template Adherence**: Guide engineer to update traces, links, diagrams.
 6. **Ordering (MANDATORY for multi-task sets)**: If you generate 2+ tasks, include explicit ordering and cross-links (“Depends on”) so engineers run tasks in the intended sequence.
+
+## Token-Safety Budget (Mandatory)
+- Default max tasks per batch: 8. If more are needed, stop and ask to continue in a second batch.
+- Default max total estimated hours per batch: 16. If exceeded, stop and ask for confirmation.
+
+## When to Stop (Mandatory)
+- Stop once tasks are written with: Anchor Scope, Pattern Reference, concrete verification, and scope maintenance steps.
+- Default caps: 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; mark gaps as `[Unknown]`.
+- If the intent cannot be broken into verifiable tasks, stop and set `Verdict: Needs Narrowing`.
+
+## Blocked Runbook (Mandatory)
+- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes` first.
+- No pattern references exist: mark `[Unknown]` and write tasks that first establish a pattern via a small, verified example.
+- Verification steps unknown: mark `[Unknown]` and point to `Scopes/DEVELOPER_INFO.md` as the source of truth to update.
+
+## Output Contract
+
+Return <= 20 lines:
+
+```markdown
+## TASKS
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary of what was produced>
+Evidence:
+- `Scopes/Work/Tasks/YYYY-MM-DD-<task-slug>.md` (and any dependencies)
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. hand off to developing-tdd>
+Artifact: (none)
+```
 
 ## Task Template
 

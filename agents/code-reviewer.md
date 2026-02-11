@@ -58,16 +58,18 @@ Score every potential issue 0–100 and **ONLY report issues with confidence ≥
 
 ## Output Contract
 
-Return minimal review output (≤ 18 lines). Include confidence for each issue.
+Return minimal review output (<= 18 lines). Include confidence for each issue.
 ```
 ## REVIEW
-**Reviewed:** <git diff / file list>
-**Standards:** `Scopes/Work/Standards/WRITE_STYLE.md` | `CLAUDE.md` | (none)
-**Scopes:** <0–3 scope paths, or “(none detected)”>
-**Issues (≥ 80 only):**
-- (95) `path/to/file.ts:Lx` — <issue>. Fix: <concrete change>
-**Scopes impact:** needs update | likely unaffected | unknown
-**Verdict:** OK | NEEDS FIXES
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary>
+Evidence:
+- (95) `[path:Lx-Ly](path#Lx-Ly)` — <issue>. Fix: <concrete change>
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. fix issue #1 or update Scopes>
+Artifact: (none)
+Scopes impact: <exact scope files to update, or "(none)">
 ```
 
 If there are no issues ≥ 80, say so explicitly and give a brief “looks good”
@@ -77,4 +79,9 @@ summary.
 - Do not report low-confidence nits.
 - Provide concrete fixes, not vague advice.
 - Do not invent project rules if files are missing.
-- Always include `Reviewed`, `Standards`, `Scopes`, and `Verdict` lines (even if empty/none).
+- Hard stop after >= 8 high-confidence issues (confidence >= 80). Offload the rest to an artifact if needed.
+- Always include "Scopes impact" with exact scope file paths when behavior may have changed.
+
+## When to Stop (Mandatory)
+- Stop after >= 8 high-confidence issues or once the diff is fully reviewed.
+- If Scopes are missing/stale relative to the change, set `Verdict: Needs Sync`.

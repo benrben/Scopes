@@ -5,8 +5,11 @@ description: >
   updates Scopes documentation files following project templates. Always use
   after implementation is verified to keep docs in sync with code. Generates
   evidence-backed scope files with proper code links.
-tools: Read, Write, Edit, Bash, Grep, Glob
+tools: Read, Write, Bash, Grep, Glob
 model: inherit
+readonly: false
+allowed_output_roots:
+  - Scopes/
 maxTurns: 20
 ---
 
@@ -86,17 +89,31 @@ links by checking that the referenced file:line exists:
 sed -n '<line>p' <referenced-file>
 ```
 
+### Step 7: Post-Write Validation (Default)
+After writing/updating scopes, run the fast validators:
+```bash
+python3 skills/syncing-scopes/scripts/check_evidence_links.py --broken-only --summary
+python3 skills/syncing-scopes/scripts/drift_detector.py --stale-only --limit 20
+```
+
 ## Output Contract
 
-Return (≤ 10 lines; do not paste scope contents):
+Return (<= 12 lines; do not paste scope contents):
 ```
-## Scope Written
+## SCOPE WRITTEN
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary>
+Evidence:
+- `Scopes/Product/...` — created/updated
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. run scope-auditor or proceed to merge>
+Artifact: (none)
+```
 
-**Created/Updated:** `Scopes/Product/Area/File.md`
-**Evidence links:** X valid, Y broken (fixed/noted)
-**INDEX.md:** updated | no change needed
-**GRAPH.md:** updated | no change needed
-```
+## When to Stop (Mandatory)
+- Stop once the requested scope changes are written and the post-write validators have been run (or a concrete blocker recorded).
+- If evidence links cannot be proven, mark `[Unknown]` and stop.
 
 ## Rules
 - Every claim MUST have a `[path:Lx-Ly](path#Lx-Ly)` evidence link.
@@ -105,3 +122,4 @@ Return (≤ 10 lines; do not paste scope contents):
 - Use `--link-only` when generating links to save output space.
 - Always self-validate before finishing.
 - Do not produce scopes with 0 traces or with ≠ 2 diagrams (fix before returning).
+- Ask before destructive operations (deletes/mass rewrites).

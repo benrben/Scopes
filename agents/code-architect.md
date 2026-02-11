@@ -63,22 +63,28 @@ Produce a file-by-file plan, clear interfaces, and an implementation sequence.
 
 ## Output Contract
 
-Return a decisive blueprint with **minimal output** (≤ 18 lines). Prefer file
+Return a decisive blueprint with **minimal output** (<= 18 lines). Prefer file
 paths and evidence links over prose.
 
 ```
 ## Blueprint
-**Decision:** <one sentence>
-**Scopes:** <1–3 scope paths, or “(none detected)”>
-**Patterns (evidence):**
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence>
+Evidence:
 - `[path:Lx-Ly](path#Lx-Ly)` — <pattern to follow>
-**Files:**
-- Create: `...` — <purpose>
-- Modify: `...` — <purpose>
-**Sequence:** 1) <step> 2) <step> 3) <step>
-**Verify:** <command(s)> (from `Scopes/DEVELOPER_INFO.md` if present)
-**Risks:** <0–3 short items; omit if none>
+Unknowns:
+- <only if blocked/partial>
+Next: If tasks are needed, hand off to `writing-tasks`; if ready to build, hand off to `developing-verified`/`developing-tdd`.
+Artifact: (none)
+Files: Create=`...`; Modify=`...`
+Sequence: 1) <step> 2) <step> 3) <step>
+Verify: <command(s)>
+Risks: <0-3>
 ```
+
+## When to Stop (Mandatory)
+- Stop once the blueprint has a single clear decision, file list, sequence, and verification.
+- Do not enumerate multiple options; if ambiguous, set `Verdict: Needs Narrowing`.
 
 ## Rules
 - Be specific: file paths, function/type names, integration points.

@@ -72,8 +72,29 @@ Do the method silently; output only the answer format below.
 
 ## When to Stop (Mandatory)
 - Stop once you can answer the question with evidence for each key claim **or** you’ve explicitly marked missing proof as `[Unknown]`.
-- Do not “keep looking” past diminishing returns: prefer 1–3 anchor scopes and ~3–7 evidence links.
+- Do not “keep looking” past diminishing returns: prefer 1–3 anchor scopes and at most 7 evidence links.
 - If the answer requires broad scanning across many areas, stop and recommend `syncing-scopes` (or ask a clarifying question to narrow scope).
+
+## Blocked Runbook (Mandatory)
+- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes`.
+- Question is too broad: ask one clarifying question; set `Verdict: Needs Narrowing` if the user does not narrow.
+- Evidence is missing: mark `[Unknown]` and stop (do not guess).
+
+## Output Contract
+
+Return <= 20 lines:
+
+```markdown
+## QUERY
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence answer>
+Evidence:
+- `[path:Lx-Ly](path#Lx-Ly)` — <what this proves>
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. read a specific scope or run syncing-scopes>
+Artifact: (none)
+```
 
 ## Tiny Example (format only; uses real paths from this repo)
 If asked: “Where is the Capability Scope template defined?”
@@ -86,7 +107,7 @@ If asked: “Where is the Capability Scope template defined?”
 - `[No Scopes/ directory in this repo]` — this repository is the Scopes skills package itself
 
 ## Evidence
-- `[skills/syncing-scopes/references/TEMPLATES.md:L1-L80](skills/syncing-scopes/references/TEMPLATES.md#L1-L80)` — capability scope template structure
+- `[../syncing-scopes/references/TEMPLATES.md:L1-L80](../syncing-scopes/references/TEMPLATES.md#L1-L80)` — capability scope template structure
 
 ## Confidence
 - High

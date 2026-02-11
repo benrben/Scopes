@@ -27,6 +27,7 @@ Ask the user one simple question:
 - **Upstream inputs**: `Scopes/Research/**`, `Scopes/Work/Planning/**`, capability scopes, `Scopes/DEVELOPER_INFO.md`
 - **Downstream outputs**: ADR (`Scopes/Decisions/ADRs/**`), possible `Scopes/GRAPH.md` updates
 - **Typical next commands**: `planning-idea`, `writing-tasks`
+- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration (Prefer Parallel)
 
@@ -70,6 +71,7 @@ Write ADR to `Scopes/Decisions/ADRs/<0000>-<slug>.md`.
 3. **Consequences**: List both Pros AND Cons.
 4. **Decision Drivers (MANDATORY)**: Explicitly list the forces that matter (e.g., latency, security, complexity, team skill).
 5. **Rejected Options (MANDATORY)**: Include at least one rejected alternative and why it was rejected.
+6. **Evidence for internal context (MANDATORY)**: Any repo-specific context claims must include code/config evidence links (not just scope links). Missing proof becomes `[Unknown]`.
 
 ## ADR Template
 
@@ -114,4 +116,30 @@ We will...
 ## Affected Scopes
 - [Scopes/Product/Frontend/State.md](link) — rules updated.
 - [Scopes/GRAPH.md](link) — new dependency edge.
+```
+
+## When to Stop (Mandatory)
+- Stop once Status, Context (with evidence where applicable), Options/Tradeoffs, Decision, Consequences, and Affected Scopes are complete.
+- Default caps: 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; mark gaps as `[Unknown]`.
+- If the decision is unclear or multiple decisions are being mixed, stop and set `Verdict: Needs Narrowing`.
+
+## Blocked Runbook (Mandatory)
+- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes`.
+- No evidence for key context: mark `[Unknown]`, list what you searched, and stop.
+- ADR numbering/scaffold tooling missing: write the ADR manually with a placeholder number and note the blocker.
+
+## Output Contract
+
+Return <= 20 lines:
+
+```markdown
+## ADR
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence summary of the recorded decision>
+Evidence:
+- `Scopes/Decisions/ADRs/<0000>-<slug>.md`
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. update scopes or create tasks>
+Artifact: `Scopes/Decisions/ADRs/<0000>-<slug>.md`
 ```

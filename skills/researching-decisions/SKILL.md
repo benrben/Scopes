@@ -25,10 +25,10 @@ Ask the user one simple question:
 - **Upstream inputs**: `Scopes/Work/Planning/**`, `Scopes/Work/Ideas/**`, `Scopes/Decisions/ADRs/**`, `Scopes/Product/**`
 - **Downstream outputs**: Research report (`Scopes/Research/**`)
 - **Typical next commands**: `planning-idea`, `writing-adr`, `writing-tasks`
+- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration (Prefer Parallel)
-
-Only include agents with **Need ≥ 9**.
+Invoke agents only when needed.
 
 | Agent | How it uses it | Need (1–10) |
 |---|---|---:|
@@ -70,6 +70,7 @@ Write research report under `Scopes/Research/**`.
 3. **No Ambiguity**: If unknown, say `[Unknown]`.
 4. **Cross-linking (MANDATORY)**: Link to primary Capability Scopes, relevant ADRs, tasks/plans.
 5. **Offline Mode (No Web Access)**: If web research is blocked/unavailable, still deliver the report with a complete Internal Truth section and mark the External section as `[Blocked]` with a checklist of sources/questions to verify later.
+6. **Source cap (default)**: Use at most 5 external sources unless the user explicitly asks for more.
 
 ## Research Report Template
 
@@ -116,4 +117,31 @@ If external research is not possible, write:
 - [ ] External section uses URL sources only
 - [ ] At least 2 outer scope links
 - [ ] Concrete recommendation with tradeoffs
+
+## When to Stop (Mandatory)
+- Default budgets: 1-3 anchor scopes, 3-10 code files for internal audit; mark gaps as `[Unknown]`.
+- Internal-only mode (no web needed/available): stop once internal constraints + patterns are documented with evidence.
+- External mode: stop after at most 5 external sources unless the user asks to go broader.
+- Stop once the report has recommendation + options/tradeoffs + explicit scope updates list.
+
+## Blocked Runbook (Mandatory)
+- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes` before external research.
+- No web access: mark External section as `[Blocked]` and proceed with internal-only report.
+- Question too broad: ask one narrowing question; otherwise set `Verdict: Needs Narrowing`.
+
+## Output Contract
+
+Return <= 20 lines:
+
+```markdown
+## RESEARCH
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence recommendation or current best answer>
+Evidence:
+- `Scopes/Research/YYYY-MM-DD-<topic-slug>.md`
+Unknowns:
+- <only if blocked/partial>
+Next: <one action; e.g. write ADR or create tasks>
+Artifact: `Scopes/Research/YYYY-MM-DD-<topic-slug>.md`
+```
 ```

@@ -21,7 +21,11 @@ are relevant and return their paths + key information.
 
 ### Step 1: Get the Overview
 ```bash
-python3 skills/syncing-scopes/scripts/scope_map.py --depth 2
+python3 skills/syncing-scopes/scripts/scope_map.py --depth 1
+```
+If the repo is large, narrow by area first:
+```bash
+python3 skills/syncing-scopes/scripts/scope_map.py --area <AreaName> --depth 2
 ```
 If `scope_map.py` is not available, fall back to:
 ```bash
@@ -54,19 +58,27 @@ Scan ADR titles for relevant architectural decisions.
 
 ## Output Contract
 
-Return a minimal brief (≤ 10 lines):
+Return a minimal brief (<= 14 lines):
 
 ```
 ## NAV
-**Verdict:** Found relevant scopes | Scopes missing | Drift suspected
-**Scopes:** `Scopes/Product/...` — <short>, `Scopes/Product/...` — <short>
-**Deps:** <edge1>; <edge2>; <edge3> (or “(none)”; max 3)
-**ADRs:** <0–2 titles, or “(none)”>
-**Read:** 1) <scope> 2) <scope> (3) <scope>
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence on what to read first>
+Evidence:
+- `Scopes/Product/...` — <short>
+Unknowns:
+- <only if blocked/partial>
+Next: Read 1) <scope> 2) <scope> (3) <scope>
+Artifact: (none)
 ```
+
+## When to Stop (Mandatory)
+- Stop once you have 1-3 relevant scope paths and <= 3 dependency edges.
+- Do not return more than 5 scope paths; mark gaps as `[Unknown]`.
+- If `Scopes/INDEX.md` or `Scopes/GRAPH.md` is missing, stop and set `Verdict: Needs Sync`.
 
 ## Rules
 - NEVER edit files. You are read-only.
 - Return at most 5 relevant scope paths. Don't dump everything.
 - Always include the dependency direction from GRAPH.md.
-- Keep total output under 10 lines.
+- Keep total output under the line limit.

@@ -68,20 +68,24 @@ Capture what matters to modify/extend safely:
 
 ## Output Contract
 
-Return a tight trace with specific file paths and line numbers (≤ 18 lines).
+Return a tight trace with specific file paths and line numbers (<= 18 lines).
 ```
 ## Feature Trace
-**Goal:** <one sentence>
-**Scopes:** <1–3 scope paths, or “(none detected)”>
-**Entry:** `path/to/file.ts:Lx-Ly` — <entrypoint>
-**Flow:**
-1. `path/to/a.ts:Lx-Ly` — <what happens>
-2. `path/to/b.ts:Lx-Ly` — <what happens>
-3. ... (max 7 steps)
-**Key deps:** internal=<0–3>, external=<0–3>
-**Essential files:** `<f1>`, `<f2>`, `<f3>` (max 10)
-**Unknowns:** <only if blocked; one line>
+Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
+Decision: <one sentence on how the feature works>
+Evidence:
+- `[path:Lx-Ly](path#Lx-Ly)` — <entry/flow proof>
+Unknowns:
+- <only if blocked/partial>
+Next: <one recommended next step>
+Artifact: (none)
+Confidence: High | Medium | Low
+Evidence gaps searched: `rg -n "<pattern>" ...` (one line; if applicable)
 ```
+
+## When to Stop (Mandatory)
+- Stop once you can describe the end-to-end flow with 3-10 essential files.
+- Stop early and mark `[Unknown]` when you cannot close the loop.
 
 ## Rules
 - Do not invent entry points or flows; trace them.
