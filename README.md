@@ -108,7 +108,40 @@ This repository is the **source package** for Scopes skills/agents you install i
 
 ## Getting started (recommended path)
 
-### 1) Install the skills into your assistant
+### Option A: Claude Code Plugin (recommended for Claude Code users)
+
+Scopes is packaged as a **Claude Code plugin**. Install it once and get all skills, agents, and slash commands.
+
+**Local install (for development/testing):**
+```bash
+claude --plugin-dir /path/to/Scopes
+```
+
+**From a plugin marketplace** (if your team has one configured):
+```bash
+# Inside Claude Code
+/plugin install scopes
+```
+
+Once installed, all commands are available under the `/scopes:` namespace:
+
+| Command | What it does |
+|---|---|
+| `/scopes:sync` | Generate or update Scopes from code reality |
+| `/scopes:query <question>` | Ask about the project using Scopes navigation |
+| `/scopes:plan <idea>` | Turn an idea into an implementation blueprint |
+| `/scopes:develop <task>` | Implement with sandbox verification |
+| `/scopes:tdd <task>` | Implement via strict TDD (red/green/refactor) |
+| `/scopes:refactor <target>` | Plan a safe, incremental refactor |
+| `/scopes:bugs [area]` | Scan for bugs, security issues, and anti-patterns |
+| `/scopes:tasks <intent>` | Convert intent into engineer-ready task files |
+| `/scopes:adr <decision>` | Record an architecture decision |
+| `/scopes:research <question>` | Research a decision with internal + external sources |
+| `/scopes:update` | Refresh installed skills from upstream |
+
+Agent Skills (automatically invoked by Claude based on context) and subagents (scope-navigator, tdd-runner, code-reviewer, etc.) are also loaded with the plugin.
+
+### Option B: Manual skill copy (Cursor, other assistants)
 
 This repo is the source; your *project* is the target. Typical targets:
 
@@ -125,18 +158,26 @@ cp -R /path/to/Scopes/skills/* .cursor/skills/
 bash .cursor/skills/updating-skills/scripts/update-skills.sh
 ```
 
-### 2) Run `syncing-scopes` in your project repo
+### After installation: Run `syncing-scopes`
 
 Generate or repair `Scopes/` so the rest of the system has a trustworthy map to route through.
 
-### 3) Use Scopes-first workflows day to day
+```bash
+# Claude Code plugin:
+/scopes:sync
+
+# Manual install:
+# Ask your assistant to use the syncing-scopes skill
+```
+
+### Use Scopes-first workflows day to day
 
 Examples:
 
-- "Where is the payment validation logic?" → `querying-scopes` / `scope-navigator`
-- "Plan the new retry strategy" → `planning-idea` → `writing-tasks`
-- "Implement the change safely" → `developing-verified` or `developing-tdd`
-- "Did docs drift?" → `scope-auditor`
+- "Where is the payment validation logic?" → `/scopes:query` or `querying-scopes` / `scope-navigator`
+- "Plan the new retry strategy" → `/scopes:plan` or `planning-idea` → `writing-tasks`
+- "Implement the change safely" → `/scopes:develop` or `/scopes:tdd`
+- "Did docs drift?" → `/scopes:sync` or `scope-auditor`
 
 ---
 

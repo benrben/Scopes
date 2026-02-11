@@ -1,0 +1,36 @@
+{
+  "name": "scopes-marketplace",
+  "owner": {
+    "name": "Ben Reich"
+  },
+  "metadata": {
+    "description": "Evidence-backed AI skills, agents, and workflows for real codebases. Navigate your repo by intent, not by file tree.",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "scopes",
+      "source": "./",
+      "description": "The full Scopes toolkit: 11 skills, 7 agents, and 11 slash commands for evidence-backed AI development. Includes syncing-scopes (truth engine), TDD/verified development, planning, bug hunting, task writing, ADRs, research, and more.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Ben Reich"
+      },
+      "homepage": "https://github.com/benreich/Scopes",
+      "license": "MIT",
+      "keywords": [
+        "scopes",
+        "documentation",
+        "evidence",
+        "tdd",
+        "planning",
+        "navigation",
+        "agents",
+        "workflows",
+        "code-review",
+        "bug-hunting"
+      ],
+      "category": "productivity"
+    }
+  ]
+}

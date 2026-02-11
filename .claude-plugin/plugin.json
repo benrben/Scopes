@@ -1,0 +1,10 @@
+{
+  "name": "scopes",
+  "description": "Evidence-backed AI skills for real codebases. Turns your repo into a navigable map of capabilities, traces, and code evidence so AI assistants can reliably plan, implement, and document changes.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Ben Reich"
+  },
+  "homepage": "https://github.com/benreich/Scopes",
+  "license": "MIT"
+}
