@@ -12,10 +12,10 @@ Update Scopes Skills only.
 
 Usage:
   # Run from whatever skills folder you installed into (Cursor/Claude/Antigravity):
-  bash <skills-root>/update-skills/scripts/update-skills.sh
+  bash <skills-root>/updating-skills/scripts/update-skills.sh
 
   # Override the target skills directory explicitly (rare):
-  bash <skills-root>/update-skills/scripts/update-skills.sh --target-dir <skills-root>
+  bash <skills-root>/updating-skills/scripts/update-skills.sh --target-dir <skills-root>
 
 Options:
   --repo <git-url>            (default: https://github.com/benrben/Scopes.git)

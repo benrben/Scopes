@@ -2,9 +2,9 @@
 
 **Stop pasting folders. Stop guessing. Start shipping with proof.**
 
-Scopes is a set of **skills** and **agents** that turns your repo into a map your AI assistant can reliably navigate. It adds an opinionated, evidence-backed layer (“Scopes”) that translates **human intent** (features, capabilities, flows) into **code truth** (exact files + line ranges, tests, config, schemas).
+Scopes is a set of **skills** and **agents** that turns your repo into a map your AI assistant can reliably navigate. It adds an opinionated, evidence-backed layer ("Scopes") that translates **human intent** (features, capabilities, flows) into **code truth** (exact files + line ranges, tests, config, schemas).
 
-If you’ve ever watched an assistant “sound confident” while looking in the wrong place, this is the fix.
+If you've ever watched an assistant "sound confident" while looking in the wrong place, this is the fix.
 
 ![Scopes map](docs/assets/scopes_hero.png)
 
@@ -12,18 +12,18 @@ If you’ve ever watched an assistant “sound confident” while looking in the
 
 - Engineers using AI assistants on real repos (not toy projects)
 - Teams that care about correctness, maintainability, and repeatable workflows
-- Anyone tired of paying tokens to brute-force “context”
+- Anyone tired of paying tokens to brute-force "context"
 
 ---
 
 ## The problem Scopes solves
 
-When a developer asks an AI assistant to *“update the login flow”* or *“fix the payment bug”*, the assistant usually struggles with:
+When a developer asks an AI assistant to *"update the login flow"* or *"fix the payment bug"*, the assistant usually struggles with:
 
 - **Intent ambiguity**: the request names a capability, but the assistant sees thousands of files.
-- **Where-to-look failure**: you end up manually pointing to directories, hoping it’s enough.
+- **Where-to-look failure**: you end up manually pointing to directories, hoping it's enough.
 - **Token waste**: you paste large chunks of code to compensate.
-- **Doc drift**: the “docs” don’t match what the code actually does today.
+- **Doc drift**: the "docs" don't match what the code actually does today.
 - **Hallucinations**: when evidence is missing, the model fills the gap.
 
 ---
@@ -36,7 +36,7 @@ Scopes adds a first-class **navigation + compression layer** inside your repo:
 - `Scopes/GRAPH.md` — the dependency graph (what touches what)
 - `Scopes/Product/**` — capability docs written from *observable reality*, with evidence links like:
   - `[path/to/file.ts:L20-L45](path/to/file.ts#L20-L45)` *(example)*
-- `Scopes/DEVELOPER_INFO.md` — “how to run/test/build” discovered in repo truth
+- `Scopes/DEVELOPER_INFO.md` — "how to run/test/build" discovered in repo truth
 - `Scopes/Onboarding/TECH_STACK.md` — evidence-backed stack inventory
 - `Scopes/Work/Standards/WRITE_STYLE.md` — engineering defaults for maintainable changes
 
@@ -55,11 +55,11 @@ flowchart LR
 
 ---
 
-## The flagship skill: `sync-scopes` (the Truth Engine)
+## The flagship skill: `syncing-scopes` (the Truth Engine)
 
 ![Sync Scopes Engine](docs/assets/sync_scopes_engine.png)
 
-`sync-scopes` is the core of the system. It’s a “Project Archivist” workflow that reads your codebase (tests/config/schema/impl) and generates or repairs `Scopes/` so it stays trustworthy.
+`syncing-scopes` is the core of the system. It's a "Project Archivist" workflow that reads your codebase (tests/config/schema/impl) and generates or repairs `Scopes/` so it stays trustworthy.
 
 What it enforces:
 
@@ -69,7 +69,7 @@ What it enforces:
 - **Graph, not just tree**: keep `INDEX.md` and `GRAPH.md` as the canonical navigation surfaces.
 - **Token-efficiency by design**: prefer the smallest scope slice needed to answer or implement.
 
-Helper scripts included under `skills/sync-scopes/scripts/` (scope map, drift detection, evidence link generation, link checking).
+Helper scripts included under `skills/syncing-scopes/scripts/` (scope map, drift detection, evidence link generation, link checking).
 
 ---
 
@@ -79,16 +79,21 @@ This repository is the **source package** for Scopes skills/agents you install i
 
 ### Skills (commands)
 
-- `sync-scopes` — generate/update `Scopes/` from code + git reality
-- `ask-scopes` — answer “how/where/what depends on what” from `Scopes/` + evidence
-- `plan-idea` — turn an idea into a scope-native implementation blueprint
-- `write-tasks` — convert intent into engineer-ready tasks under `Scopes/Work/Tasks/**`
-- `dev-verify` / `dev-tdd` — implement changes with verification gates (and update Scopes as part of the workflow)
-- `plan-refactor` — plan safe green-to-green refactors with scope link maintenance
-- `bug-hunt` — evidence-backed bug scanning → reports + tasks
-- `write-adr` — record decisions under `Scopes/Decisions/ADRs/**`
-- `research-loop` — separate internal repo truth from external web research
-- `update-skills` — keep your installed skills fresh from upstream
+- `syncing-scopes` — generate/update `Scopes/` from code + git reality
+- `querying-scopes` — answer "how/where/what depends on what" from `Scopes/` + evidence
+- `planning-idea` — turn an idea into a scope-native implementation blueprint
+- `writing-tasks` — convert intent into engineer-ready tasks under `Scopes/Work/Tasks/**`
+- `developing-verified` / `developing-tdd` — implement changes with verification gates (and update Scopes as part of the workflow)
+- `planning-refactor` — plan safe green-to-green refactors with scope link maintenance
+- `hunting-bugs` — evidence-backed bug scanning → reports + tasks
+- `writing-adr` — record decisions under `Scopes/Decisions/ADRs/**`
+- `researching-decisions` — separate internal repo truth from external web research
+- `updating-skills` — keep your installed skills fresh from upstream
+
+### Shared infrastructure
+
+- `skills/_shared/` — common Scopes-first protocol and session log templates (loaded by skills via progressive disclosure)
+- `skills/_evaluations/` — evaluation scenarios for testing skill effectiveness
 
 ### Agents (roles)
 
@@ -111,16 +116,16 @@ This repo is the source; your *project* is the target. Typical targets:
 - Claude: `.claude/skills/`
 - Other setups: `.agent/skills/`
 
-Copy or sync this repo’s `skills/` (and optionally `agents/`) into your target skills directory. Then keep them updated with `update-skills`.
+Copy or sync this repo's `skills/` (and optionally `agents/`) into your target skills directory. Then keep them updated with `updating-skills`.
 
 Example (Cursor):
 ```bash
 mkdir -p .cursor/skills
-cp -R /path/to/ScopesCommands/skills/* .cursor/skills/
-bash .cursor/skills/update-skills/scripts/update-skills.sh
+cp -R /path/to/Scopes/skills/* .cursor/skills/
+bash .cursor/skills/updating-skills/scripts/update-skills.sh
 ```
 
-### 2) Run `sync-scopes` in your project repo
+### 2) Run `syncing-scopes` in your project repo
 
 Generate or repair `Scopes/` so the rest of the system has a trustworthy map to route through.
 
@@ -128,32 +133,32 @@ Generate or repair `Scopes/` so the rest of the system has a trustworthy map to 
 
 Examples:
 
-- “Where is the payment validation logic?” → `ask-scopes` / `scope-navigator`
-- “Plan the new retry strategy” → `plan-idea` → `write-tasks`
-- “Implement the change safely” → `dev-verify` or `dev-tdd`
-- “Did docs drift?” → `scope-auditor`
+- "Where is the payment validation logic?" → `querying-scopes` / `scope-navigator`
+- "Plan the new retry strategy" → `planning-idea` → `writing-tasks`
+- "Implement the change safely" → `developing-verified` or `developing-tdd`
+- "Did docs drift?" → `scope-auditor`
 
 ---
 
 ## Why this reduces tokens (and increases correctness)
 
-Scopes changes the retrieval unit from “files/folders” to “capabilities with evidence”.
+Scopes changes the retrieval unit from "files/folders" to "capabilities with evidence".
 
 You provide:
-- **One intent** (“Login”, “Payments”, “Retry policy”)
+- **One intent** ("Login", "Payments", "Retry policy")
 
 Scopes provides:
 - **One anchor document** (`Scopes/Product/...`)
 - **One trace** (end-to-end flow table)
 - **A handful of evidence links** (exact code/test/config lines)
 
-That’s less context, higher signal, and dramatically less room for guessing.
+That's less context, higher signal, and dramatically less room for guessing.
 
 ---
 
 ## The promise
 
-Scopes doesn’t make models smarter.
+Scopes doesn't make models smarter.
 
 It makes them **better grounded**: they know what you mean, where to look, what changed, and what is proven—so they can help with real Day‑2 engineering work: refactors, bugs, plans, tasks, and decisions.
 

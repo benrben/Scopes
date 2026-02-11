@@ -34,7 +34,7 @@ When working in a repo that uses Scopes, a copilot should **not** start by grepp
    - Follow **Usage & Flow Traces** end-to-end.
    - Use **Code Evidence** links to jump into the exact code/tests/config proving each behavior.
 5. **If the scope is missing or drifty**:
-  - Run the `sync-scopes` skill to generate/update evidence-backed docs, or
+  - Run the `syncing-scopes` skill to generate/update evidence-backed docs, or
    - Create a small task to repair the scope (add traces/evidence/required diagrams).
 6. **After changes**:
    - Update the affected `Scopes/Product/**` docs (traces + evidence + diagrams),

@@ -1,0 +1,137 @@
+---
+name: planning-refactor
+description: Plans safe, incremental refactors (green-to-green) with verification gates and explicit Scopes evidence/trace maintenance. Use when the user wants to refactor, restructure, or reorganize code while preserving behavior.
+---
+
+# Planning a Refactor
+
+**You are the Safety Engineer.** Your goal is to plan code changes that improve structure without altering external behavior. Refactoring is dangerous — your strict plans mitigate risk through **incremental phases** and **verification gates**, while keeping Scope documentation perfectly synced.
+
+## When to use this skill
+Use when the user wants to refactor safely without changing external behavior.
+
+## Prerequisites
+Requires a Scopes-enabled repo and a repeatable verification signal (tests/scripts).
+
+## Mission Start
+**You MUST read the shared protocol before proceeding.** Load and follow the [shared Scopes-first startup protocol](../_shared/SCOPES_PROTOCOL.md) (located at `skills/_shared/SCOPES_PROTOCOL.md`).
+
+## Kickoff (Ask After Scope Startup)
+Ask the user one simple question:
+- "What are we refactoring (exact module/area), and what behaviors must stay identical?"
+
+## Scope Connections
+- **Upstream inputs**: `Scopes/Work/Bugs/**`, `Scopes/Work/Tasks/**`, capability scopes under `Scopes/Product/**`
+- **Downstream outputs**: Refactor plan (`Scopes/Work/Refactors/**`), follow-on tasks via `writing-tasks`
+- **Typical next command**: `developing-tdd` to execute the plan safely.
+
+## Agent Orchestration (Prefer Parallel)
+
+Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+
+### Phase 1: Research — PARALLEL
+
+Fire **all three agents simultaneously** to assess the refactor landscape:
+- **`scope-navigator`** — maps affected scopes, dependency graph, downstream dependents
+- **`plan-researcher`** *(background)* — investigates code patterns, coupling, git churn history; writes brief to `Scopes/Work/Planning/`
+- **`scope-auditor`** *(background)* — validates current scope accuracy so the refactor plan starts from truth
+
+Read all summaries before proceeding. Navigator shows WHAT is affected; researcher shows HOW coupled it is; auditor shows WHERE scopes have drifted.
+
+### Phase 2: Plan — MAIN AGENT
+
+The main agent synthesizes agent findings into the Refactor Plan using the Safety Model below. No further agent delegation needed for this phase.
+
+---
+
+## Scopes-first Navigation
+1. **Treat the Scope as the contract**: snapshot the scope's Rules/Traces as refactor invariants.
+2. **Lock invariants**: Add characterization tests if coverage is weak.
+3. **Plan for link-rot**: Any move/rename must include a step to update evidence links + trace line numbers.
+4. **Graph-aware sequencing**: Use `Scopes/GRAPH.md` to plan safer order of operations.
+
+## Refactor Safety Model
+```mermaid
+flowchart TD
+  Contract[Snapshot Contract] --> Lock[Phase 0: Characterization Tests]
+  Lock --> Steps[Incremental Phases: Green-to-Green]
+  Steps --> Docs[Update Evidence Links + Traces + Diagrams]
+  Docs --> Graph[Update GRAPH.md edges if needed]
+```
+
+## Method (Silent) + Output Contract (Visible)
+
+### 1) Deconstruct (Silent)
+- Identify refactor intent and precise target.
+- Snapshot invariants and traces from capability scopes.
+
+### 2) Diagnose (Silent)
+- If coverage weak: include Phase 0 (Characterization Tests).
+- Use `Scopes/GRAPH.md` to identify downstream dependents.
+
+### 3) Develop (Silent)
+- Choose strategy (Strangler Fig / Parallel Change / Extract Method/Class).
+- Break into phases where each ends green.
+- Include explicit Scope Maintenance tasks for every move/rename.
+
+### 4) Deliver (Visible)
+Write refactor plan to `Scopes/Work/Refactors/<YYYY-MM-DD>-<slug>.md`.
+
+## Pattern Conformance (Mandatory)
+
+Before planning any structural change, you MUST discover the project's existing patterns (see [Pattern Discovery](../_shared/SCOPES_PROTOCOL.md)).
+
+1. **During Deconstruct**: Identify which project patterns exist in the refactor target area. Document them as "Pattern Invariants" alongside behavior invariants.
+2. **During Develop**: Ensure the refactored structure preserves or improves alignment with established patterns — never break a convention in the process of restructuring.
+3. **In the Plan output**: Include a "Pattern Alignment" section that lists which patterns are preserved, improved, or need migration.
+4. **If patterns conflict**: The refactor plan should explicitly address the pattern consolidation (e.g., "Migrate from two data access approaches to one").
+
+---
+
+## Rules
+1. **Green-to-Green**: Tests pass at every checkpoint.
+2. **No Logic Changes**: Structural only. Do not mix with feature work.
+3. **Pattern Preservation**: Refactors MUST preserve established project patterns or explicitly plan their migration.
+4. **Scope Updates (MANDATORY)**: Update evidence links, traces, and diagrams after moves/renames.
+
+## Refactor Plan Template
+
+**File Path**: `Scopes/Work/Refactors/<YYYY-MM-DD>-<slug>.md`
+
+```markdown
+# Refactor: <Title>
+
+## 1. The Contract
+**Module**: `src/old_module.ts`
+**Invariants**: ...
+**Evidence**: `[tests/old_module.test.ts](link)`
+**Scope Reference**: `[Scopes/Product/Legacy/Module.md](link)`
+
+## 2. Strategy: <Pattern Name>
+
+## 3. Execution Phases
+
+### Phase 0: Lockdown (Safety)
+- [ ] Write Characterization Tests
+
+### Phase 1: The Seam
+- [ ] Create interface
+- [ ] **Scope Update**: Add interface to Scope
+
+### Phase 2: New Implementation
+- [ ] Create new module + tests
+
+### Phase 3: The Swap
+- [ ] Update factory/routing
+- [ ] Verify integration tests
+
+### Phase 4: Cleanup
+- [ ] Delete old module
+- [ ] **Scope Maintenance**: Update all evidence links, diagrams, traces, graph edges
+```
+
+## Audit Checklist
+- [ ] Phase 0 included if coverage is weak
+- [ ] Every phase ends in green test suite
+- [ ] All impacted `Scopes/Product/**` evidence links updated after moves/renames
+- [ ] Exactly 2 diagrams remain in each substantial Capability Scope
