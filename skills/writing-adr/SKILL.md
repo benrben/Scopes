@@ -30,19 +30,11 @@ Ask the user one simple question:
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Context Gathering — PARALLEL
-
-Fire **both agents simultaneously** to build decision context:
-- **`scope-navigator`** — finds affected scopes, dependency graph edges, and existing ADRs in the area
-- **`plan-researcher`** *(background)* — investigates codebase patterns, historical decisions, and constraints that inform this choice; writes brief to `Scopes/Work/Planning/`
-
-Read both summaries before drafting. Navigator tells you WHAT scopes are affected; researcher tells you WHY the current state exists.
-
-### Phase 2: ADR Drafting — MAIN AGENT
-
-The main agent drafts the ADR using the Decision Flow below. No further agent delegation needed.
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| *(none; all agents are < 9 for this skill)* | *(not used)* | 1 |
 
 ---
 
@@ -76,6 +68,8 @@ Write ADR to `Scopes/Decisions/ADRs/<0000>-<slug>.md`.
 1. **Immutable Status**: If a decision changes, write a new ADR that "Supersedes" the old one.
 2. **Scope Links (MANDATORY)**: List Affected Scopes with links.
 3. **Consequences**: List both Pros AND Cons.
+4. **Decision Drivers (MANDATORY)**: Explicitly list the forces that matter (e.g., latency, security, complexity, team skill).
+5. **Rejected Options (MANDATORY)**: Include at least one rejected alternative and why it was rejected.
 
 ## ADR Template
 
@@ -91,6 +85,21 @@ Accepted / Proposed / Deprecated
 - **Problem**: ...
 - **Constraint**: ...
 - **Scope Context**: See `[Scopes/Product/...](link)`.
+
+## Decision Drivers
+- <driver 1>
+- <driver 2>
+
+## Options Considered
+### Option A (Selected / Rejected)
+- **Summary**: ...
+- **Pros**: ...
+- **Cons**: ...
+
+### Option B (Rejected / Selected)
+- **Summary**: ...
+- **Pros**: ...
+- **Cons**: ...
 
 ## Decision
 We will...

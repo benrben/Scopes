@@ -68,6 +68,15 @@ Return a structured summary in this format:
 - `Scopes/Product/Area/File.md:L42` — target not found
 - ...
 
+**Top Offenders:**
+- Drift: <area> (N files)
+- Broken links: <area> (N files)
+
+**Next Actions:**
+- If drift is high: run `syncing-scopes` on the offender areas first.
+- If broken links exist: fix broken evidence links before any new scope writing.
+- If both are clean: proceed (Scopes are healthy).
+
 **Verdict:** Clean | N issues need attention | M critical issues
 ```
 

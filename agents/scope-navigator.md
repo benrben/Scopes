@@ -35,6 +35,9 @@ Read `Scopes/INDEX.md` to understand the top-level structure.
 ### Step 3: Read GRAPH.md
 Read `Scopes/GRAPH.md` to understand dependency relationships.
 
+If `Scopes/INDEX.md` or `Scopes/GRAPH.md` is missing, call it out explicitly
+in your output and recommend running `syncing-scopes` (Scopes drift/missing).
+
 ### Step 4: Narrow Down
 Based on the request, read the 1-3 most relevant scope files.
 Use `--scope` for single-file detail:
@@ -55,6 +58,8 @@ Return a structured brief:
 
 ```
 ## Navigation Result
+
+**Verdict:** Found relevant scopes | Scopes missing | Drift suspected
 
 **Relevant Scopes:**
 - `Scopes/Product/Area/File.md` — summary of what it covers

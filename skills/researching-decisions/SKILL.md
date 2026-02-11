@@ -28,27 +28,11 @@ Ask the user one simple question:
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Internal Research — PARALLEL
-
-Fire **both agents simultaneously** to build the internal truth layer:
-- **`scope-navigator`** — maps relevant scopes, dependency graph, ADRs, and capability boundaries
-- **`plan-researcher`** *(background)* — investigates codebase patterns, git history, existing decisions, and constraints; writes brief to `Scopes/Work/Planning/`
-
-Read both summaries to build the "Internal Repo Truth" section.
-
-### Phase 2: External Research — MAIN AGENT
-
-The main agent conducts web research (requires web access tools). This phase happens sequentially after Phase 1 because external research should be informed by internal constraints.
-
-### Phase 3: Synthesis — MAIN AGENT
-
-Combine internal and external findings into the research report. No agent delegation needed.
-
-### Phase 4: Validation (optional) — SINGLE AGENT
-
-If the research affects existing scopes, fire **`scope-auditor`** *(background)* to verify referenced scopes are current.
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| `scope-navigator` | Quickly locate the 1–3 relevant Scopes + dependency edges to ground the internal audit | 9 |
 
 ---
 
@@ -85,6 +69,7 @@ Write research report under `Scopes/Research/**`.
 2. **Evidence-Backed**: Internal claims cite `[path:Lx-Ly](path#Lx-Ly)`. External claims cite URLs.
 3. **No Ambiguity**: If unknown, say `[Unknown]`.
 4. **Cross-linking (MANDATORY)**: Link to primary Capability Scopes, relevant ADRs, tasks/plans.
+5. **Offline Mode (No Web Access)**: If web research is blocked/unavailable, still deliver the report with a complete Internal Truth section and mark the External section as `[Blocked]` with a checklist of sources/questions to verify later.
 
 ## Research Report Template
 
@@ -104,6 +89,8 @@ Write research report under `Scopes/Research/**`.
 ## 2. External Analysis
 - **Option A**: Description. Source: [link]
 - **Option B**: Description. Source: [link]
+If external research is not possible, write:
+- `[Blocked: no web access]` and list the exact sources you would check (official docs, RFCs, vendor guides) and what you’re trying to confirm.
 
 ## 3. Options & Tradeoffs
 | Option | Pros | Cons | Fit for Repo |

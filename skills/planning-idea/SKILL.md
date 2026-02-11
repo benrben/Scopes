@@ -30,23 +30,12 @@ Ask the user one simple question:
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Research — PARALLEL
-
-Fire **both agents simultaneously** to gather context before planning:
-- **`scope-navigator`** — finds relevant scopes, dependency graph, and capability boundaries
-- **`plan-researcher`** *(background)* — investigates codebase patterns, git history, existing ADRs, and constraints; writes brief to `Scopes/Work/Planning/`
-
-Read both summaries before proceeding. The navigator's scope map tells you WHERE to fit the idea; the researcher's brief tells you HOW the codebase currently works.
-
-### Phase 2: Blueprint — MAIN AGENT
-
-The main agent synthesizes agent findings into the Implementation Blueprint using the Planning Model below. No further agent delegation needed for this phase.
-
-### Phase 3: Validation (optional) — SINGLE AGENT
-
-If the plan touches many scopes, fire **`scope-auditor`** *(background)* to verify that referenced scopes are current before the plan is finalized.
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| `scope-navigator` | Find relevant scopes + dependency graph to place the idea correctly | 9 |
+| `code-architect` | Produce a decisive architecture blueprint aligned to existing patterns and the Scopes contract | 10 |
 
 ---
 
@@ -95,6 +84,7 @@ Before proposing an implementation blueprint, you MUST discover the project's ex
 3. **Pattern Conformance**: Every TODO Scope MUST reference the existing pattern to follow.
 4. **Template Fidelity**: Proposed Scope changes follow standard structure (use cases, traces, evidence, exactly 2 diagrams).
 5. **Outer-scope linking**: Link to capability scopes, research notes, ADRs, release notes as applicable.
+6. **Risk Register (MANDATORY)**: Include a short risk/unknowns table with mitigations and verification.
 
 ## Plan Template
 
@@ -106,12 +96,17 @@ Before proposing an implementation blueprint, you MUST discover the project's ex
 ## Executive Summary
 Implementation of <Idea> using <Strategy>.
 
-## 1. Scope Registry Impact
+## 1. Risk Register (Required)
+| Unknown / Risk | Impact | Mitigation | Verification |
+|---|---|---|---|
+| <e.g., API quota limits> | <what breaks> | <how we mitigate> | <how we verify> |
+
+## 2. Scope Registry Impact
 - **New Scope**: `Scopes/Product/Payments/Stripe.md`
 - **Modified Scope**: `Scopes/Product/User/Profile.md`
 - **Graph Update**: `Payments --> Stripe`
 
-## 2. TODO Scopes (The Work)
+## 3. TODO Scopes (The Work)
 
 ### Scope 1: Backend Integration
 - **Goal**: Connect to Stripe API.
@@ -130,7 +125,7 @@ Implementation of <Idea> using <Strategy>.
 - **Pattern Reference**: Follow `[src/components/OrderButton.tsx](link)` — same component + hook pattern.
 - **Dependencies**: Scope 2.
 
-## 3. Definition of Done
+## 4. Definition of Done
 - All tests green.
 - Scope files created/updated with template.
 - `GRAPH.md` updated.
@@ -138,6 +133,7 @@ Implementation of <Idea> using <Strategy>.
 
 ## Audit Checklist
 - [ ] Every proposed Scope file path is under `Scopes/Product/**`
+- [ ] Risk Register included (unknowns + mitigations + verification)
 - [ ] Plan includes explicit verification steps
 - [ ] Plan lists exact Scope maintenance tasks
 - [ ] Graph edges planned with evidence locations

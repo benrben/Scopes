@@ -31,33 +31,28 @@ Create or maintain a **single reliable source of truth** organized as a tree of 
 ## When to use this skill
 Use when `Scopes/` is missing or stale and you need to generate/update evidence-backed scope documentation from observable code/tests/config/schema.
 
+## Quick Start (30 minutes)
+Use this time-boxed path when `Scopes/` already exists and you need a fast refresh (not a full regeneration):
+
+1. **Triage drift + broken links**
+   - `python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 10`
+   - `python3 skills/syncing-scopes/scripts/check_evidence_links.py --broken-only --summary`
+2. **Pick the top 1–3 Scope files** (highest drift or most broken links).
+3. **Update those scopes only**:
+   - Fix broken evidence links.
+   - Refresh “Where to Start”, Traces, and consolidated Evidence.
+   - Preserve “exactly 2” diagrams and at least one end-to-end trace per major path.
+4. **Re-run the checks** from step 1 until clean (or clearly report what’s blocked).
+5. **Maintenance sweep (only if you touched structure)**: sort `INDEX.md` links, update `GRAPH.md` edges.
+
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Audit & Map — PARALLEL
-
-Fire **all three agents simultaneously** to assess the current state:
-- **`scope-auditor`** *(background)* — detects stale evidence, broken links, code-doc drift across all scopes
-- **`scope-navigator`** — maps the full scope tree, dependency graph, and identifies coverage gaps
-- **`plan-researcher`** *(background)* — investigates recent code changes (git history), new files, and patterns that may need new scopes; writes brief to `Scopes/Work/Planning/`
-
-Read all three summaries before proceeding. Auditor shows WHAT is stale; navigator shows WHERE gaps exist; researcher shows WHAT changed recently.
-
-### Phase 2: Update — SEQUENTIAL (scope-writer or main agent)
-
-For **targeted updates** (a few scopes):
-- Fire **`scope-writer`** with the list of affected scopes from Phase 1 findings
-
-For **full generation/rebuild** (many scopes or initial setup):
-- The main agent follows the Workflow below directly, since this requires the full methodology
-
-### Phase 3: Re-validate — SINGLE AGENT
-
-After all updates are written, fire **`scope-auditor`** to re-validate:
-- Confirms stale evidence is now fixed
-- Confirms new scopes have proper evidence links
-- Catches any remaining drift
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| `scope-auditor` | Detect stale evidence, broken links, and code-doc drift; re-validate after updates | 10 |
+| `scope-writer` | Apply scope documentation updates using Phase 1 findings | 10 |
 
 ---
 
@@ -105,6 +100,17 @@ After all updates are written, fire **`scope-auditor`** to re-validate:
 - **Drift audit (mandatory, early)**: Treat existing claims as hypotheses. Re-check evidence links. Look for missing coverage.
 - **Refresh, don't churn**: Update existing files/paths when possible. Rewrite only when fundamentally wrong. Create new Scopes only for unrepresented capabilities.
 - **Maintain**: Execute Maintenance Controls (sort lists, clean tasks).
+
+#### Minimum Viable Update (Time-boxed)
+If you have limited time and need a “good enough” refresh:
+- Fix **broken evidence links first** (broken links make all downstream workflows fail).
+- Update only the **anchor scope(s)** for the affected area (usually 1–3 files).
+- Keep scope changes structural and evidence-backed:
+  - Summary updated to match observable behavior.
+  - At least one end-to-end trace for the main path.
+  - Consolidated Evidence table refreshed.
+  - Exactly 2 Mermaid diagrams retained.
+- Defer any large reorganizations; capture them as a task under `Scopes/Work/Tasks/**`.
 
 ## Maintenance Controls
 

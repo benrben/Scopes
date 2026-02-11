@@ -23,18 +23,12 @@ Requires a Scopes-enabled repo (a `Scopes/` directory) and readable code files r
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) for efficient context gathering. The main agent orchestrates and delivers the answer.
+Only include agents with **Need ≥ 9**.
 
-### Context Lookup — SINGLE AGENT (or PARALLEL for broad questions)
-
-For **focused questions** (single capability/area):
-- Fire **`scope-navigator`** — returns relevant scope paths, dependencies, and summaries
-
-For **broad questions** (cross-cutting, "how does X relate to Y"):
-- Fire **`scope-navigator`** + **`plan-researcher`** *(background)* **simultaneously**
-- Navigator maps the scope landscape; researcher digs into code patterns and history
-
-Read the agent summary, then synthesize into the answer format below. The main agent verifies evidence links against code.
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| `scope-navigator` | Find relevant `Scopes/**` paths + dependencies + reading order for the question | 10 |
+| `code-explorer` | When the question requires deeper “how it works” tracing, follow Scopes evidence links and map end-to-end execution flow | 9 |
 
 ---
 
@@ -74,6 +68,28 @@ Do the method silently; output only the answer format below.
 ## Confidence
 - High / Medium / Low
 - Notes: `[Unknown]` / `[Partially Traced]` where applicable
+```
+
+## When to Stop (Mandatory)
+- Stop once you can answer the question with evidence for each key claim **or** you’ve explicitly marked missing proof as `[Unknown]`.
+- Do not “keep looking” past diminishing returns: prefer 1–3 anchor scopes and ~3–7 evidence links.
+- If the answer requires broad scanning across many areas, stop and recommend `syncing-scopes` (or ask a clarifying question to narrow scope).
+
+## Tiny Example (format only; uses real paths from this repo)
+If asked: “Where is the Capability Scope template defined?”
+
+```markdown
+## Answer
+- Capability scope templates are defined in the `syncing-scopes` references.
+
+## Scope Paths Used
+- `[No Scopes/ directory in this repo]` — this repository is the Scopes skills package itself
+
+## Evidence
+- `[skills/syncing-scopes/references/TEMPLATES.md:L1-L80](skills/syncing-scopes/references/TEMPLATES.md#L1-L80)` — capability scope template structure
+
+## Confidence
+- High
 ```
 
 ## Typical Hand-offs

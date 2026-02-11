@@ -34,30 +34,11 @@ Ask the user one simple question:
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Investigation — PARALLEL
-
-Fire **both agents simultaneously** at the start:
-- **`bug-scanner`** — scans for bug-prone patterns, security hotspots, stale docs; writes report to `Scopes/Work/Bugs/`
-- **`scope-navigator`** — finds relevant scopes and dependency graph for the affected area
-
-Read both summaries, then synthesize findings into the bug report.
-
-### Phase 2: Fix (if requested) — SEQUENTIAL FEEDBACK LOOP
-
-If the user wants a fix (not just a report), delegate implementation:
-- Fire **`tdd-runner`** with the diagnosed bug + scope context
-- Fire **`code-reviewer`** on the fix
-- **APPROVED** → proceed to Phase 3
-- **NEEDS REVISION** → feed review back to `tdd-runner` → re-invoke `code-reviewer`
-- Max **3 iterations**, then escalate to human
-
-### Phase 3: Documentation — PARALLEL
-
-If scopes are affected, fire **both agents simultaneously**:
-- **`scope-writer`** — updates affected scope docs
-- **`scope-auditor`** *(background)* — validates scope accuracy after fix
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| `bug-scanner` | Scan hotspots/security-ish patterns and write a bug report to `Scopes/Work/Bugs/**` | 10 |
 
 ---
 
@@ -93,6 +74,11 @@ Look for high-signal issue classes:
 
 ### 4) Deliver (Visible)
 Produce a bug report under `Scopes/Work/Bugs/**` and optional task files.
+
+## Severity Rubric (Use consistently)
+- **High**: security/authz issues, data loss/corruption, crashes, money-impacting bugs, privilege escalation, or broad production outages.
+- **Medium**: incorrect behavior in common paths, denial-of-service risks without data loss, broken retries/timeouts, or high-frequency reliability issues.
+- **Low**: maintainability hazards, rare edge-case correctness, minor performance regressions, or “foot-guns” that need guardrails.
 
 ## Bug Report Template
 

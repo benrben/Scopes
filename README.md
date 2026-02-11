@@ -98,11 +98,13 @@ This repository is the **source package** for Scopes skills/agents you install i
 ### Agents (roles)
 
 - `scope-navigator` — find the 1–3 relevant scopes fast (read-only)
+- `code-architect` — produce architecture blueprints aligned to Scopes and existing patterns
+- `code-explorer` — trace feature implementations end-to-end using Scopes evidence
+- `code-simplifier` — simplify recent changes without behavior changes
 - `scope-writer` — write/update Scopes using the canonical templates
 - `scope-auditor` — detect drift + broken evidence links (read-only)
-- `plan-researcher` — gather repo/scope/git context to support planning
-- `tdd-runner` — run strict red→green→refactor implementation loops
 - `bug-scanner` — hotspot scan + scope context (read-only)
+- `code-reviewer` — review diffs and report only high-confidence issues
 
 ---
 
@@ -139,7 +141,7 @@ Once installed, all commands are available under the `/scopes:` namespace:
 | `/scopes:research <question>` | Research a decision with internal + external sources |
 | `/scopes:update` | Refresh installed skills from upstream |
 
-Agent Skills (automatically invoked by Claude based on context) and subagents (scope-navigator, tdd-runner, code-reviewer, etc.) are also loaded with the plugin.
+Agent Skills (automatically invoked by Claude based on context) and subagents (scope-navigator, bug-scanner, scope-writer, scope-auditor, etc.) are also loaded with the plugin.
 
 ### Option B: Manual skill copy (Cursor, other assistants)
 

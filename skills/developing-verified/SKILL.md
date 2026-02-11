@@ -31,32 +31,13 @@ Ask the user one simple question next:
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Context Gathering — PARALLEL
-
-Fire **both agents simultaneously** before starting any implementation:
-- **`scope-navigator`** — finds relevant scopes, dependency graph, and anchor files
-- **`plan-researcher`** *(background)* — investigates codebase patterns, git history, constraints; writes brief to `Scopes/Work/Planning/`
-
-Read both summaries before proceeding to Phase 2.
-
-### Phase 2: Implementation — SEQUENTIAL (verify loop)
-
-Follow the Verify-as-you-go Loop below in the main context. For large changes, consider delegating to **`tdd-runner`** agent for context isolation.
-
-### Phase 3: Review — SEQUENTIAL FEEDBACK LOOP
-
-Fire **`code-reviewer`** on the changed files:
-- **APPROVED** → proceed to Phase 4
-- **NEEDS REVISION** → address feedback → re-invoke `code-reviewer`
-- Max **3 iterations**, then escalate to human
-
-### Phase 4: Documentation — PARALLEL
-
-Fire **both agents simultaneously**:
-- **`scope-writer`** — updates affected scope docs with new traces/evidence
-- **`scope-auditor`** *(background)* — validates all scopes are still accurate
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| `scope-navigator` | Find relevant scopes, dependency graph, and anchor files before starting implementation | 9 |
+| `code-simplifier` | After sandbox verification passes, simplify recent changes while preserving behavior and staying aligned to the Scopes contract | 9 |
+| `code-reviewer` | After changes are complete, review `git diff` and report only confidence ≥ 80 issues vs Scopes + standards | 9 |
 
 ---
 
@@ -70,6 +51,20 @@ Fire **both agents simultaneously**:
 3. **REPL / console verification** — open the project's REPL (e.g., `python -c "..."`, `node -e "..."`, `rails console`, `iex`) and exercise the changed behavior interactively.
 4. **HTTP / CLI verification** — use `curl`, `httpie`, or the project's CLI tool to hit endpoints or trigger commands.
 5. **Manual repro steps** — only when all above are unavailable; write a short checklist in the session log.
+
+### Fast Defaults (When `Scopes/DEVELOPER_INFO.md` is missing)
+If the repo doesn’t document canonical commands yet, use the smallest safe defaults for the detected stack **and write what you ran** into `Scopes/DEVELOPER_INFO.md` as you discover it.
+
+- **JS/TS** (if `package.json` exists):
+  - Prefer: `npm test` or `pnpm test` or `yarn test` (whichever matches lockfile/tools)
+  - If available: `npm run lint`, `npm run typecheck`
+- **Python**:
+  - Prefer: `python -m pytest -q` (or `pytest -q` if configured)
+  - If available: `ruff check .`, `mypy .`
+- **Go**:
+  - Prefer: `go test ./...`
+
+If none of these run, stop and record the blocker (missing deps, missing env, network, etc.) in the Session Log.
 
 ### What You Do NOT Do
 - **Do NOT create new test files** (`.test.ts`, `_test.go`, `test_*.py`, etc.)

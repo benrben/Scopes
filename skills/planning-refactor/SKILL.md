@@ -27,20 +27,12 @@ Ask the user one simple question:
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Research — PARALLEL
-
-Fire **all three agents simultaneously** to assess the refactor landscape:
-- **`scope-navigator`** — maps affected scopes, dependency graph, downstream dependents
-- **`plan-researcher`** *(background)* — investigates code patterns, coupling, git churn history; writes brief to `Scopes/Work/Planning/`
-- **`scope-auditor`** *(background)* — validates current scope accuracy so the refactor plan starts from truth
-
-Read all summaries before proceeding. Navigator shows WHAT is affected; researcher shows HOW coupled it is; auditor shows WHERE scopes have drifted.
-
-### Phase 2: Plan — MAIN AGENT
-
-The main agent synthesizes agent findings into the Refactor Plan using the Safety Model below. No further agent delegation needed for this phase.
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| `scope-navigator` | Map affected scopes + dependency graph + downstream dependents | 9 |
+| `code-architect` | Produce the refactor architecture blueprint (target structure, phases, invariants) aligned to existing patterns and Scopes | 9 |
 
 ---
 
@@ -49,6 +41,7 @@ The main agent synthesizes agent findings into the Refactor Plan using the Safet
 2. **Lock invariants**: Add characterization tests if coverage is weak.
 3. **Plan for link-rot**: Any move/rename must include a step to update evidence links + trace line numbers.
 4. **Graph-aware sequencing**: Use `Scopes/GRAPH.md` to plan safer order of operations.
+5. **Rollback plan (mandatory when risky)**: If you touch public interfaces or move/rename files, include a rollback strategy (revert path, compatibility layer, or feature flag).
 
 ## Refactor Safety Model
 ```mermaid
@@ -73,6 +66,7 @@ flowchart TD
 - Choose strategy (Strangler Fig / Parallel Change / Extract Method/Class).
 - Break into phases where each ends green.
 - Include explicit Scope Maintenance tasks for every move/rename.
+- Include an explicit rollback plan if the refactor changes public interfaces or moves/renames files.
 
 ### 4) Deliver (Visible)
 Write refactor plan to `Scopes/Work/Refactors/<YYYY-MM-DD>-<slug>.md`.
@@ -109,7 +103,12 @@ Before planning any structural change, you MUST discover the project's existing 
 
 ## 2. Strategy: <Pattern Name>
 
-## 3. Execution Phases
+## 3. Rollback Plan (Required for moves/public interfaces)
+- **Revert strategy**: <how to undo quickly (revert commit, restore old entrypoints)>
+- **Compatibility** (if needed): <adapter/shim/feature flag to preserve callers>
+- **Scope recovery**: <how to restore evidence links if rollback happens>
+
+## 4. Execution Phases
 
 ### Phase 0: Lockdown (Safety)
 - [ ] Write Characterization Tests
@@ -133,5 +132,6 @@ Before planning any structural change, you MUST discover the project's existing 
 ## Audit Checklist
 - [ ] Phase 0 included if coverage is weak
 - [ ] Every phase ends in green test suite
+- [ ] Rollback plan included if refactor moves files or changes public interfaces
 - [ ] All impacted `Scopes/Product/**` evidence links updated after moves/renames
 - [ ] Exactly 2 diagrams remain in each substantial Capability Scope

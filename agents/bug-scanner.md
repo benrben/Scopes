@@ -34,7 +34,15 @@ If `static_hotspots.py` is not available, fall back to manual grep patterns:
 grep -rn "eval(" src/ --include="*.ts" --include="*.js" | head -10
 grep -rn "TODO\|FIXME\|HACK\|XXX" src/ --include="*.ts" --include="*.js" | head -10
 grep -rn "password\|secret\|api_key\|token" src/ --include="*.ts" --include="*.js" -i | head -10
+
+# Non-JS examples (adapt includes to repo language)
+grep -rn "eval\\(|exec\\(" . --include="*.py" --exclude-dir="venv" --exclude-dir="__pycache__" | head -10
+grep -rn "pickle\\.loads\\(|yaml\\.load\\(" . --include="*.py" --exclude-dir="venv" --exclude-dir="__pycache__" | head -10
+grep -rn "exec\\.Command\\(" . --include="*.go" --exclude-dir="vendor" | head -10
+grep -rn "TODO\\|FIXME\\|HACK\\|XXX" . --include="*.py" --include="*.go" --include="*.rb" --exclude-dir="vendor" --exclude-dir="node_modules" | head -10
 ```
+Prefer excluding dependency/build dirs to reduce false positives:
+- `node_modules/`, `vendor/`, `dist/`, `build/`, `.venv/`, `venv/`, `__pycache__/`
 
 ### Step 2: Scope Context
 Find which scopes cover the affected files:

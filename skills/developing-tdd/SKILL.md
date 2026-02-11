@@ -13,6 +13,20 @@ Use when the user wants strict TDD: write the failing test first, then minimal c
 ## Prerequisites
 Requires a Scopes-enabled repo (a `Scopes/` directory) and a runnable test suite (or repeatable verification steps).
 
+## If the Repo Has No Tests (Phase 0: Establish a Harness)
+If there is no test suite yet, you MUST create the smallest safe characterization harness before doing feature work:
+
+1. **Search for existing verification**: check `Scopes/DEVELOPER_INFO.md`, CI configs, `Makefile`, `package.json`, `pyproject.toml`, `go.mod`, etc.
+2. **Pick a minimal runner that fits the repo** (do not introduce a second framework if one already exists):
+   - JS/TS: Node’s built-in `node:test` or the existing runner in `package.json`
+   - Python: `pytest` if present, otherwise `unittest`
+   - Go: `go test` (standard library)
+3. **Write one characterization test** that asserts an observable behavior (input → output/error), ideally at a boundary (HTTP handler, CLI command, pure function).
+4. **Run it and record the command** as the baseline RED/GREEN signal.
+5. **Document the command** in `Scopes/DEVELOPER_INFO.md` so the repo is no longer “testless” for future work.
+
+If you cannot establish any repeatable harness safely, stop and recommend switching to `developing-verified` (with REPL/curl verification) plus a follow-up task to add tests.
+
 ## Safety and confirmations
 - Keep changes minimal and continuously verifiable; stop early if tests/env are blocked.
 - Ask before destructive operations or expensive commands.
@@ -31,32 +45,13 @@ Ask the user one simple question next:
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Context Gathering — PARALLEL
-
-Fire **both agents simultaneously** before starting any TDD work:
-- **`scope-navigator`** — finds relevant scopes, dependency graph, and anchor files
-- **`plan-researcher`** *(background)* — investigates codebase patterns, git history, constraints; writes brief to `Scopes/Work/Planning/`
-
-Read both summaries before proceeding to Phase 2.
-
-### Phase 2: Implementation — SEQUENTIAL (TDD loop)
-
-Follow the TDD Cycle below in the main context, OR delegate to **`tdd-runner`** agent for context isolation (recommended for large changes that would bloat the main conversation).
-
-### Phase 3: Review — SEQUENTIAL FEEDBACK LOOP
-
-Fire **`code-reviewer`** on the changed files:
-- **APPROVED** → proceed to Phase 4
-- **NEEDS REVISION** → feed review back to `tdd-runner` (or fix in main context) → re-invoke `code-reviewer`
-- Max **3 iterations**, then escalate to human
-
-### Phase 4: Documentation — PARALLEL
-
-Fire **both agents simultaneously**:
-- **`scope-writer`** — updates affected scope docs with new traces/evidence
-- **`scope-auditor`** *(background)* — validates all scopes are still accurate
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| `scope-navigator` | Find relevant scopes, dependency graph, and anchor files before starting TDD | 9 |
+| `code-simplifier` | After tests are green, simplify recent changes while preserving behavior and staying aligned to the Scopes contract | 9 |
+| `code-reviewer` | After changes are complete, review `git diff` and report only confidence ≥ 80 issues vs Scopes + standards | 9 |
 
 ---
 

@@ -11,10 +11,20 @@ This skill refreshes **Skills only**.
 Use when installed Scopes skills are stale and you want to refresh them locally from upstream.
 
 ## Safety and confirmations
-- This workflow clones a repo and overwrites target skill folders; ask before running if the user has local modifications.
+- This workflow clones a repo and overwrites target folders; ask before running if the user has local modifications.
+- Always run `--dry-run` first and keep a backup copy of the existing skills folder before syncing.
 
 ## Helper scripts
 - `scripts/update-skills.sh`: Refresh installed skills from upstream `skills/`.
+
+## Suggested Update Flow (Safe)
+1. **Dry run** (see what would change): `bash <skills-root>/updating-skills/scripts/update-skills.sh --dry-run -v`
+2. **Backup safety**: by default the script backs up overwritten folders under `<target>/.scopes-backups/<timestamp>/` (disable with `--no-backup`).
+3. **Sync**: `bash <skills-root>/updating-skills/scripts/update-skills.sh -v`
+4. **Post-update validation**:
+   - Verify `skills/_shared/SCOPES_PROTOCOL.md` exists in the target skills root.
+   - Spot-check one skill: confirm “Mission Start” still points to the shared protocol.
+   - If your assistant caches skills/plugins, reload/restart it.
 
 ## Scopes-first Policy Check (Post-update)
 After syncing skills, verify that execution/planning/research skills keep this startup contract:

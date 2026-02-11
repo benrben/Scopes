@@ -3,9 +3,8 @@ name: scope-writer
 description: >
   Use after implementing features or when scopes need refreshing. Creates and
   updates Scopes documentation files following project templates. Always use
-  after tdd-runner reports PASS and code-reviewer reports APPROVED to keep
-  docs in sync with code. Generates evidence-backed scope files with proper
-  code links.
+  after implementation is verified to keep docs in sync with code. Generates
+  evidence-backed scope files with proper code links.
 tools: Read, Write, Edit, Bash, Grep, Glob
 model: inherit
 maxTurns: 20
@@ -67,6 +66,9 @@ Follow the TEMPLATES.md structure EXACTLY:
 - `## Key Behaviors / Use Cases` — with code links
 - `## Internal Design Notes` — how it works, with links
 - `## Cross-Links` — related scopes (use relative paths)
+Also enforce the two key invariants from the templates:
+- **Exactly 2 Mermaid diagrams** in every substantial capability scope.
+- **At least one end-to-end trace** per major path in “Usage & Flow Traces”.
 
 ### Step 5: Update INDEX.md and GRAPH.md
 If this is a new scope:
@@ -102,3 +104,4 @@ Return:
 - Follow the template format EXACTLY — don't improvise sections.
 - Use `--link-only` when generating links to save output space.
 - Always self-validate before finishing.
+- Do not produce scopes with 0 traces or with ≠ 2 diagrams (fix before returning).

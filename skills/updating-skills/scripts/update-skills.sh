@@ -8,7 +8,7 @@ usage() {
   cat <<'USAGE'
 update-skills.sh
 
-Update Scopes Skills only.
+Update Scopes skills (and shared support files).
 
 Usage:
   # Run from whatever skills folder you installed into (Cursor/Claude/Antigravity):
@@ -21,6 +21,9 @@ Options:
   --repo <git-url>            (default: https://github.com/benrben/Scopes.git)
   --ref <branch-or-tag>       (default: main)
   --target-dir <path>         (default: auto-detected skills root)
+  --backup-dir <path>         (default: <target>/.scopes-backups/<timestamp>/)
+  --no-backup                 (disable backups before overwriting)
+  --include-evaluations       (also sync skills/_evaluations/)
   --dry-run
   -v, --verbose
 
@@ -36,6 +39,9 @@ REPO_URL="${SCOPES_SKILLS_REPO:-${SCOPES_COMMANDS_REPO:-https://github.com/benrb
 REF="${SCOPES_SKILLS_REF:-${SCOPES_COMMANDS_REF:-main}}"
 DRY_RUN=0
 VERBOSE=0
+BACKUP=1
+BACKUP_DIR=""
+INCLUDE_EVALUATIONS=0
 
 require_value() {
   local flag="$1"
@@ -62,6 +68,18 @@ while [[ $# -gt 0 ]]; do
       require_value "$1" "${2:-}"
       REF="$2"; shift 2
       ;;
+    --backup-dir)
+      require_value "$1" "${2:-}"
+      BACKUP_DIR="$2"
+      BACKUP=1
+      shift 2
+      ;;
+    --no-backup)
+      BACKUP=0; shift
+      ;;
+    --include-evaluations)
+      INCLUDE_EVALUATIONS=1; shift
+      ;;
     --dry-run)
       DRY_RUN=1; shift
       ;;
@@ -80,6 +98,11 @@ done
 if [[ -z "$TARGET_DIR" ]]; then
   scripts_dir="$(CDPATH='' cd -- "$(dirname -- "$0")" && pwd)"
   TARGET_DIR="$(CDPATH='' cd -- "$scripts_dir/../.." && pwd)"
+fi
+
+if [[ $BACKUP -eq 1 && -z "$BACKUP_DIR" ]]; then
+  ts="$(date +"%Y%m%d-%H%M%S")"
+  BACKUP_DIR="$TARGET_DIR/.scopes-backups/$ts"
 fi
 
 if [[ ${#ARGS[@]} -gt 0 ]]; then
@@ -151,6 +174,75 @@ ADDED=0
 UPDATED=0
 FOUND=0
 
+backup_dir() {
+  local src_dir="$1"
+  if [[ $BACKUP -ne 1 || $DRY_RUN -eq 1 ]]; then
+    return 0
+  fi
+  if [[ ! -d "$src_dir" ]]; then
+    return 0
+  fi
+
+  mkdir -p "$BACKUP_DIR"
+  cp -R "$src_dir" "$BACKUP_DIR/"
+}
+
+sync_dir() {
+  local src_dir="$1"
+  local dest_dir="$2"
+
+  if [[ $DRY_RUN -eq 1 ]]; then
+    if [[ -d "$dest_dir" ]]; then
+      if [[ $BACKUP -eq 1 ]]; then
+        say "Would backup: $dest_dir/ -> $BACKUP_DIR/"
+      fi
+
+      if [[ $VERBOSE -eq 1 ]]; then
+        # diff exits 1 when differences exist, 0 when identical, 2 on error
+        diff_out="$(diff -qr "$dest_dir" "$src_dir" 2>/dev/null || true)"
+        if [[ -n "$diff_out" ]]; then
+          diff_lines="$(printf '%s\n' "$diff_out" | wc -l | tr -d ' ')"
+          say "Would update: $dest_dir/ (diff: ~$diff_lines item(s))"
+        else
+          say "Would update: $dest_dir/ (diff: none detected)"
+        fi
+      else
+        say "Would update: $dest_dir/"
+      fi
+      UPDATED=$((UPDATED + 1))
+    else
+      say "Would add: $dest_dir/"
+      ADDED=$((ADDED + 1))
+    fi
+    return 0
+  fi
+
+  if [[ -d "$dest_dir" ]]; then
+    backup_dir "$dest_dir"
+    UPDATED=$((UPDATED + 1))
+  else
+    ADDED=$((ADDED + 1))
+  fi
+
+  tmp_dir="$TARGET_DIR/.scopes-tmp-$(basename "$dest_dir")-$$"
+  rm -rf "$tmp_dir"
+  cp -R "$src_dir" "$tmp_dir"
+  rm -rf "$dest_dir"
+  mv "$tmp_dir" "$dest_dir"
+  say "Synced: $dest_dir/"
+}
+
+# Always sync shared protocol/templates; skills depend on these.
+if [[ -d "$SKILLS_ROOT/_shared" ]]; then
+  FOUND=1
+  sync_dir "$SKILLS_ROOT/_shared" "$TARGET_DIR/_shared"
+fi
+
+if [[ $INCLUDE_EVALUATIONS -eq 1 && -d "$SKILLS_ROOT/_evaluations" ]]; then
+  FOUND=1
+  sync_dir "$SKILLS_ROOT/_evaluations" "$TARGET_DIR/_evaluations"
+fi
+
 shopt -s nullglob
 for skill_dir in "$SKILLS_ROOT"/*; do
   [[ -d "$skill_dir" ]] || continue
@@ -159,30 +251,7 @@ for skill_dir in "$SKILLS_ROOT"/*; do
 
   skill_name="$(basename "$skill_dir")"
   dest_dir="$TARGET_DIR/$skill_name"
-  tmp_skill_dir="$TARGET_DIR/.scopes-tmp-${skill_name}-$$"
-
-  if [[ $DRY_RUN -eq 1 ]]; then
-    if [[ -d "$dest_dir" ]]; then
-      say "Would update: $dest_dir/"
-      UPDATED=$((UPDATED + 1))
-    else
-      say "Would add: $dest_dir/"
-      ADDED=$((ADDED + 1))
-    fi
-    continue
-  fi
-
-  if [[ -d "$dest_dir" ]]; then
-    UPDATED=$((UPDATED + 1))
-  else
-    ADDED=$((ADDED + 1))
-  fi
-
-  rm -rf "$tmp_skill_dir"
-  cp -R "$skill_dir" "$tmp_skill_dir"
-  rm -rf "$dest_dir"
-  mv "$tmp_skill_dir" "$dest_dir"
-  say "Synced: $dest_dir/"
+  sync_dir "$skill_dir" "$dest_dir"
 done
 shopt -u nullglob
 

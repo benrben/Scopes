@@ -27,19 +27,11 @@ Ask the user one simple question:
 
 ## Agent Orchestration (Prefer Parallel)
 
-Delegate to [agents](../agents/) following the [parallel development pattern](../agents/WORKFLOW.md). The main agent orchestrates; agents do the heavy lifting in isolated contexts.
+Only include agents with **Need ≥ 9**.
 
-### Phase 1: Context Gathering — PARALLEL
-
-Fire **both agents simultaneously** to understand the work landscape:
-- **`scope-navigator`** — finds anchor scopes, dependency graph, and capability boundaries for each task area
-- **`plan-researcher`** *(background)* — investigates codebase patterns, existing tasks/bugs/plans, and implementation constraints; writes brief to `Scopes/Work/Planning/`
-
-Read both summaries before writing tasks. Navigator provides anchor scope paths for task templates; researcher provides implementation context for step definitions.
-
-### Phase 2: Task Writing — MAIN AGENT
-
-The main agent writes task files using the Task Anatomy below. No further agent delegation needed.
+| Agent | How it uses it | Need (1–10) |
+|---|---|---:|
+| *(none; all agents are < 9 for this skill)* | *(not used)* | 1 |
 
 ---
 
@@ -61,7 +53,7 @@ flowchart TD
 
 ### 2) Diagnose (Silent)
 - Find Anchor Scope under `Scopes/Product/**` for each task.
-- Identify dependencies. Resolve ambiguity with explicit acceptance criteria.
+- Identify dependencies and an execution order. Resolve ambiguity with explicit acceptance criteria.
 
 ### 3) Develop (Silent)
 - Describe current state with evidence links.
@@ -90,6 +82,7 @@ Before writing task steps, you MUST discover the project's existing patterns (se
 3. **No "Implement X"**: Say "Implement X **following the pattern in** Y to achieve Behavior Z, verified by Test/Sandbox W".
 4. **Pattern Reference Required**: Every task that creates code MUST reference an existing implementation as the pattern to follow.
 5. **Template Adherence**: Guide engineer to update traces, links, diagrams.
+6. **Ordering (MANDATORY for multi-task sets)**: If you generate 2+ tasks, include explicit ordering and cross-links (“Depends on”) so engineers run tasks in the intended sequence.
 
 ## Task Template
 
@@ -97,6 +90,11 @@ Before writing task steps, you MUST discover the project's existing patterns (se
 
 ```markdown
 # Task: <Action-Oriented Title>
+
+## 0. Task Set (Only if part of a multi-task set)
+**Set**: <shared set name / goal>
+**Order**: <1 of N>
+**Depends On**: <links to other task file(s), if any>
 
 ## 1. Summary
 **Goal**: <User-facing value>
