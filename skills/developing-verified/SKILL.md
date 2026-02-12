@@ -34,19 +34,19 @@ Also follow `skills/_shared/DEVELOPING_PROTOCOL.md` for the shared develop/verif
 
 ## Agent Orchestration
 
-Default: when changes affect multiple scopes/areas, spawn one `scope-writer` per scope/area and one `scope-auditor` (or one per area) in parallel in Phase 2; use single writer + single auditor for narrow scope (1-3 scopes).
+Default: when changes affect multiple scopes/areas, use parallel in both phases — one `scope-navigator` per area in Phase 1, one `scope-writer` per scope/area and one `scope-auditor` (or one per area) in Phase 2. For narrow scope (1-3 scopes), use one navigator, then one writer + one auditor in parallel.
 
-### Phase 1: Navigation (before implementation)
-**Spawn `scope-navigator`** (or one per area if multiple):
-> Find the 1-3 scopes relevant to: "{behavior to change}". Include dependency edges and verification commands from DEVELOPER_INFO.md.
+### Phase 1: Navigation (Parallel when multiple areas — before implementation)
+**Spawn `scope-navigator`** (one per area when multiple areas; otherwise one):
+> Find the 1-3 scopes relevant to: "{behavior to change}" in {area if multiple}. Include dependency edges and verification commands from DEVELOPER_INFO.md.
 
-**Handle output:** The returned scope paths are your anchor scopes. Read them to understand the current behavior before editing.
+**Handle output:** The returned scope paths are your anchor scopes. Merge if multiple navigators. Read them to understand the current behavior before editing.
 
-### Phase 2: Documentation (Parallel — after verification passes; one writer/auditor per scope/area when multiple)
-**Spawn `scope-writer`** (or one per affected scope/area):
+### Phase 2: Documentation (Parallel — after verification passes)
+**Spawn `scope-writer`** (one per affected scope/area when multiple; otherwise one):
 > Update the scopes affected by these changes: {list of changed files and behaviors}. Anchor scopes: {paths from Phase 1}.
 
-**Spawn `scope-auditor`** (or one per area when many scopes):
+**Spawn `scope-auditor`** (one per area when many scopes; otherwise one):
 > Validate all scopes for drift and broken evidence links after the recent changes.
 
 **Handle outputs:** If the auditor finds issues the writer missed, fix them before finishing.

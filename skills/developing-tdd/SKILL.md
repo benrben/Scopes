@@ -7,6 +7,7 @@ model: inherit
 # Developing (TDD)
 
 You implement changes via strict RED -> GREEN -> REFACTOR, then keep `Scopes/` truthful.
+Multiple independent behaviors are executed as **parallel TDD cycles** — one agent per behavior, all running RED→GREEN→REFACTOR at the same time.
 Shared rules live in `skills/_shared/DEVELOPING_PROTOCOL.md`.
 
 ## When to use this skill
@@ -34,28 +35,41 @@ Also follow `skills/_shared/DEVELOPING_PROTOCOL.md` for the shared develop/verif
 
 ## Agent Orchestration
 
-Default: when changes affect multiple scopes/areas, spawn one `scope-writer` per scope/area and one `scope-auditor` (or one per area) in parallel in Phase 2; use single writer + single auditor for narrow scope (1-3 scopes).
+**Parallel TDD by default.** When there are multiple independent behaviors/tasks to implement, split them and run one TDD cycle agent per behavior in parallel. Each agent owns its own RED→GREEN→REFACTOR on non-overlapping files. After all cycles are GREEN, run scope documentation in parallel per area.
 
-### Phase 1: Navigation (before first RED)
-**Spawn `scope-navigator`** (or one per area if multiple):
-> Find the 1-3 scopes relevant to: "{behavior to change}". Include dependency edges and test/verification commands from DEVELOPER_INFO.md.
+For a single behavior, use the single-cycle flow below.
 
-**Handle output:** The returned scope paths are your anchor scopes. Read them to understand the current behavior contract before writing your first failing test.
+### Phase 0: Split (main agent — before spawning)
+1. Identify all independent behaviors/tasks to implement (from task files, user request, or plan).
+2. Check for file overlap: two tasks touching the same file cannot run in parallel. Group overlapping tasks into one cycle.
+3. Assign each independent cycle its own area/scope(s) and test file(s).
 
-### Phase 2: Documentation (Parallel — after all cycles are GREEN; one writer/auditor per scope/area when multiple)
-**Spawn `scope-writer`** (or one per affected scope/area):
-> Update the scopes affected by these changes: {list of changed files and behaviors}. Anchor scopes: {paths from Phase 1}.
+### Phase 1: Navigate (Parallel — one `scope-navigator` per cycle)
+**Spawn `scope-navigator`** for each cycle:
+> Find the scopes relevant to: "{behavior for this cycle}". Include dependency edges and test/verification commands from DEVELOPER_INFO.md.
 
-**Spawn `scope-auditor`** (or one per area when many scopes):
+**Handle output:** Each navigator's scope paths become the anchor scopes for that cycle's TDD agent. Merge results to confirm no scope overlap between cycles.
+
+### Phase 2: Execute (Parallel — one TDD agent per cycle)
+**Spawn one TDD execution agent** per independent behavior (all in parallel):
+> Implement "{behavior}" using strict TDD (RED→GREEN→REFACTOR). Anchor scopes: {paths from Phase 1 for this cycle}. Test files: {assigned test files}. Code files: {assigned code files}. Do NOT touch files outside your assignment. Stop when your tests are GREEN.
+
+**Handle output:** Wait for all agents to complete. If any cycle fails or is blocked, handle it individually (fix or mark blocked) without stopping the others. Run the full test suite once all cycles report GREEN to catch integration issues.
+
+### Phase 3: Documentation (Parallel — after all cycles are GREEN)
+**Spawn `scope-writer`** (one per affected scope/area):
+> Update the scopes affected by these changes: {list of changed files and behaviors for this area}. Anchor scopes: {paths from Phase 1}.
+
+**Spawn `scope-auditor`** (one per area):
 > Validate all scopes for drift and broken evidence links after the recent changes.
 
 **Handle outputs:** If the auditor finds issues the writer missed, fix them before finishing.
 
 ### Optional Agents (invoke only when the stated condition applies)
-- **`code-explorer`** — Before RED, if you need to trace existing behavior: "Trace how {behavior} works starting from {scope evidence links}."
-- **`code-architect`** — Before RED, if the change is non-trivial and needs a blueprint: "Design implementation for {feature} given scopes {paths}."
-- **`code-simplifier`** — After GREEN, if recent changes need cleanup: "Simplify the changes in {files} while preserving behavior."
-- **`code-reviewer`** — After GREEN, for a confidence check: "Review the diff for bugs, security issues, and convention violations."
+- **`code-explorer`** — Before RED, if a cycle needs to trace existing behavior: "Trace how {behavior} works starting from {scope evidence links}."
+- **`code-architect`** — Before RED, if a cycle is non-trivial and needs a blueprint: "Design implementation for {feature} given scopes {paths}."
+- **`code-simplifier`** — After all GREEN, if changes need cleanup: "Simplify the changes in {files} while preserving behavior."
+- **`code-reviewer`** — After all GREEN, for a confidence check: "Review the diff for bugs, security issues, and convention violations."
 
 ## If the Repo Has No Tests (Phase 0: Establish a Harness)
 If there is no test suite yet, create the smallest safe characterization harness before feature work:
@@ -68,9 +82,10 @@ If there is no test suite yet, create the smallest safe characterization harness
 If you cannot establish any repeatable harness safely, stop and recommend `developing-verified` plus a follow-up task to add tests.
 
 ## When to Stop (Mandatory)
-- Stop after the requested behaviors are complete and tests are green.
-- Stop early when budgets are exceeded: 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; mark gaps as `[Unknown]`.
-- Stop and set `Verdict: Needs Narrowing` if the behavior cannot be stated as a testable assertion.
+- Stop after **all** parallel cycles are GREEN and the full test suite passes.
+- Individual cycles stop when their own tests are GREEN; they do not wait for other cycles.
+- Stop and set `Verdict: Needs Narrowing` if a behavior cannot be stated as a testable assertion.
+- If cycles conflict at integration (full suite fails after all cycles), resolve conflicts in the main agent before finishing.
 
 ## Blocked Runbook (Mandatory)
 - Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes` first.
