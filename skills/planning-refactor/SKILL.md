@@ -1,6 +1,7 @@
 ---
 name: planning-refactor
 description: Plans safe, incremental refactors (green-to-green) with verification gates and explicit Scopes evidence/trace maintenance. Use when the user wants to refactor, restructure, or reorganize code while preserving behavior.
+model: inherit
 ---
 
 # Planning a Refactor
@@ -27,6 +28,8 @@ Ask the user one simple question:
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration
+
+Default: when the refactor spans multiple modules/areas, spawn one `scope-navigator` per area and/or one `code-architect` per area in parallel; use single agents for narrow scope (1-3 scopes).
 
 ### Phase 1: Navigation (before Deconstruct)
 **Spawn `scope-navigator`:**

@@ -1,6 +1,7 @@
 ---
 name: developing-tdd
 description: Implements features and fixes via strict TDD (red/green/refactor) while updating Scopes docs and session logs. Use when the user asks for strict TDD or wants a failing test first.
+model: inherit
 ---
 
 # Developing (TDD)
@@ -33,17 +34,19 @@ Also follow `skills/_shared/DEVELOPING_PROTOCOL.md` for the shared develop/verif
 
 ## Agent Orchestration
 
+Default: when changes affect multiple scopes/areas, spawn one `scope-writer` per scope/area and one `scope-auditor` (or one per area) in parallel in Phase 2; use single writer + single auditor for narrow scope (1-3 scopes).
+
 ### Phase 1: Navigation (before first RED)
-**Spawn `scope-navigator`:**
+**Spawn `scope-navigator`** (or one per area if multiple):
 > Find the 1-3 scopes relevant to: "{behavior to change}". Include dependency edges and test/verification commands from DEVELOPER_INFO.md.
 
 **Handle output:** The returned scope paths are your anchor scopes. Read them to understand the current behavior contract before writing your first failing test.
 
-### Phase 2: Documentation (Parallel — after all cycles are GREEN)
-**Spawn `scope-writer`:**
+### Phase 2: Documentation (Parallel — after all cycles are GREEN; one writer/auditor per scope/area when multiple)
+**Spawn `scope-writer`** (or one per affected scope/area):
 > Update the scopes affected by these changes: {list of changed files and behaviors}. Anchor scopes: {paths from Phase 1}.
 
-**Spawn `scope-auditor`:**
+**Spawn `scope-auditor`** (or one per area when many scopes):
 > Validate all scopes for drift and broken evidence links after the recent changes.
 
 **Handle outputs:** If the auditor finds issues the writer missed, fix them before finishing.

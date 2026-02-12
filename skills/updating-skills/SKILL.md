@@ -1,6 +1,7 @@
 ---
 name: updating-skills
 description: Refreshes installed Scopes skills in a project by syncing packaged skill folders from upstream. Use when the user wants to update or refresh their installed skills version.
+model: inherit
 ---
 
 # Updating Skills

@@ -1,6 +1,7 @@
 ---
 name: writing-adr
 description: Writes Architecture Decision Records (ADRs) under Scopes/Decisions/ADRs with options, tradeoffs, and affected scopes. Use when recording a decision, choosing between approaches, or documenting rationale for an architectural choice.
+model: inherit
 ---
 
 # Writing an ADR
@@ -30,6 +31,8 @@ Ask the user one simple question:
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration
+
+Default: when the decision affects multiple capability areas, spawn one `scope-navigator` per area in parallel; use a single navigator for narrow scope (1-3 scopes).
 
 ### Phase 1: Navigation (before Diagnose)
 **Spawn `scope-navigator`:**

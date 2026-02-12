@@ -1,6 +1,7 @@
 ---
 name: planning-idea
 description: Turns a raw idea into a concrete implementation blueprint with explicit Scopes impacts, sequencing, and verification. Use when the user needs a plan, blueprint, or wants to design a feature before coding.
+model: inherit
 ---
 
 # Planning an Idea
@@ -30,6 +31,8 @@ Ask the user one simple question:
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration
+
+Default: when the idea spans multiple capability areas, spawn one `scope-navigator` per area and/or one `code-architect` per area in parallel; use single agents for narrow scope (1-3 scopes).
 
 ### Phase 1: Navigation (before Deconstruct)
 **Spawn `scope-navigator`:**

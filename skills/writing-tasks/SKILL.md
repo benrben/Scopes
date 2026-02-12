@@ -1,6 +1,7 @@
 ---
 name: writing-tasks
 description: Converts intent (chat, plans, research, bug reports) into engineer-ready task files under Scopes/Work/Tasks with verification and scope maintenance. Use when the user needs executable work units, task breakdowns, or actionable tickets.
+model: inherit
 ---
 
 # Writing Tasks
@@ -27,6 +28,8 @@ Ask the user one simple question:
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
 ## Agent Orchestration
+
+Default: when the intent spans multiple capability areas or outcomes, spawn one `scope-navigator` per area in parallel; use a single navigator for narrow scope (1-3 scopes).
 
 ### Phase 1: Navigation (before Diagnose)
 **Spawn `scope-navigator`:**

@@ -1,6 +1,7 @@
 ---
 name: hunting-bugs
 description: Finds bugs, foot-guns, and anti-patterns with code evidence and produces actionable fix reports under Scopes/Work/Bugs. Use when the user asks for a bug scan, failure investigation, code smell audit, security review, or error analysis.
+model: inherit
 ---
 
 # Hunting Bugs
@@ -35,11 +36,13 @@ Ask the user one simple question:
 
 ## Agent Orchestration
 
-### Phase 1: Investigation (Parallel — spawn both at the same time)
-**Spawn `scope-navigator`:**
+Default: when the target spans multiple areas, spawn one `scope-navigator` per area and one `bug-scanner` per area in parallel; use one pair for narrow scope (single target area).
+
+### Phase 1: Investigation (Parallel — spawn both at the same time, or one pair per area)
+**Spawn `scope-navigator`** (or one per area):
 > Find the scopes covering "{target area or symptom}". Include dependency edges to identify blast radius.
 
-**Spawn `bug-scanner`:**
+**Spawn `bug-scanner`** (or one per area):
 > Scan "{target area}" for hotspots, security issues, and anti-patterns. Write findings to `Scopes/Work/Bugs/`.
 
 **Handle outputs:** Review both results together. The navigator's scope context tells you what *should* be true; the scanner's findings tell you what's *actually* wrong. Cross-reference to identify scope drift alongside code bugs.

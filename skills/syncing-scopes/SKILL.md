@@ -1,6 +1,7 @@
 ---
 name: syncing-scopes
 description: Generates or updates Scopes documentation from code, tests, config, and schema while maintaining INDEX.md, GRAPH.md, and DEVELOPER_INFO.md with evidence-backed claims. Use when Scopes are missing, stale, or drifted from code reality.
+model: inherit
 ---
 
 # Syncing Scopes
@@ -22,15 +23,16 @@ Use when `Scopes/` is missing, stale, or you suspect scope drift (broken evidenc
 Load and follow the shared Scopes-first startup protocol at `skills/_shared/SCOPES_PROTOCOL.md`.
 For detailed rules, load `skills/syncing-scopes/references/PROTOCOLS.md` and `skills/syncing-scopes/references/TEMPLATES.md` as needed.
 
-## Kickoff (Ask Next)
-- "Are we generating Scopes from scratch, or updating existing Scopes (and which area should we focus on first)?"
+## Kickoff (Automatic)
+- Do **not** ask which area to focus on. Discover all capability areas from `Scopes/INDEX.md` and `Scopes/Product/**` (or from repo structure if Scopes are missing) and sync **all** areas in parallel. Only ask the user for destructive operations (see Safety) or when Scopes are missing and generation from scratch needs approval.
 
-## Quick Start (Update Mode, 30 minutes)
-1. Capture drift + broken links:
-   - `python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 10`
+## Quick Start (Update Mode — all areas, automatic)
+1. Discover all areas from `Scopes/INDEX.md` and `Scopes/Product/**` (one area per top-level capability or dir).
+2. Capture drift + broken links (optionally in parallel per area):
+   - `python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only`
    - `python3 skills/syncing-scopes/scripts/check_evidence_links.py --broken-only --summary`
-2. Pick the top 1-3 scope files to fix.
-3. Update those scopes (traces + evidence + diagrams), then re-run the checks.
+3. Spawn one `scope-auditor` per area in parallel (Phase 1), then one `scope-writer` per area in parallel (Phase 2). Update **all** areas; do not limit to 1-3 scopes.
+4. Re-validate (Phase 3), then report.
 
 Common targets to keep in sync:
 - `Scopes/Product/**`, `Scopes/INDEX.md`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
@@ -42,31 +44,33 @@ Common targets to keep in sync:
 
 ## Agent Orchestration
 
-### Phase 1: Audit (before main work)
-**Spawn `scope-auditor`:**
-> Detect stale evidence, broken links, and code-doc drift across all scopes. Return SCOPE AUDIT with the worst offenders.
+**Automatic, all areas, parallel.** Do not ask the user which area to sync. Discover all areas from `Scopes/INDEX.md` and `Scopes/Product/**`; spawn one auditor per area and one writer per area in parallel. Sync **all** areas — no 1-3 scope limit.
 
-**Handle output:** Use the audit findings to prioritize which scopes to fix first. The worst 1-3 items become your immediate targets.
+#### Phase 1: Audit (Parallel — one agent per area, all areas)
+**Spawn `scope-auditor`** for **each** capability area (from INDEX.md or top-level dirs under `Scopes/Product/`):
+> Audit only scopes under {area path or capability name}. Detect stale evidence, broken links, and code-doc drift. Return SCOPE AUDIT for this area.
 
-### Phase 2: Write (after main agent processes audit results)
-**Spawn `scope-writer`:**
-> Update these scope files: {worst items from Phase 1 audit}. Fix broken evidence links, refresh traces, and align with current code.
+**Handle output:** Merge audit findings from all areas. Do not reduce to "top 1-3"; keep full list for Phase 2.
 
-**Handle output:** Confirm the writer's changes address the audit findings.
+#### Phase 2: Write (Parallel — one agent per area, all areas)
+**Spawn `scope-writer`** for **each** area (same list as Phase 1):
+> Update only scope files in {area path or capability name}. Fix broken evidence links, refresh traces, and align with current code for this area. Target files: {list from Phase 1 for this area}.
 
-### Phase 3: Re-validate (after writes complete)
+**Handle output:** Confirm each writer's changes; resolve any cross-area conflicts (e.g. GRAPH.md, INDEX.md) in the main agent.
+
+#### Phase 3: Re-validate (after writes complete)
 **Spawn `scope-auditor`:**
 > Re-validate all scopes after the recent updates. Confirm drift and broken links are resolved.
 
 **Handle output:** If new issues are found, either fix them inline or record them for a follow-up task.
 
 ## When to Stop (Mandatory)
-- Stop once validators are clean for the targeted area OR you can precisely report what is blocked and why.
-- Default caps (unless user asks broader): 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; label gaps as `[Unknown]`.
-- If Scopes require a repo-wide regeneration beyond the budget, stop and propose a sequenced plan artifact under `Scopes/Work/Planning/**`.
+- Stop once validators are clean for **all** areas OR you can precisely report what is blocked and why.
+- No scope cap: sync all areas. Label gaps as `[Unknown]` where evidence is missing.
+- If the repo is too large to sync in one run, split by capability areas and run parallel agents per area; do not arbitrarily limit to 1-3 scopes.
 
 ## Blocked Runbook (Mandatory)
-- No `Scopes/` and generation is not approved: set `Verdict: Needs Narrowing` and ask for permission/scope.
+- No `Scopes/` and generation from scratch is not approved: set `Verdict: Needs Narrowing` and ask for permission to generate (do not ask which area — generate all).
 - Evidence links cannot be validated (missing files, permissions): record exact blocker; set `Verdict: Blocked`.
 - Git history unavailable (no git metadata): use filesystem timestamps and direct evidence checks; record limitation.
 

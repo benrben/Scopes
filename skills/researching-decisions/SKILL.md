@@ -1,6 +1,7 @@
 ---
 name: researching-decisions
 description: Researches decision questions by combining internal repo truth (Scopes + code) with external web sources, keeping the two strictly separated. Use when external info is needed to unblock a decision, evaluate options, or compare technologies.
+model: inherit
 ---
 
 # Researching Decisions
@@ -29,8 +30,10 @@ Ask the user one simple question:
 
 ## Agent Orchestration
 
+Default: when the research question spans multiple capability areas or sub-questions, spawn one `scope-navigator` per area in parallel; use a single navigator for narrow scope (1-3 scopes).
+
 ### Phase 1: Navigation (before Diagnose)
-**Spawn `scope-navigator`:**
+**Spawn `scope-navigator`** (or one per area if multiple):
 > Find the 1-3 scopes relevant to this research question: "{user's question}". Include dependency edges and any related ADRs under Scopes/Decisions/ADRs/.
 
 **Handle output:** Use the returned scope paths to ground your Internal Repo Truth section. Read them before proceeding to Diagnose.

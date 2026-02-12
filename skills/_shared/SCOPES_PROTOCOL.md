@@ -71,8 +71,9 @@ Before implementing or planning changes, discover the project's established code
 
 When a skill specifies Agent Orchestration phases:
 
+0. **Default — parallel per unit**: When a phase's work can be split by area, scope, or independent task, spawn **one agent instance per unit in parallel** (same agent type, different prompt per unit). Use a single agent only when scope is narrow (e.g. 1-3 targets). Skills may override this with a single-stream option for narrow scope.
 1. **Spawn agents as subagents/subtasks** in your environment (e.g., Task tool in Cursor/Claude Code).
-2. **Parallel phases**: Spawn all listed agents at the same time in a single tool-call batch; wait for all to complete.
+2. **Parallel phases**: Spawn all listed agents at the same time in a single tool-call batch; wait for all to complete. You may list multiple instances of the same agent type with different tasks (e.g. one auditor per area, one writer per area); each is spawned in parallel with its own prompt.
 3. **Sequential phases**: Wait for the previous phase's outputs before spawning the next.
 4. **Prompt templates**: Fill in `{placeholders}` with concrete values from the current session (user's goal, scope paths, file lists, etc.).
 5. **Handle outputs**: Follow the "Handle output" instruction for each phase before proceeding to the next method step.

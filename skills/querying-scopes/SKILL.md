@@ -1,6 +1,7 @@
 ---
 name: querying-scopes
 description: Answers project questions by navigating Scopes documentation and verifying claims against code evidence. Use when the user asks how something works, where behavior lives, what depends on what, what changed, or what to read first.
+model: inherit
 ---
 
 # Querying Scopes
@@ -22,6 +23,8 @@ Requires a Scopes-enabled repo (a `Scopes/` directory) and readable code files r
 **You MUST read the shared protocol before proceeding.** Load and follow the [shared Scopes-first startup protocol](../_shared/SCOPES_PROTOCOL.md) (located at `skills/_shared/SCOPES_PROTOCOL.md`).
 
 ## Agent Orchestration
+
+Default: when the question spans multiple areas or sub-questions, spawn one `scope-navigator` per area (and one `code-explorer` per trace in Phase 2 if needed) in parallel; use single agents for narrow scope (1-3 scopes).
 
 ### Phase 1: Navigation (before Diagnose)
 **Spawn `scope-navigator`:**
