@@ -33,24 +33,28 @@ Ask the user one simple question:
 - **Downstream outputs**: Bug report (`Scopes/Work/Bugs/**`), optional tasks via `writing-tasks`, fixes via `developing-tdd`
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
-## Agent Orchestration (Prefer Parallel)
-Invoke agents only when needed.
+## Agent Orchestration
 
-| Agent | How it uses it | Need (1–10) |
-|---|---|---:|
-| `bug-scanner` | Scan hotspots/security-ish patterns and write a bug report to `Scopes/Work/Bugs/**` | 10 |
+### Phase 1: Investigation (Parallel — spawn both at the same time)
+**Spawn `scope-navigator`:**
+> Find the scopes covering "{target area or symptom}". Include dependency edges to identify blast radius.
+
+**Spawn `bug-scanner`:**
+> Scan "{target area}" for hotspots, security issues, and anti-patterns. Write findings to `Scopes/Work/Bugs/`.
+
+**Handle outputs:** Review both results together. The navigator's scope context tells you what *should* be true; the scanner's findings tell you what's *actually* wrong. Cross-reference to identify scope drift alongside code bugs.
 
 ---
 
 ## Investigation Model
 ```mermaid
 flowchart TD
-  Q[Kickoff Scope] --> S[Select Surface Area]
-  S --> P[Prove Issues with Evidence]
-  P --> R[Rank + Recommend]
-  R --> B[Bug Report]
-  R --> T[Optional Tasks]
-  R --> D[Scope Drift Fixes]
+  Q["Kickoff Scope"] --> S["Select Surface Area"]
+  S --> P["Prove Issues with Evidence"]
+  P --> R["Rank + Recommend"]
+  R --> B["Bug Report"]
+  R --> T["Optional Tasks"]
+  R --> D["Scope Drift Fixes"]
 ```
 
 ## Method (Silent) + Output Contract (Visible)

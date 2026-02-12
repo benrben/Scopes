@@ -26,13 +26,19 @@ Ask the user one simple question:
 - **Typical next command**: `developing-tdd` to execute the plan safely.
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
-## Agent Orchestration (Prefer Parallel)
-Invoke agents only when needed.
+## Agent Orchestration
 
-| Agent | How it uses it | Need (1–10) |
-|---|---|---:|
-| `scope-navigator` | Map affected scopes + dependency graph + downstream dependents | 9 |
-| `code-architect` | Produce the refactor architecture blueprint (target structure, phases, invariants) aligned to existing patterns and Scopes | 9 |
+### Phase 1: Navigation (before Deconstruct)
+**Spawn `scope-navigator`:**
+> Find the scopes covering "{refactor target module/area}". Map dependency edges and downstream dependents that could break. Return NAV.
+
+**Handle output:** Use the returned scope paths as your anchor scopes. Their Rules/Traces become your refactor invariants.
+
+### Phase 2: Architecture (after Diagnose, before Develop)
+**Spawn `code-architect`:**
+> Using anchor scopes: {paths from Phase 1} and invariants: {snapshotted rules/traces}. Design a phased refactor plan for: "{refactor target}". Each phase must end green. Return Blueprint.
+
+**Handle output:** The blueprint's phases and file plan feed directly into the Execution Phases of the refactor plan.
 
 ---
 
@@ -46,10 +52,10 @@ Invoke agents only when needed.
 ## Refactor Safety Model
 ```mermaid
 flowchart TD
-  Contract[Snapshot Contract] --> Lock[Phase 0: Characterization Tests]
-  Lock --> Steps[Incremental Phases: Green-to-Green]
-  Steps --> Docs[Update Evidence Links + Traces + Diagrams]
-  Docs --> Graph[Update GRAPH.md edges if needed]
+  Contract["Snapshot Contract"] --> Lock["Phase 0: Characterization Tests"]
+  Lock --> Steps["Incremental Phases: Green-to-Green"]
+  Steps --> Docs["Update Evidence Links + Traces + Diagrams"]
+  Docs --> Graph["Update GRAPH.md edges if needed"]
 ```
 
 ## Method (Silent) + Output Contract (Visible)

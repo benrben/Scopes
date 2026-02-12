@@ -117,18 +117,18 @@ Every relationship must include evidence, or be placed under “Possible Relatio
 ```mermaid
 flowchart TD
   A[Entry] --> B[Validation]
-  B --> C[Core Logic]
-  C --> D[Data / Side Effects]
+  B --> C["Core Logic"]
+  C --> D["Data / Side Effects"]
   D --> E[Output]
 ```
 
 ### Diagram 2: Ecosystem / Dependencies
 ```mermaid
 flowchart TD
-  Actor[User/API/Cron] --> ThisScope[This Scope]
-  ThisScope --> DataStore[(DB/Cache)]
-  ThisScope --> External[External Systems]
-  ThisScope --> OtherScopes[Other Scopes]
+  Actor["User / API / Cron"] --> ThisScope["This Scope"]
+  ThisScope --> DataStore[("DB / Cache")]
+  ThisScope --> External["External Systems"]
+  ThisScope --> OtherScopes["Other Scopes"]
 ```
 
 ## Usage & Flow Traces
@@ -191,14 +191,14 @@ What this documentation set is and how to use it.
 
 ## Legend
 - `-->` Depends On / Uses
-- `..>` Possible Relation (Low confidence)
+- `-.->` Possible Relation (Low confidence)
 
 ## Graph
 ```mermaid
 flowchart TD
-  A[Scope A] --> B[Scope B]
-  B --> C[Scope C]
-  A ..> D[Scope D]
+  A["Scope A"] --> B["Scope B"]
+  B --> C["Scope C"]
+  A -.-> D["Scope D"]
 ```
 
 ## Evidence Table

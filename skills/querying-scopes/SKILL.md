@@ -21,14 +21,19 @@ Requires a Scopes-enabled repo (a `Scopes/` directory) and readable code files r
 ## Mission Start
 **You MUST read the shared protocol before proceeding.** Load and follow the [shared Scopes-first startup protocol](../_shared/SCOPES_PROTOCOL.md) (located at `skills/_shared/SCOPES_PROTOCOL.md`).
 
-## Agent Orchestration (Prefer Parallel)
+## Agent Orchestration
 
-Only include agents with **Need ≥ 9**.
+### Phase 1: Navigation (before Diagnose)
+**Spawn `scope-navigator`:**
+> Find the scopes relevant to this question: "{user's question}". Return scope paths, dependency edges, and a recommended reading order.
 
-| Agent | How it uses it | Need (1–10) |
-|---|---|---:|
-| `scope-navigator` | Find relevant `Scopes/**` paths + dependencies + reading order for the question | 10 |
-| `code-explorer` | When the question requires deeper “how it works” tracing, follow Scopes evidence links and map end-to-end execution flow | 9 |
+**Handle output:** Read the returned scope paths. Use them as the anchor for your answer.
+
+### Phase 2: Deep Trace (conditional — only if the question requires "how it works" tracing)
+**Spawn `code-explorer`:**
+> Trace how "{feature/behavior from user's question}" works end-to-end, starting from these scope evidence links: {links from the anchor scopes read in Phase 1}.
+
+**Handle output:** Merge the Feature Trace into your answer's Evidence section.
 
 ---
 
@@ -71,8 +76,8 @@ Do the method silently; output only the answer format below.
 ```
 
 ## When to Stop (Mandatory)
-- Stop once you can answer the question with evidence for each key claim **or** you’ve explicitly marked missing proof as `[Unknown]`.
-- Do not “keep looking” past diminishing returns: prefer 1–3 anchor scopes and at most 7 evidence links.
+- Stop once you can answer the question with evidence for each key claim **or** you've explicitly marked missing proof as `[Unknown]`.
+- Do not "keep looking" past diminishing returns: prefer 1-3 anchor scopes and at most 7 evidence links.
 - If the answer requires broad scanning across many areas, stop and recommend `syncing-scopes` (or ask a clarifying question to narrow scope).
 
 ## Blocked Runbook (Mandatory)
@@ -97,7 +102,7 @@ Artifact: (none)
 ```
 
 ## Tiny Example (format only; uses real paths from this repo)
-If asked: “Where is the Capability Scope template defined?”
+If asked: "Where is the Capability Scope template defined?"
 
 ```markdown
 ## Answer

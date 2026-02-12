@@ -29,24 +29,30 @@ Ask the user one simple question:
 - **Downstream outputs**: Plan (`Scopes/Work/Planning/**`), follow-on tasks via `writing-tasks`
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
-## Agent Orchestration (Prefer Parallel)
-Invoke agents only when needed.
+## Agent Orchestration
 
-| Agent | How it uses it | Need (1–10) |
-|---|---|---:|
-| `scope-navigator` | Find relevant scopes + dependency graph to place the idea correctly | 9 |
-| `code-architect` | Produce a decisive architecture blueprint aligned to existing patterns and the Scopes contract | 10 |
+### Phase 1: Navigation (before Deconstruct)
+**Spawn `scope-navigator`:**
+> Find the 1-3 scopes most relevant to this idea: "{user's idea}". Include dependency edges from GRAPH.md and a recommended reading order.
+
+**Handle output:** Use the returned scope paths as your anchor scopes. Read them before proceeding to Deconstruct.
+
+### Phase 2: Architecture (after Diagnose, before Develop)
+**Spawn `code-architect`:**
+> Using these anchor scopes: {scope paths from Phase 1}. Design an implementation blueprint for: "{user's idea}". Follow existing patterns found in the anchor scopes. Return a decisive file-by-file plan.
+
+**Handle output:** The blueprint's file list, sequence, and pattern references become the foundation of your TODO Scopes in the plan.
 
 ---
 
 ## Planning Model
 ```mermaid
 flowchart TD
-  Idea[Idea Input] --> Fit[Fit to existing Scopes]
-  Fit --> Risks[Risk + Feasibility]
-  Risks --> Blueprint[Sequenced Blueprint]
-  Blueprint --> Artifacts[Scope Registry Impact]
-  Artifacts --> Done[Definition of Done + Verification]
+  Idea["Idea Input"] --> Fit["Fit to existing Scopes"]
+  Fit --> Risks["Risk + Feasibility"]
+  Risks --> Blueprint["Sequenced Blueprint"]
+  Blueprint --> Artifacts["Scope Registry Impact"]
+  Artifacts --> Done["Definition of Done + Verification"]
 ```
 
 ## Method (Silent) + Output Contract (Visible)

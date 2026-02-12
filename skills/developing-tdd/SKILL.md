@@ -31,19 +31,28 @@ Also follow `skills/_shared/DEVELOPING_PROTOCOL.md` for the shared develop/verif
 - **Downstream outputs**: session log (`Scopes/Work/STDD/**`), scope updates (`Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`)
 - **Typical handoffs**: `scope-navigator` (find anchor scopes), `scope-writer` + `scope-auditor` (after verified)
 
-## Agent Orchestration (Guidance)
+## Agent Orchestration
 
-Need scores are intentionally not uniform; only invoke what you need.
+### Phase 1: Navigation (before first RED)
+**Spawn `scope-navigator`:**
+> Find the 1-3 scopes relevant to: "{behavior to change}". Include dependency edges and test/verification commands from DEVELOPER_INFO.md.
 
-| Agent | How it uses it | Need (1-10) |
-|---|---|---:|
-| `scope-navigator` | Find 1-3 anchor scopes + deps | 10 |
-| `code-explorer` | Trace existing behavior/tests before writing RED | 7 |
-| `code-architect` | Blueprint when non-trivial | 6 |
-| `code-simplifier` | Behavior-preserving cleanup after GREEN | 6 |
-| `code-reviewer` | High-confidence issues after changes | 6 |
-| `scope-writer` | Update affected `Scopes/**` with evidence | 8 |
-| `scope-auditor` | Validate drift/broken links after scope edits | 8 |
+**Handle output:** The returned scope paths are your anchor scopes. Read them to understand the current behavior contract before writing your first failing test.
+
+### Phase 2: Documentation (Parallel — after all cycles are GREEN)
+**Spawn `scope-writer`:**
+> Update the scopes affected by these changes: {list of changed files and behaviors}. Anchor scopes: {paths from Phase 1}.
+
+**Spawn `scope-auditor`:**
+> Validate all scopes for drift and broken evidence links after the recent changes.
+
+**Handle outputs:** If the auditor finds issues the writer missed, fix them before finishing.
+
+### Optional Agents (invoke only when the stated condition applies)
+- **`code-explorer`** — Before RED, if you need to trace existing behavior: "Trace how {behavior} works starting from {scope evidence links}."
+- **`code-architect`** — Before RED, if the change is non-trivial and needs a blueprint: "Design implementation for {feature} given scopes {paths}."
+- **`code-simplifier`** — After GREEN, if recent changes need cleanup: "Simplify the changes in {files} while preserving behavior."
+- **`code-reviewer`** — After GREEN, for a confidence check: "Review the diff for bugs, security issues, and convention violations."
 
 ## If the Repo Has No Tests (Phase 0: Establish a Harness)
 If there is no test suite yet, create the smallest safe characterization harness before feature work:

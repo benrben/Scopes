@@ -26,24 +26,24 @@ Ask the user one simple question:
 - **Typical next command**: `developing-tdd` to execute tasks.
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
-## Agent Orchestration (Prefer Parallel)
+## Agent Orchestration
 
-Only include agents with **Need ≥ 9**.
+### Phase 1: Navigation (before Diagnose)
+**Spawn `scope-navigator`:**
+> Find the 1-3 scopes relevant to this intent: "{user's stated outcome}". Include dependency edges and existing pattern references.
 
-| Agent | How it uses it | Need (1–10) |
-|---|---|---:|
-| *(none; all agents are < 9 for this skill)* | *(not used)* | 1 |
+**Handle output:** Use the returned scope paths as the Anchor Scope for each generated task. Pattern references from the navigator feed into the task's "Pattern Reference" section.
 
 ---
 
 ## Task Anatomy
 ```mermaid
 flowchart TD
-  Goal[Goal] --> Current[Current State: Anchor Scope]
-  Current --> Desired[Desired State]
-  Desired --> Steps[Implementation Steps]
+  Goal[Goal] --> Current["Current State: Anchor Scope"]
+  Current --> Desired["Desired State"]
+  Desired --> Steps["Implementation Steps"]
   Steps --> Verify[Verification]
-  Verify --> Maintain[Scope Maintenance]
+  Verify --> Maintain["Scope Maintenance"]
 ```
 
 ## Method (Silent) + Output Contract (Visible)

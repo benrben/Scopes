@@ -29,24 +29,24 @@ Ask the user one simple question:
 - **Typical next commands**: `planning-idea`, `writing-tasks`
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
-## Agent Orchestration (Prefer Parallel)
+## Agent Orchestration
 
-Only include agents with **Need ≥ 9**.
+### Phase 1: Navigation (before Diagnose)
+**Spawn `scope-navigator`:**
+> Find the scopes affected by this decision: "{decision being recorded}". Include dependency edges to identify downstream impacts and any existing ADRs under Scopes/Decisions/ADRs/ that relate.
 
-| Agent | How it uses it | Need (1–10) |
-|---|---|---:|
-| *(none; all agents are < 9 for this skill)* | *(not used)* | 1 |
+**Handle output:** Use the returned scope paths as the "Affected Scopes" in the ADR. Dependency edges inform the Consequences section.
 
 ---
 
 ## Decision Flow
 ```mermaid
 flowchart TD
-  C[Context + Evidence] --> O[Options + Tradeoffs]
+  C["Context + Evidence"] --> O["Options + Tradeoffs"]
   O --> D[Decision]
   D --> K[Consequences]
-  K --> A[Affected Scopes]
-  A --> G[Graph Notes]
+  K --> A["Affected Scopes"]
+  A --> G["Graph Notes"]
 ```
 
 ## Method (Silent) + Output Contract (Visible)

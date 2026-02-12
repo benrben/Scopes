@@ -27,12 +27,13 @@ Ask the user one simple question:
 - **Typical next commands**: `planning-idea`, `writing-adr`, `writing-tasks`
 - **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
 
-## Agent Orchestration (Prefer Parallel)
-Invoke agents only when needed.
+## Agent Orchestration
 
-| Agent | How it uses it | Need (1–10) |
-|---|---|---:|
-| `scope-navigator` | Quickly locate the 1–3 relevant Scopes + dependency edges to ground the internal audit | 9 |
+### Phase 1: Navigation (before Diagnose)
+**Spawn `scope-navigator`:**
+> Find the 1-3 scopes relevant to this research question: "{user's question}". Include dependency edges and any related ADRs under Scopes/Decisions/ADRs/.
+
+**Handle output:** Use the returned scope paths to ground your Internal Repo Truth section. Read them before proceeding to Diagnose.
 
 ---
 

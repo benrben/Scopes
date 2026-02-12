@@ -1,5 +1,10 @@
 # Agent Workflow — Parallel Development Pattern
 
+> **Skills embed their own Agent Orchestration** with concrete prompts, parallel
+> groupings, and output-handling instructions. This document is the architectural
+> reference for the agent system. See individual `skills/*/SKILL.md` files for
+> the executable orchestration steps that implement these patterns.
+
 Based on [Zach Wills' three core principles](https://zachwills.net/how-to-use-claude-code-subagents-to-parallelize-development/):
 
 1. **Parallel Execution for Speed** — run independent agents concurrently

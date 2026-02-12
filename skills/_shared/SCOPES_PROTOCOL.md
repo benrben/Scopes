@@ -67,6 +67,19 @@ Before implementing or planning changes, discover the project's established code
 
 ---
 
+## Agent Invocation Rules
+
+When a skill specifies Agent Orchestration phases:
+
+1. **Spawn agents as subagents/subtasks** in your environment (e.g., Task tool in Cursor/Claude Code).
+2. **Parallel phases**: Spawn all listed agents at the same time in a single tool-call batch; wait for all to complete.
+3. **Sequential phases**: Wait for the previous phase's outputs before spawning the next.
+4. **Prompt templates**: Fill in `{placeholders}` with concrete values from the current session (user's goal, scope paths, file lists, etc.).
+5. **Handle outputs**: Follow the "Handle output" instruction for each phase before proceeding to the next method step.
+6. **Optional agents**: Only spawn when the stated condition applies — do not invoke by default.
+
+---
+
 ## Common Rules
 
 These rules apply across all Scopes skills:

@@ -40,12 +40,25 @@ Common targets to keep in sync:
 - Create checkpoint commits only if explicitly approved by the user.
 - Diff-only fallback: if commits are not allowed, use `git diff` summaries to show what changed.
 
-## Agent Orchestration (Guidance)
+## Agent Orchestration
 
-| Agent | How it uses it | Need (1-10) |
-|---|---|---:|
-| `scope-auditor` | Detect stale evidence + broken links; re-validate after updates | 10 |
-| `scope-writer` | Apply scope doc updates using templates + evidence links | 9 |
+### Phase 1: Audit (before main work)
+**Spawn `scope-auditor`:**
+> Detect stale evidence, broken links, and code-doc drift across all scopes. Return SCOPE AUDIT with the worst offenders.
+
+**Handle output:** Use the audit findings to prioritize which scopes to fix first. The worst 1-3 items become your immediate targets.
+
+### Phase 2: Write (after main agent processes audit results)
+**Spawn `scope-writer`:**
+> Update these scope files: {worst items from Phase 1 audit}. Fix broken evidence links, refresh traces, and align with current code.
+
+**Handle output:** Confirm the writer's changes address the audit findings.
+
+### Phase 3: Re-validate (after writes complete)
+**Spawn `scope-auditor`:**
+> Re-validate all scopes after the recent updates. Confirm drift and broken links are resolved.
+
+**Handle output:** If new issues are found, either fix them inline or record them for a follow-up task.
 
 ## When to Stop (Mandatory)
 - Stop once validators are clean for the targeted area OR you can precisely report what is blocked and why.
