@@ -13,7 +13,7 @@ Suggested thresholds:
 - 70-79 Good
 - <70 Needs work
 
-Optional helper: `python3 scripts/score_evals.py <results.json>`
+Optional helper: aggregate scores with your preferred JSON scoring tool.
 
 ## What We Test (Defaults)
 
@@ -40,9 +40,42 @@ Every skill/agent evaluation should include checks for:
   "checks": [
     {"id": "uses-protocol", "weight": 2, "desc": "Mission Start references skills/_shared/SCOPES_PROTOCOL.md"},
     {"id": "records-base-ref", "weight": 2, "desc": "Records BASE_REF; does not assume commits are allowed"},
-    {"id": "runs-validators", "weight": 3, "desc": "Runs check_evidence_links.py and drift_detector.py (or records blockers)"},
+    {"id": "mode-selection", "weight": 2, "desc": "Selects Full vs Light mode deterministically; records mode and any intentional partial coverage"},
+    {"id": "runs-validators", "weight": 3, "desc": "Runs drift_detector.py (or records blockers)"},
     {"id": "evidence-only", "weight": 3, "desc": "Updates use evidence links; unknowns are labeled [Unknown]"},
     {"id": "verdict-vocab", "weight": 2, "desc": "Returns Verdict in allowed vocabulary"}
+  ]
+}
+```
+
+### syncing-scopes (Full vs Light)
+
+```json
+{
+  "name": "syncing-scopes-full-sync",
+  "kind": "skill",
+  "skills": ["syncing-scopes"],
+  "query": "Run a full sync of Scopes (full mirror of the repo).",
+  "files": ["(a repo with Scopes/; may be large)"],
+  "checks": [
+    {"id": "full-sync", "weight": 4, "desc": "Runs Full Sync when explicitly requested (does not silently downgrade to Light)"},
+    {"id": "all-areas", "weight": 3, "desc": "Updates all capability areas (no arbitrary 1–3 scope cap)"},
+    {"id": "validators", "weight": 3, "desc": "Runs validators after writes (or records blockers)"}
+  ]
+}
+```
+
+```json
+{
+  "name": "syncing-scopes-light-sync",
+  "kind": "skill",
+  "skills": ["syncing-scopes"],
+  "query": "Sync Scopes for this very large repo (use Light Sync if needed; keep navigation/truth surfaces accurate).",
+  "files": ["(a very large repo with Scopes/)"],
+  "checks": [
+    {"id": "light-sync", "weight": 4, "desc": "Uses Light Sync when repo is too large; records what was intentionally partial"},
+    {"id": "truth-surfaces", "weight": 3, "desc": "Keeps INDEX/GRAPH/DEVELOPER_INFO/TECH_STACK accurate"},
+    {"id": "selective-updates", "weight": 3, "desc": "Updates stale/broken scopes first; avoids unnecessary churn"}
   ]
 }
 ```
@@ -112,6 +145,7 @@ Every skill/agent evaluation should include checks for:
   "files": ["(a repo with Scopes/ and an auth anchor scope)"],
   "checks": [
     {"id": "task-budget", "weight": 2, "desc": "Respects max tasks per batch and hours per batch defaults"},
+    {"id": "links", "weight": 2, "desc": "Every task file includes a Links section with 1-3 anchor scopes under Scopes/Product/**"},
     {"id": "pattern-reference", "weight": 3, "desc": "Every code-creating task includes a Pattern Reference"},
     {"id": "verification", "weight": 3, "desc": "Tasks have concrete verification steps"},
     {"id": "scope-maintenance", "weight": 2, "desc": "Tasks list scope maintenance impacts explicitly"}
@@ -130,6 +164,7 @@ Every skill/agent evaluation should include checks for:
   "files": ["(a repo with populated Scopes/)"],
   "checks": [
     {"id": "stop-condition", "weight": 3, "desc": "Stops once Risk Register + Scope Registry Impact + TODO Scopes + DoD are complete"},
+    {"id": "links", "weight": 2, "desc": "Plan artifact includes Links section with 1-3 anchor scopes under Scopes/Product/**"},
     {"id": "pattern-evidence", "weight": 3, "desc": "Blueprint cites existing patterns with evidence links or marks [Unknown]"},
     {"id": "verdict-vocab", "weight": 2, "desc": "Returns allowed Verdict vocabulary"},
     {"id": "no-implementation", "weight": 2, "desc": "Does not implement product code"}
@@ -149,80 +184,9 @@ Every skill/agent evaluation should include checks for:
   "checks": [
     {"id": "phases-and-gates", "weight": 3, "desc": "Has phases + verification gates + rollback plan"},
     {"id": "link-rot-checklist", "weight": 3, "desc": "Includes post-move/rename link validation step"},
+    {"id": "links", "weight": 2, "desc": "Refactor plan includes Links section with 1-3 anchor scopes under Scopes/Product/**"},
     {"id": "budgets", "weight": 2, "desc": "Uses budgets and [Unknown] instead of over-scanning"},
     {"id": "verdict-vocab", "weight": 2, "desc": "Returns allowed Verdict vocabulary"}
-  ]
-}
-```
-
-### hunting-bugs
-
-```json
-{
-  "name": "hunting-bugs",
-  "kind": "skill",
-  "skills": ["hunting-bugs"],
-  "query": "Scan the auth module for security issues and bugs.",
-  "files": ["(a repo with Scopes/ and an auth module)"],
-  "checks": [
-    {"id": "bug-report", "weight": 3, "desc": "Writes a bug report under Scopes/Work/Bugs/ with ranked findings"},
-    {"id": "evidence-links", "weight": 3, "desc": "Every finding has at least one evidence link (or [Unknown])"},
-    {"id": "post-step-validators", "weight": 2, "desc": "Runs check_evidence_links.py --broken-only --summary (or records blocker)"},
-    {"id": "verdict-vocab", "weight": 2, "desc": "Returns allowed Verdict vocabulary"}
-  ]
-}
-```
-
-### researching-decisions
-
-```json
-{
-  "name": "researching-decisions",
-  "kind": "skill",
-  "skills": ["researching-decisions"],
-  "query": "Should we migrate from REST to GraphQL for our public API?",
-  "files": ["(a repo with Scopes/ and an existing REST API)"],
-  "checks": [
-    {"id": "truth-separation", "weight": 3, "desc": "Separates Internal Repo Truth from External Research"},
-    {"id": "source-cap", "weight": 2, "desc": "Uses <= 5 external sources by default"},
-    {"id": "offline-mode", "weight": 2, "desc": "If web blocked, marks external section [Blocked] and proceeds internal-only"},
-    {"id": "verdict-vocab", "weight": 3, "desc": "Returns allowed Verdict vocabulary"}
-  ]
-}
-```
-
-### writing-adr
-
-```json
-{
-  "name": "writing-adr",
-  "kind": "skill",
-  "skills": ["writing-adr"],
-  "query": "Record the decision to use Redis for session storage.",
-  "files": ["(a repo with Scopes/ and session/auth code)"],
-  "checks": [
-    {"id": "format", "weight": 3, "desc": "ADR includes Context, Options, Decision, Consequences, Affected Scopes"},
-    {"id": "internal-evidence", "weight": 3, "desc": "Repo-specific context includes code/config evidence links or [Unknown]"},
-    {"id": "verdict-vocab", "weight": 2, "desc": "Returns allowed Verdict vocabulary"},
-    {"id": "stop-condition", "weight": 2, "desc": "Stops once ADR sections are complete (no extra exploration)"}
-  ]
-}
-```
-
-### updating-skills
-
-```json
-{
-  "name": "updating-skills",
-  "kind": "skill",
-  "skills": ["updating-skills"],
-  "query": "Update my installed Scopes skills to the latest version.",
-  "files": ["(a project with skills installed under a known root)"],
-  "checks": [
-    {"id": "dry-run", "weight": 3, "desc": "Runs or recommends --dry-run first; warns about overwrites"},
-    {"id": "protocol-file", "weight": 3, "desc": "Verifies skills/_shared/SCOPES_PROTOCOL.md exists in the target skills root"},
-    {"id": "verdict-vocab", "weight": 2, "desc": "Returns allowed Verdict vocabulary"},
-    {"id": "blocked-runbook", "weight": 2, "desc": "If auth/network fails, records exact blocker and next action"}
   ]
 }
 ```
@@ -233,23 +197,6 @@ Every skill/agent evaluation should include checks for:
 
 These are intentionally narrow: they test budgets, output schema, verdict vocabulary, and least-privilege behavior.
 
-### scope-navigator
-
-```json
-{
-  "name": "scope-navigator",
-  "kind": "agent",
-  "agents": ["scope-navigator"],
-  "query": "Find the 1-3 most relevant scopes for 'authentication'.",
-  "checks": [
-    {"id": "budget", "weight": 3, "desc": "Returns <= 5 scope paths and <= 3 deps"},
-    {"id": "schema", "weight": 3, "desc": "Includes Verdict/Decision/Evidence/Unknowns/Next/Artifact fields"},
-    {"id": "verdict-vocab", "weight": 2, "desc": "Uses allowed Verdict vocabulary"},
-    {"id": "readonly", "weight": 2, "desc": "Does not write/edit files"}
-  ]
-}
-```
-
 ### bug-scanner
 
 ```json
@@ -259,9 +206,9 @@ These are intentionally narrow: they test budgets, output schema, verdict vocabu
   "agents": ["bug-scanner"],
   "query": "Scan src/auth for hotspots and write a bug scan report.",
   "checks": [
-    {"id": "artifact-path", "weight": 3, "desc": "Writes report under Scopes/Work/Bugs/ with standard naming"},
+    {"id": "artifact-path", "weight": 3, "desc": "Writes report under Scopes/Work/Bugs/ with standard naming and a Links section"},
     {"id": "evidence-format", "weight": 3, "desc": "Findings use [path:Lx-Ly](path#Lx-Ly) evidence format"},
-    {"id": "schema", "weight": 2, "desc": "Returned summary uses the standard schema + Verdict vocab"},
+    {"id": "schema", "weight": 2, "desc": "Returned summary uses the standard schema + Verdict vocab + Confidence"},
     {"id": "no-code-edits", "weight": 2, "desc": "Does not edit product code"}
   ]
 }
@@ -277,76 +224,8 @@ These are intentionally narrow: they test budgets, output schema, verdict vocabu
   "query": "Summarize the current work state after a tool-heavy phase.",
   "checks": [
     {"id": "artifact-path", "weight": 3, "desc": "Writes summary under Scopes/Work/Notes/ with standard naming"},
-    {"id": "stability", "weight": 3, "desc": "Includes goals/constraints/plan/findings/unknowns/next"},
-    {"id": "schema", "weight": 2, "desc": "Returned summary includes pointer + abstract fields"}
-  ]
-}
-```
-
-### scope-auditor
-
-```json
-{
-  "name": "scope-auditor",
-  "kind": "agent",
-  "agents": ["scope-auditor"],
-  "query": "Validate Scopes drift and broken evidence links.",
-  "checks": [
-    {"id": "budget", "weight": 3, "desc": "Returns counts + worst 3 items (no long dumps)"},
-    {"id": "schema", "weight": 3, "desc": "Includes Verdict/Decision/Evidence/Unknowns/Next/Artifact fields"},
-    {"id": "readonly", "weight": 2, "desc": "Does not write/edit files"},
-    {"id": "verdict-vocab", "weight": 2, "desc": "Uses allowed Verdict vocabulary"}
-  ]
-}
-```
-
-### scope-writer
-
-```json
-{
-  "name": "scope-writer",
-  "kind": "agent",
-  "agents": ["scope-writer"],
-  "query": "Update the auth capability scope after a verified change.",
-  "checks": [
-    {"id": "templates", "weight": 2, "desc": "Uses TEMPLATES.md structure (exact sections/diagrams/traces)"},
-    {"id": "validators", "weight": 3, "desc": "Runs check_evidence_links.py and drift_detector.py (or records blocker)"},
-    {"id": "schema", "weight": 3, "desc": "Returns standard schema + Verdict vocabulary"},
-    {"id": "write-roots", "weight": 2, "desc": "Writes only under Scopes/ allowed roots"}
-  ]
-}
-```
-
-### code-architect
-
-```json
-{
-  "name": "code-architect",
-  "kind": "agent",
-  "agents": ["code-architect"],
-  "query": "Design an implementation blueprint for adding rate limiting.",
-  "checks": [
-    {"id": "single-decision", "weight": 3, "desc": "Picks one approach (no option sprawl)"},
-    {"id": "evidence", "weight": 3, "desc": "Cites patterns with evidence links or [Unknown]"},
-    {"id": "schema", "weight": 2, "desc": "Uses standard schema + Verdict vocabulary"},
-    {"id": "stop-condition", "weight": 2, "desc": "Stops once files/sequence/verification are specified"}
-  ]
-}
-```
-
-### code-explorer
-
-```json
-{
-  "name": "code-explorer",
-  "kind": "agent",
-  "agents": ["code-explorer"],
-  "query": "Trace how login works end-to-end.",
-  "checks": [
-    {"id": "essential-files", "weight": 3, "desc": "Limits to 3-10 essential files by default"},
-    {"id": "gaps-searched", "weight": 2, "desc": "Includes 'Evidence gaps searched (rg patterns)' when needed"},
-    {"id": "confidence", "weight": 2, "desc": "Includes explicit Confidence"},
-    {"id": "schema", "weight": 3, "desc": "Uses standard schema + Verdict vocabulary"}
+    {"id": "stability", "weight": 3, "desc": "Includes links/goals/constraints/plan/findings/unknowns/next"},
+    {"id": "schema", "weight": 2, "desc": "Returned summary includes pointer + abstract fields + Confidence"}
   ]
 }
 ```

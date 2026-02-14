@@ -1,110 +1,313 @@
 ---
 name: developing-tdd
-description: Implements features and fixes via strict TDD (red/green/refactor) while updating Scopes docs and session logs. Use when the user asks for strict TDD or wants a failing test first.
+description: Implements features via parallel TDD — agents write failing tests simultaneously, orchestrator gates each phase (RED → GREEN → REFACTOR) by running the test suite, and routes failures back to the relevant agents.
 model: inherit
 ---
 
-# Developing (TDD)
+# Developing (TDD) — Parallel Phase-Gated TDD
 
-You implement changes via strict RED -> GREEN -> REFACTOR, then keep `Scopes/` truthful.
-Multiple independent behaviors are executed as **parallel TDD cycles** — one agent per behavior, all running RED→GREEN→REFACTOR at the same time.
-Shared rules live in `skills/_shared/DEVELOPING_PROTOCOL.md`.
+You implement features using strict TDD with **parallel agents per phase**. The lead orchestrates 3 phases (RED → GREEN → REFACTOR), each running agents in parallel, with the test suite as the gate between phases.
 
 ## When to use this skill
-Use when the user wants strict TDD: failing test first, minimal fix, refactor, then scope maintenance.
+Use when you need to implement something with new tests. If no new tests are needed (just running existing ones), use `developing-verified` instead.
 
 ## Prerequisites
-- A Scopes-enabled repo (a `Scopes/` directory), or permission to create it via `syncing-scopes`.
-- A runnable test suite, or permission to establish the smallest safe harness.
-
-## Safety and confirmations
-- Ask before destructive ops or expensive commands.
-- Keep changes small and continuously verifiable; stop if the test harness is blocked.
+- The repo has a working test runner (from `Scopes/DEVELOPER_INFO.md` or detectable).
+- Permission to create/modify test files.
+- Read `skills/_shared/SCOPES_PROTOCOL.md` and `skills/_shared/DEVELOPING_PROTOCOL.md`.
 
 ## Mission Start
-Load and follow the shared Scopes-first startup protocol at `skills/_shared/SCOPES_PROTOCOL.md`.
-Also follow `skills/_shared/DEVELOPING_PROTOCOL.md` for the shared develop/verify/scope loop.
+Load and follow the shared protocols:
+- `skills/_shared/SCOPES_PROTOCOL.md` (Scopes-first startup)
+- `skills/_shared/DEVELOPING_PROTOCOL.md` (verification-first loops)
+- `skills/_shared/SLICE_CONTRACT.md` (delegation format)
+- `skills/_shared/SESSION_LOG_TEMPLATES.md` (session log structure for TDD)
 
-## Kickoff (Ask Next)
-- "What behavior should we change, and what should the failing test assert?"
+---
 
-## Scope Connections
-- **Upstream inputs**: `Scopes/Work/Tasks/**`, `Scopes/Work/Bugs/**`
-- **Downstream outputs**: session log (`Scopes/Work/STDD/**`), scope updates (`Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`)
-- **Typical handoffs**: `scope-navigator` (find anchor scopes), `scope-writer` + `scope-auditor` (after verified)
+## Architecture
 
-## Agent Orchestration
+```
+┌─────────────────────────────────────────────────────────┐
+│                    ORCHESTRATOR (lead)                   │
+│                                                         │
+│  Responsibilities:                                      │
+│  • Slice the work into independent behavior slices      │
+│  • Run the test suite between EVERY phase               │
+│  • Gate: verify expected results before next phase      │
+│  • Route failures back to the responsible agent         │
+│  • NEVER write tests or implementation code directly    │
+│    (delegate to agents)                                 │
+│                                                         │
+│  The orchestrator's ONLY code interaction is running    │
+│  the test command and reading results.                  │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+     ┌──────────────────┼──────────────────┐
+     ▼                  ▼                  ▼
+┌─────────┐      ┌─────────┐       ┌──────────┐
+│  RED    │      │  GREEN  │       │ REFACTOR │
+│ Agents  │      │ Agents  │       │ Agents   │
+│(writers)│      │(fixers) │       │(simpli-  │
+│         │      │         │       │  fiers)  │
+└─────────┘      └─────────┘       └──────────┘
+ Write            Write code       Simplify
+ failing          to make tests    without
+ tests            pass             behavior
+                                   change
+```
 
-**Parallel TDD by default.** When there are multiple independent behaviors/tasks to implement, split them and run one TDD cycle agent per behavior in parallel. Each agent owns its own RED→GREEN→REFACTOR on non-overlapping files. After all cycles are GREEN, run scope documentation in parallel per area.
+---
 
-For a single behavior, use the single-cycle flow below.
+## Workflow
 
-### Phase 0: Split (main agent — before spawning)
-1. Identify all independent behaviors/tasks to implement (from task files, user request, or plan).
-2. Check for file overlap: two tasks touching the same file cannot run in parallel. Group overlapping tasks into one cycle.
-3. Assign each independent cycle its own area/scope(s) and test file(s).
+### Step 0: Preflight (orchestrator, < 3 min)
 
-### Phase 1: Navigate (Parallel — one `scope-navigator` per cycle)
-**Spawn `scope-navigator`** for each cycle:
-> Find the scopes relevant to: "{behavior for this cycle}". Include dependency edges and test/verification commands from DEVELOPER_INFO.md.
+**Lane A: Baseline** — Run existing tests:
+```bash
+<test_command>
+```
+Record: `baseline = PASS | FAIL (N failures)`.
 
-**Handle output:** Each navigator's scope paths become the anchor scopes for that cycle's TDD agent. Merge results to confirm no scope overlap between cycles.
+**Lane B: Route** — Find anchor scope(s):
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+  --query "<user goal keywords>" --limit 5 --format json
+```
 
-### Phase 2: Execute (Parallel — one TDD agent per cycle)
-**Spawn one TDD execution agent** per independent behavior (all in parallel):
-> Implement "{behavior}" using strict TDD (RED→GREEN→REFACTOR). Anchor scopes: {paths from Phase 1 for this cycle}. Test files: {assigned test files}. Code files: {assigned code files}. Do NOT touch files outside your assignment. Stop when your tests are GREEN.
+**Merge:** anchor scope(s) + baseline captured.
 
-**Handle output:** Wait for all agents to complete. If any cycle fails or is blocked, handle it individually (fix or mark blocked) without stopping the others. Run the full test suite once all cycles report GREEN to catch integration issues.
+---
 
-### Phase 3: Documentation (Parallel — after all cycles are GREEN)
-**Spawn `scope-writer`** (one per affected scope/area):
-> Update the scopes affected by these changes: {list of changed files and behaviors for this area}. Anchor scopes: {paths from Phase 1}.
+### Step 1: Slice (orchestrator only, < 5 min)
 
-**Spawn `scope-auditor`** (one per area):
-> Validate all scopes for drift and broken evidence links after the recent changes.
+Break the user's goal into **independent behavior slices**. Each slice becomes a Slice Contract for the agents:
 
-**Handle outputs:** If the auditor finds issues the writer missed, fix them before finishing.
+```json
+{
+  "slice_id": "slice-1",
+  "behavior": "<one testable behavior>",
+  "acceptance_examples": [
+    "Given X, when Y, then Z"
+  ],
+  "test_file": "<path where the test should be written>",
+  "impl_files": ["<files the agent may edit to implement>"],
+  "anchor_scope": "<path from Step 0>",
+  "test_command": "<specific test command for this slice>",
+  "pattern_reference": "<path to existing similar implementation>"
+}
+```
 
-### Optional Agents (invoke only when the stated condition applies)
-- **`code-explorer`** — Before RED, if a cycle needs to trace existing behavior: "Trace how {behavior} works starting from {scope evidence links}."
-- **`code-architect`** — Before RED, if a cycle is non-trivial and needs a blueprint: "Design implementation for {feature} given scopes {paths}."
-- **`code-simplifier`** — After all GREEN, if changes need cleanup: "Simplify the changes in {files} while preserving behavior."
-- **`code-reviewer`** — After all GREEN, for a confidence check: "Review the diff for bugs, security issues, and convention violations."
+**Rules:**
+- Each slice = one testable behavior (2-5 acceptance examples)
+- Slices MUST be **independent** — no shared file edits across slices
+- Each slice has **exclusive file ownership**: test file + impl files
+- If two slices need to edit the same file → merge them into one slice
 
-## If the Repo Has No Tests (Phase 0: Establish a Harness)
-If there is no test suite yet, create the smallest safe characterization harness before feature work:
-1. Look for existing verification (`Scopes/DEVELOPER_INFO.md`, CI configs, `Makefile`, `package.json`, `pyproject.toml`, `go.mod`). If none, record `[Unknown]`.
-2. Choose the most native runner for the repo (do not introduce a second framework if one exists).
-3. Write one characterization test at a boundary (HTTP handler, CLI command, pure function).
-4. Run it and record the command as the baseline RED/GREEN signal.
-5. Update `Scopes/DEVELOPER_INFO.md` with the command you ran.
+**Max slices per batch:** 6 (queue the rest for the next cycle)
 
-If you cannot establish any repeatable harness safely, stop and recommend `developing-verified` plus a follow-up task to add tests.
+---
 
-## When to Stop (Mandatory)
-- Stop after **all** parallel cycles are GREEN and the full test suite passes.
-- Individual cycles stop when their own tests are GREEN; they do not wait for other cycles.
-- Stop and set `Verdict: Needs Narrowing` if a behavior cannot be stated as a testable assertion.
-- If cycles conflict at integration (full suite fails after all cycles), resolve conflicts in the main agent before finishing.
+### Step 2: RED Phase — Write Failing Tests (parallel agents)
 
-## Blocked Runbook (Mandatory)
-- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes` first.
-- Tests will not run: record the exact blocker + command tried; set `Verdict: Blocked`; propose the smallest environment fix.
-- No tests exist: run Phase 0 harness; if blocked, switch to `developing-verified` and create a task to add tests.
+⚠️ **Spawn ALL test-writer agents in a SINGLE tool-call batch.**
+
+For each slice, spawn a subagent:
+
+> **SLICE CONTRACT — RED PHASE**
+> - **Target**: Write failing test(s) for: {behavior}
+> - **Ownership**: You may ONLY create/edit: {test_file}
+> - **Acceptance examples**: {acceptance_examples}
+> - **Pattern reference**: Follow the test patterns in {pattern_reference}
+> - **Guard**: After writing, run `{test_command}` — tests MUST FAIL
+> - **⛔ DO NOT write implementation code.** Only test code.
+> - **Artifact**: Return JSON: `{ "slice_id": "...", "test_file": "...", "tests_written": N, "guard_result": "FAIL" }`
+
+Wait for ALL agents to complete.
+
+**GATE: Orchestrator runs tests**
+```bash
+<full_test_command>
+```
+
+**Verify:**
+- All NEW tests FAIL (expected — no implementation yet)
+- All BASELINE tests still pass (no regressions)
+- If a new test passes unexpectedly → it's testing existing behavior, not new. Remove or rethink it.
+- If a baseline test broke → an agent edited the wrong file. Fix ownership and re-run.
+
+✅ Gate passes → proceed to GREEN
+❌ Gate fails → route failures back to the responsible agent(s), re-run RED for those slices only
+
+---
+
+### Step 3: GREEN Phase — Make Tests Pass (parallel agents)
+
+⚠️ **Spawn ALL implementation agents in a SINGLE tool-call batch.**
+
+For each slice, spawn a subagent:
+
+> **SLICE CONTRACT — GREEN PHASE**
+> - **Target**: Write minimal code to make these tests pass: {test_file}
+> - **Ownership**: You may ONLY edit: {impl_files}. Do NOT edit the test file.
+> - **Acceptance examples**: {acceptance_examples}
+> - **Pattern reference**: Follow implementation patterns in {pattern_reference}
+> - **Guard**: After implementing, run `{test_command}` — tests MUST PASS
+> - **⛔ MINIMAL code only.** No over-engineering. No extra features.
+> - **Artifact**: Return JSON: `{ "slice_id": "...", "files_changed": [...], "guard_result": "PASS" }`
+
+Wait for ALL agents to complete.
+
+**GATE: Orchestrator runs full test suite**
+```bash
+<full_test_command>
+```
+
+**Verify:**
+- All NEW tests PASS
+- All BASELINE tests still pass
+- If some new tests still fail:
+  → Spawn fix agents for ONLY the failing slices (same contract, add the error output as context)
+  → Re-gate after fixes
+  → Max 3 fix cycles per slice before escalating to user
+
+✅ Gate passes → proceed to REFACTOR
+❌ After 3 fix cycles still failing → set `Verdict: Blocked`, report which slices failed + error output
+
+---
+
+### Step 4: REFACTOR Phase — Simplify (parallel agents)
+
+⚠️ **Spawn ALL simplifier agents in a SINGLE tool-call batch.**
+
+For each slice with diff > 20 lines OR touching > 2 files, spawn a `code-simplifier` subagent:
+
+> **SLICE CONTRACT — REFACTOR PHASE**
+> - **Target**: Simplify the code changed in slice: {slice_id}
+> - **Ownership**: {impl_files + test_file} — you may edit both implementation and test code
+> - **Guard command**: `{test_command}` — run after every simplification
+> - **Acceptance**: All tests still pass. Code is cleaner. No behavior change.
+> - **Artifact**: Return JSON: `{ "slice_id": "...", "files_simplified": N, "lines_removed": N, "guard_result": "PASS" }`
+
+For slices with small diffs (≤ 20 lines, ≤ 2 files): orchestrator does inline cleanup (rename variables, extract helpers). This is the ONLY time the orchestrator edits code directly.
+
+Wait for ALL agents to complete.
+
+**GATE: Orchestrator runs full test suite**
+```bash
+<full_test_command>
+```
+
+**Verify:**
+- All tests PASS (refactoring must not break anything)
+- If a test broke → spawn a fix agent for that slice with the error output
+- Re-gate after fix
+
+✅ Gate passes → proceed to Final Gate
+
+---
+
+### Step 5: Final Gate (orchestrator only)
+
+1. **Full test suite** one last time:
+   ```bash
+   <full_test_command>
+   ```
+
+2. Spawn `code-reviewer` as a subagent:
+   > **SLICE CONTRACT**
+   > - **Target**: Review all changes from this TDD session
+   > - **Ownership**: Read-only review of {all files from all slices}
+   > - **Context**: Anchor scope at `{anchor_scope_path}`, slices: `{slice_list}`
+   > - **Acceptance**: Report only findings with confidence ≥ 80%.
+   > - **Artifact**: Return JSON: `{ "findings_count": N, "severity_breakdown": {...}, "scopes_impacted": [...] }`
+
+3. IF reviewer finds high-severity issues → fix cycle, then re-run reviewer.
+
+---
+
+### Step 6: Scope Sync (conditional, automatic)
+
+```bash
+git diff --name-only | xargs -I{} grep -rl "{}" Scopes/Product/ 2>/dev/null
+```
+
+**IF output is non-empty** (scope-linked files changed):
+1. Update affected scope(s) — refresh evidence links, update traces
+2. Run: `python3 skills/syncing-scopes/scripts/drift_detector.py --stale-only --limit 10`
+
+**ELSE:** Skip scope update entirely.
+
+---
+
+### Step 7: Leave Durable Artifacts (mandatory)
+
+1. **Session log**: finalized at `Scopes/Work/STDD/<session-slug>.md`
+
+Per slice entry:
+```markdown
+### Slice: <behavior name>
+- **Phase results**: RED ✅ → GREEN ✅ → REFACTOR ✅
+- **Tests added**: <list>
+- **Files changed**: <list>
+- **Fix cycles**: <0-3>
+- **Decision**: <what design choice was made>
+- **Follow-ups**: <parking lot items>
+```
+
+2. **Parking lot** items → converted to task files at `Scopes/Work/Tasks/`
+3. **Context summary**: if the session was tool-heavy (>10 tool calls), invoke `context-summarizer`
+
+---
+
+## Phase 0 Protocol: When No Tests Exist
+
+If the repo has no test framework or test files:
+
+1. **Do NOT block on test setup.** Run harness setup in parallel with scope lookup (Step 0).
+2. Set up the minimal test infrastructure:
+   - Install test runner (from DEVELOPER_INFO.md or detect)
+   - Create test directory structure
+   - Write one trivial passing test to verify the harness
+3. Record the test command in the session log
+4. Proceed to Step 1 (Slice) once the harness is verified
+
+---
+
+## File Ownership Rules
+
+⛔ **These rules prevent agent conflicts:**
+
+1. Each slice has a declared `test_file` and `impl_files` list
+2. No two slices may share ANY file in their ownership lists
+3. If a shared file is needed → merge those slices into one
+4. The orchestrator ONLY runs tests and reads output — it does NOT edit owned files (except small inline refactors for tiny diffs)
+5. Agents may NOT edit files outside their ownership list
+
+---
+
+## Blocked Runbook
+- Tests fail unexpectedly (not from your changes): record baseline failures; exclude them; continue.
+- No test runner found and can't install: set `Verdict: Blocked`, explain why.
+- Agent conflict (two agents edited same file): merge the conflicting slices, re-run from RED.
+- Fix cycle exhausted (3 attempts): set `Verdict: Blocked`, report failing tests + error output.
+- Scope navigation fails (no Scopes/): focus on code; note `Scopes sync needed` in artifacts.
 
 ## Output Contract
 
-Return <= 25 lines:
+Return <= 20 lines:
 
 ```markdown
-## TDD RESULT
+## TDD
 Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
-Decision: <one sentence summary of the change>
-Evidence:
-- `[path:Lx-Ly](path#Lx-Ly)` — failing test (RED)
-- `[path:Lx-Ly](path#Lx-Ly)` — fix (GREEN)
-Unknowns:
-- <only if blocked/partial>
-Next: <one action; e.g. run full suite, update scopes, or open PR>
-Artifact: <session log path, or (none)>
+Decision: <one sentence summary>
+Slices Completed: <N> / <Total>
+Phases: RED(<N> agents) → GREEN(<N> agents) → REFACTOR(<N> agents)
+Fix Cycles: <N total across all slices>
+Tests Added: <N>
+Files Changed: <list>
+Reviewer Verdict: <PASS | findings summary>
+Scope Impact: <scopes updated or "None">
+Artifact: Scopes/Work/STDD/<session-slug>.md
+Next: <one action>
 ```

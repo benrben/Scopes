@@ -9,6 +9,14 @@ Skills reference this file instead of duplicating these sections.
 
 Before any kickoff questions, planning, or code edits:
 
+**Fast Route (preferred):**
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+  --query "<goal keywords>" --limit 5 --format json
+```
+This instantly returns ranked anchor scopes + code paths + evidence counts. Use this instead of manually reading INDEX.md when you have a clear goal.
+
+**Full Navigation (when fast route returns nothing, or for broad exploration):**
 1. Read `Scopes/INDEX.md` to locate the relevant capability area.
 2. Read `Scopes/GRAPH.md` to understand dependency relationships and blast radius.
 3. Select only the relevant anchor scope(s) under `Scopes/Product/**` (usually 1-3). Do not read all scope files.
@@ -72,12 +80,28 @@ Before implementing or planning changes, discover the project's established code
 When a skill specifies Agent Orchestration phases:
 
 0. **Default — parallel per unit**: When a phase's work can be split by area, scope, or independent task, spawn **one agent instance per unit in parallel** (same agent type, different prompt per unit). Use a single agent only when scope is narrow (e.g. 1-3 targets). Skills may override this with a single-stream option for narrow scope.
-1. **Spawn agents as subagents/subtasks** in your environment (e.g., Task tool in Cursor/Claude Code).
-2. **Parallel phases**: Spawn all listed agents at the same time in a single tool-call batch; wait for all to complete. You may list multiple instances of the same agent type with different tasks (e.g. one auditor per area, one writer per area); each is spawned in parallel with its own prompt.
-3. **Sequential phases**: Wait for the previous phase's outputs before spawning the next.
-4. **Prompt templates**: Fill in `{placeholders}` with concrete values from the current session (user's goal, scope paths, file lists, etc.).
-5. **Handle outputs**: Follow the "Handle output" instruction for each phase before proceeding to the next method step.
-6. **Optional agents**: Only spawn when the stated condition applies — do not invoke by default.
+1. **Slice Contracts for every delegation**: Every subagent/teammate MUST receive a Slice Contract (see `skills/_shared/SLICE_CONTRACT.md`). No naked prompts — always include target, ownership, context, acceptance, and artifact requirements.
+2. **Spawn agents as subagents/subtasks** in your environment (e.g., Task tool in Cursor/Claude Code).
+3. **Parallel phases**: Spawn all listed agents at the same time in a single tool-call batch; wait for all to complete.
+4. **Sequential phases**: Wait for the previous phase's outputs before spawning the next.
+5. **Prompt templates**: Fill in `{placeholders}` with concrete values from the current session (user's goal, scope paths, file lists, etc.).
+6. **Handle outputs**: Follow the "Handle output" instruction for each phase before proceeding to the next method step.
+7. **Deterministic triggers (not judgment calls)**: Agent invocations should be triggered by mechanical thresholds, not subjective decisions. Examples: `code-simplifier` auto-triggers at >50 lines or >3 files changed; `code-reviewer` ALWAYS runs as final gate.
+8. **WIP limits**: Never run more than 6 subagents/teammates for scope-filling, 2 concurrent behavior slices for development, or 3 concurrent reviewers. Queue the rest.
+
+### Parallelism Rules
+
+⚠️ **Spawn ALL subagents in a SINGLE tool-call batch** for parallelism. Spawning one per turn makes them sequential.
+
+**Subagents (1 task):** Spawn normally.
+**Agent Teams (2+ tasks):** Preferred for true parallelism.
+**Parallel Subagents (Fallback):** Must spawn ALL in one batch.
+- Enable: `{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }` in settings.json
+- Each teammate gets their own Slice Contract with **exclusive file ownership** (no overlapping edits)
+- Lead monitors via shared task list, messages teammates directly if needed
+- Always wait for teammates to finish before proceeding: `Wait for your teammates to complete their tasks`
+- Clean up when done: `Clean up the team`
+- Use `TeammateIdle` and `TaskCompleted` hooks for quality gates
 
 ---
 
@@ -90,6 +114,15 @@ These rules apply across all Scopes skills:
 3. **Scope Hygiene**: If you find drift between scope docs and code, flag it and recommend `syncing-scopes`.
 4. **Reality over prose**: If scope prose conflicts with code evidence, treat code evidence as source of truth.
 5. **No full-scan by default**: Do not read every scope file unless the user explicitly asks for a complete audit.
+6. **Artifact Persistence**: Every skill invocation MUST leave at least one durable artifact (scope file, session log, plan, task file, research note, or JSON receipt). Summaries in conversation are insufficient — they vanish between sessions.
+7. **Artifact-Driven Chaining**: When one skill's output feeds another (plan → tasks → develop), use the `## Links` section in the output artifact as the routing token. The downstream skill reads `## Links` to self-route, avoiding redundant scope navigation.
+
+## Tone (User-Friendly)
+
+When talking to the user, assume they are not technical:
+- Keep it friendly and simple (no heavy jargon).
+- Explain what changed and why it matters in plain language.
+- If you include evidence links, call them “proof links” and only include a few high-signal ones.
 
 ## Preflight Protocol (For Implementation Skills)
 

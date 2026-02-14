@@ -1,161 +1,148 @@
 ---
 name: planning-idea
-description: Turns a raw idea into a concrete implementation blueprint with explicit Scopes impacts, sequencing, and verification. Use when the user needs a plan, blueprint, or wants to design a feature before coding.
+description: Transforms a raw idea, feature request, or problem statement into a concrete implementation blueprint with risk analysis, pattern references, and sequenced TODO scopes. Write-as-you-go — no silent phases.
 model: inherit
 ---
 
-# Planning an Idea
+# Planning Idea — Single-Pass Blueprint
 
-**You are the System Architect.** You take a raw, vague idea and turn it into a concrete **Implementation Blueprint** (TODO Scopes) that respects strict Scope documentation standards. You bridge the gap between "I want X" and "Here is the exact list of changes needed".
+You transform raw ideas into concrete implementation blueprints. You produce the plan artifact directly—no silent internal phases—and the `## Links` section in your output IS the handoff token for the next skill (`writing-tasks`).
 
 ## When to use this skill
-Use when the user has an idea and needs a concrete, scope-native blueprint before implementation.
+Use when the user has an idea that needs to be turned into a plan before implementation.
 
 ## Prerequisites
-Requires a Scopes-enabled repo (a `Scopes/` directory) and permission to write planning artifacts.
-
-## Safety and constraints
-- Do not implement product code. Output planning artifacts under `Scopes/Work/Planning/**` (and research notes under `Scopes/Research/**` when needed).
+- `Scopes/` exists (at least `INDEX.md` and some `Product/**` files).
+- If Scopes are missing, recommend `/sync` first.
+- Read `skills/_shared/SCOPES_PROTOCOL.md`.
 
 ## Mission Start
-**You MUST read the shared protocol before proceeding.** Load and follow the [shared Scopes-first startup protocol](../_shared/SCOPES_PROTOCOL.md) (located at `skills/_shared/SCOPES_PROTOCOL.md`).
-
-## Kickoff (Ask After Scope Startup)
-Ask the user one simple question:
-- "What's the idea we're planning—paste the idea file (preferred) or describe it in 3-5 sentences?"
-
-## Scope Connections
-- **Upstream inputs**: `Scopes/Work/Ideas/**`, `Scopes/Research/**`
-- **If research needed and missing**: Trigger `researching-decisions` first.
-- **Downstream outputs**: Plan (`Scopes/Work/Planning/**`), follow-on tasks via `writing-tasks`
-- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
-
-## Agent Orchestration
-
-Default: when the idea spans multiple capability areas, spawn one `scope-navigator` per area and/or one `code-architect` per area in parallel; use single agents for narrow scope (1-3 scopes).
-
-### Phase 1: Navigation (before Deconstruct)
-**Spawn `scope-navigator`:**
-> Find the 1-3 scopes most relevant to this idea: "{user's idea}". Include dependency edges from GRAPH.md and a recommended reading order.
-
-**Handle output:** Use the returned scope paths as your anchor scopes. Read them before proceeding to Deconstruct.
-
-### Phase 2: Architecture (after Diagnose, before Develop)
-**Spawn `code-architect`:**
-> Using these anchor scopes: {scope paths from Phase 1}. Design an implementation blueprint for: "{user's idea}". Follow existing patterns found in the anchor scopes. Return a decisive file-by-file plan.
-
-**Handle output:** The blueprint's file list, sequence, and pattern references become the foundation of your TODO Scopes in the plan.
+Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
+Load `skills/_shared/SLICE_CONTRACT.md` for delegation rules.
 
 ---
 
-## Planning Model
-```mermaid
-flowchart TD
-  Idea["Idea Input"] --> Fit["Fit to existing Scopes"]
-  Fit --> Risks["Risk + Feasibility"]
-  Risks --> Blueprint["Sequenced Blueprint"]
-  Blueprint --> Artifacts["Scope Registry Impact"]
-  Artifacts --> Done["Definition of Done + Verification"]
+## Workflow: Artifact-First Planning
+
+### Step 0: Rapid Context Bundle (parallel, < 3 min)
+
+Run these in parallel — they're independent:
+
+**Lane A: Route to anchor scopes**
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+  --query "<idea keywords>" --limit 5 --format json
 ```
 
-## Method (Silent) + Output Contract (Visible)
+**Lane B: Check for prior work**
+```bash
+# Prior plans on similar topics
+find Scopes/Work/Planning/ -name "*.md" | xargs grep -li "<idea keywords>" 2>/dev/null
 
-### 1) Deconstruct (Silent)
-- Identify core feature, target users, fit in `Scopes/Product/**`.
-- Record constraints (stack/patterns/anti-tiny-scope).
+# Prior research
+find Scopes/Research/ -name "*.md" | xargs grep -li "<idea keywords>" 2>/dev/null
+```
 
-### 2) Diagnose (Silent)
-- Identify feasibility risks (schema, compatibility, breaking changes).
-- If external info required, trigger `researching-decisions` as prerequisite.
+**Lane C: Find pattern references**
+```bash
+# Find 2-3 existing implementations that are structurally similar
+# Read anchor scope evidence links → grep for similar patterns in those paths
+```
 
-### 3) Develop (Silent)
-- Choose implementation strategy with sequenced blueprint.
-- Map **Scope Registry Impact**: new scope files, modified scopes, planned graph edges, trace/diagram/evidence updates.
-- Sequence work DB -> API -> UI (or justify alternative).
+**Merge:** context bundle = anchor scopes + prior plans + prior research + pattern references.
 
-### 4) Deliver (Visible)
-Output research/context note (if needed) and implementation plan.
-
-## Pattern Conformance (Mandatory)
-
-Before proposing an implementation blueprint, you MUST discover the project's existing patterns (see [Pattern Discovery](../_shared/SCOPES_PROTOCOL.md)).
-
-1. **During Deconstruct**: Identify which existing patterns apply to the new feature (auth pattern, API pattern, data access pattern, etc.).
-2. **During Develop**: The blueprint MUST specify which existing patterns to follow for each TODO Scope, with evidence links to example implementations.
-3. **In the Plan output**: Each TODO Scope includes a "Pattern Reference" pointing to the existing implementation to mimic.
-4. **If new patterns are needed**: Explicitly call out that a new pattern is being introduced and why the existing ones don't apply.
+If prior plans exist on a similar topic, read them and build on them instead of starting from scratch.
 
 ---
 
-## Rules
-1. **Anti-Tiny-Scope**: Don't suggest a new Scope for a helper function. Merge into parent.
-2. **Graph Awareness**: Specify how new feature connects in `GRAPH.md`.
-3. **Pattern Conformance**: Every TODO Scope MUST reference the existing pattern to follow.
-4. **Template Fidelity**: Proposed Scope changes follow standard structure (use cases, traces, evidence, exactly 2 diagrams).
-5. **Outer-scope linking**: Link to capability scopes, research notes, ADRs, release notes as applicable.
-6. **Risk Register (MANDATORY)**: Include a short risk/unknowns table with mitigations and verification.
+### Step 1: Blueprint (single pass, write-as-you-go)
 
-## Plan Template
+Write **directly** to `Scopes/Work/Planning/<date>-<idea-slug>.md` as you go. Every section is a file update — the plan IS the reasoning trace, not a hidden internal process.
 
-**File Path**: `Scopes/Work/Planning/<YYYY-MM-DD>-<idea>-plan.md`
+Write these sections in order:
 
 ```markdown
-# Plan: <Feature Name>
+# <Idea Title>
 
-## Executive Summary
-Implementation of <Idea> using <Strategy>.
+## Links
+<!-- This section IS the handoff token for writing-tasks -->
+- **Anchor Scopes**: [<scope>](path.md) — <relevance>
+- **Prior Plans**: [<plan>](path.md) — <what to reuse>
+- **Prior Research**: [<research>](path.md) — <findings>
+- **Pattern References**: [<implementation>](path) — <what pattern to follow>
+- **DEVELOPER_INFO**: [commands](Scopes/DEVELOPER_INFO.md) — verification signals
 
-## 1. Risk Register (Required)
-| Unknown / Risk | Impact | Mitigation | Verification |
-|---|---|---|---|
-| <e.g., API quota limits> | <what breaks> | <how we mitigate> | <how we verify> |
+## Risk Register
+| Risk | Likelihood | Impact | Mitigation | Evidence |
+|------|-----------|--------|------------|----------|
+| <risk> | High/Med/Low | High/Med/Low | <strategy> | [path:Lx](path#Lx) |
 
-## 2. Scope Registry Impact
-- **New Scope**: `Scopes/Product/Payments/Stripe.md`
-- **Modified Scope**: `Scopes/Product/User/Profile.md`
-- **Graph Update**: `Payments --> Stripe`
+## Scope Registry Impact
+| Scope | Status | What Changes |
+|-------|--------|-------------|
+| <scope> | New / Modified / Unaffected | <description> |
 
-## 3. TODO Scopes (The Work)
+## TODO Scopes (Sequenced)
+### 1. <Scope Name>
+- **Pattern Reference**: follow `<existing implementation path>`
+- **Key Files**: `<files to modify/create>`
+- **Verification**: `<test/build command from DEVELOPER_INFO.md>`
+- **Acceptance Examples**:
+  - Given X, when Y, then Z
+  - Given A, when B, then C
+- **Depends On**: (none) | <other scope>
 
-### Scope 1: Backend Integration
-- **Goal**: Connect to Stripe API.
-- **Pattern Reference**: Follow `[src/lib/twilio.ts](link)` — same service wrapper pattern.
-- **Changes**: `src/lib/stripe.ts`
-- **Verification**: Integration Test
-- **Scope Artifacts**: Create Scope file, Diagram.
+### 2. <Scope Name>
+...
 
-### Scope 2: API Endpoint
-- **Goal**: Expose checkout session.
-- **Pattern Reference**: Follow `[src/controllers/OrderController.ts](link)` — same route + middleware + validation chain.
-- **Dependencies**: Scope 1.
+## Definition of Done
+- [ ] All TODO Scopes implemented and verified
+- [ ] All tests pass
+- [ ] Scopes documentation updated
+- [ ] No `[Unknown]` markers in affected scopes
 
-### Scope 3: Frontend UI
-- **Goal**: Payment Button Component.
-- **Pattern Reference**: Follow `[src/components/OrderButton.tsx](link)` — same component + hook pattern.
-- **Dependencies**: Scope 2.
-
-## 4. Definition of Done
-- All tests green.
-- Scope files created/updated with template.
-- `GRAPH.md` updated.
+## Decision Log
+| Decision | Rationale | Alternatives Considered |
+|----------|-----------|------------------------|
+| <choice> | <why> | <what else was weighed> |
 ```
 
-## Audit Checklist
-- [ ] Every proposed Scope file path is under `Scopes/Product/**`
-- [ ] Risk Register included (unknowns + mitigations + verification)
-- [ ] Plan includes explicit verification steps
-- [ ] Plan lists exact Scope maintenance tasks
-- [ ] Graph edges planned with evidence locations
+**Rules:**
+- Write the file AS you analyze. Don't hold information in memory — commit it to the artifact immediately.
+- Every TODO Scope MUST have a Pattern Reference (an existing implementation to follow).
+- Every TODO Scope MUST have acceptance examples that can become test cases.
+- If you can't find a pattern reference for a scope, mark it as `[No existing pattern — new ground]`.
 
-## When to Stop (Mandatory)
-- Stop once the plan contains: Risk Register, Scope Registry Impact, sequenced TODO Scopes, verification gates, and Definition of Done.
-- Default caps: 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; mark gaps as `[Unknown]`.
-- If the idea cannot be scoped to an area/capability, stop and set `Verdict: Needs Narrowing`.
+---
 
-## Blocked Runbook (Mandatory)
-- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes` first.
-- Research required but web access blocked: run `researching-decisions` in offline mode and proceed with `[Blocked]` external section.
-- Evidence for existing patterns cannot be found: mark `[Unknown]` and constrain the blueprint to what is provable.
+### Step 2: Risk Analysis Using Anchor Scopes (while writing)
+
+As you write TODO Scopes, check the anchor scope's `## Rules & Constraints` and `## Edge Cases` sections:
+- Each rule/constraint → a potential risk if violated
+- Each edge case → a potential acceptance example
+- Add these to the Risk Register and acceptance examples as you go
+
+---
+
+### Step 3: Downstream Handoff (automatic)
+
+The plan artifact's `## Links` section IS the routing protocol for `writing-tasks`:
+- `writing-tasks` reads `## Links` → extracts anchor scopes, patterns, and risks
+- `writing-tasks` reads `## TODO Scopes` → converts each into a task file
+- No re-navigation needed — the plan already did the discovery work
+
+Report to user:
+```
+Plan written to: Scopes/Work/Planning/<date>-<slug>.md
+Next: /tasks to convert this plan into task files
+```
+
+---
+
+## Blocked Runbook
+- No Scopes/ exists: recommend `/sync` first, set `Verdict: Needs Sync`.
+- Idea is too vague: ask for 2-3 concrete acceptance examples, set `Verdict: Needs Narrowing`.
+- Anchor scope is stale: note staleness in Risk Register, recommend re-sync after planning.
 
 ## Output Contract
 
@@ -164,11 +151,10 @@ Return <= 20 lines:
 ```markdown
 ## PLAN
 Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
-Decision: <one sentence summary of the chosen strategy>
-Evidence:
-- `Scopes/Work/Planning/YYYY-MM-DD-<idea>-plan.md`
-Unknowns:
-- <only if blocked/partial>
-Next: <one action; e.g. hand off to writing-tasks>
-Artifact: `Scopes/Work/Planning/YYYY-MM-DD-<idea>-plan.md`
+Decision: <one sentence summary of the blueprint>
+TODO Scopes: <count>
+Risk Items: <count>
+Pattern References: <count>
+Artifact: Scopes/Work/Planning/<date>-<slug>.md
+Next: /tasks to create task files from this plan
 ```

@@ -1,0 +1,6 @@
+{
+  "env": {
+    "SCOPES_SKILLS_REPO": "https://github.com/benrben/Scopes.git",
+    "SCOPES_SKILLS_REF": "main"
+  }
+}

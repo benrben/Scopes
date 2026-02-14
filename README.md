@@ -43,6 +43,7 @@ Scopes adds a first-class **navigation + compression layer** inside your repo:
 Instead of dumping code into context, the assistant loads **one anchor Scope**, follows **traces**, then jumps to the **exact evidence** it needs.
 
 Want the deeper explanation? Start here: [docs/why-scopes.md](docs/why-scopes.md)
+Want “set-and-forget” maintenance workflows? See: [docs/automations.md](docs/automations.md)
 
 ![Intent to Code](docs/assets/intent_to_code.png)
 ```mermaid
@@ -69,7 +70,13 @@ What it enforces:
 - **Graph, not just tree**: keep `INDEX.md` and `GRAPH.md` as the canonical navigation surfaces.
 - **Token-efficiency by design**: prefer the smallest scope slice needed to answer or implement.
 
-Helper scripts included under `skills/syncing-scopes/scripts/` (scope map, drift detection, evidence link generation, link checking).
+Helper scripts included under `skills/syncing-scopes/scripts/`:
+- `scope_map.py` — compact scope matrix view (areas/scopes/graph) with JSON output
+- `drift_detector.py` — stale evidence detection via git timestamps
+- `scope_skeleton_generator.py` — generate fill-ready capability scope skeletons from LLM-provided names
+- `slice_contract_builder.py` — build Slice Contracts from drift output, skeletons, or repo inference
+- `scope_trace_stub_from_entrypoints.py` — generate a trace-table stub from “Where to Start in Code” evidence links
+- `scope_rename_guard.py` — rewrite scope markdown links across `Scopes/**` from a rename map JSON
 
 ---
 
@@ -86,10 +93,6 @@ This repository is the **source package** for Scopes skills/agents you install i
 - `developing-verified` — implement changes with sandbox verification (no new test files)
 - `developing-tdd` — implement changes via strict TDD (failing test first)
 - `planning-refactor` — plan safe green-to-green refactors with scope link maintenance
-- `hunting-bugs` — evidence-backed bug scanning → reports + tasks
-- `writing-adr` — record decisions under `Scopes/Decisions/ADRs/**`
-- `researching-decisions` — separate internal repo truth from external web research
-- `updating-skills` — keep your installed skills fresh from upstream
 
 ### Shared infrastructure
 
@@ -98,15 +101,11 @@ This repository is the **source package** for Scopes skills/agents you install i
 
 ### Agents (roles)
 
-- `scope-navigator` — find the 1–3 relevant scopes fast (read-only)
-- `code-architect` — produce architecture blueprints aligned to Scopes and existing patterns
-- `code-explorer` — trace feature implementations end-to-end using Scopes evidence
 - `code-simplifier` — simplify recent changes without behavior changes
-- `scope-writer` — write/update Scopes using the canonical templates
-- `scope-auditor` — detect drift + broken evidence links (read-only)
 - `bug-scanner` — hotspot scan + scope context (read-only)
 - `code-reviewer` — review diffs and report only high-confidence issues
 - `context-summarizer` — stabilize a working-set summary after tool-heavy phases
+- `scope-filler` — fill new capability scope skeletons using evidence (run one per scope in parallel)
 
 ---
 
@@ -137,13 +136,9 @@ Once installed, all commands are available under the `/scopes:` namespace:
 | `/scopes:develop <task>` | Implement with sandbox verification |
 | `/scopes:tdd <task>` | Implement via strict TDD (red/green/refactor) |
 | `/scopes:refactor <target>` | Plan a safe, incremental refactor |
-| `/scopes:bugs [area]` | Scan for bugs, security issues, and anti-patterns |
 | `/scopes:tasks <intent>` | Convert intent into engineer-ready task files |
-| `/scopes:adr <decision>` | Record an architecture decision |
-| `/scopes:research <question>` | Research a decision with internal + external sources |
-| `/scopes:update` | Refresh installed skills from upstream |
 
-Agent Skills (automatically invoked by Claude based on context) and subagents (scope-navigator, bug-scanner, scope-writer, scope-auditor, etc.) are also loaded with the plugin.
+This package can be installed as a Claude Code plugin; keep the installed skills aligned with your preferred distribution/update process.
 
 ### Option B: Manual skill copy (Cursor, other assistants)
 
@@ -153,13 +148,12 @@ This repo is the source; your *project* is the target. Typical targets:
 - Claude: `.claude/skills/`
 - Other setups: `.agent/skills/`
 
-Copy or sync this repo's `skills/` (and optionally `agents/`) into your target skills directory. Then keep them updated with `updating-skills`.
+Copy or sync this repo's `skills/` (and optionally `agents/`) into your target skills directory.
 
 Example (Cursor):
 ```bash
 mkdir -p .cursor/skills
 cp -R /path/to/Scopes/skills/* .cursor/skills/
-bash .cursor/skills/updating-skills/scripts/update-skills.sh
 ```
 
 ### After installation: Run `syncing-scopes`
@@ -178,10 +172,10 @@ Generate or repair `Scopes/` so the rest of the system has a trustworthy map to 
 
 Examples:
 
-- "Where is the payment validation logic?" → `/scopes:query` or `querying-scopes` / `scope-navigator`
+- "Where is the payment validation logic?" → `/scopes:query` or `querying-scopes`
 - "Plan the new retry strategy" → `/scopes:plan` or `planning-idea` → `writing-tasks`
 - "Implement the change safely" → `/scopes:develop` or `/scopes:tdd`
-- "Did docs drift?" → `/scopes:sync` or `scope-auditor`
+- "Did docs drift?" → `/scopes:sync` (then run validators)
 
 ---
 
@@ -198,6 +192,11 @@ Scopes provides:
 - **A handful of evidence links** (exact code/test/config lines)
 
 That's less context, higher signal, and dramatically less room for guessing.
+
+When you already have a task/plan/research artifact, route from it instead of searching from scratch:
+```bash
+python3 skills/syncing-scopes/scripts/scope_map.py --from-artifact Scopes/Work/Tasks/<file>.md --depth 3 --only tree
+```
 
 ---
 
@@ -228,7 +227,6 @@ What this enforces:
 Before merging changes that touch `Scopes/**` or files referenced by scope evidence:
 
 ```bash
-python3 skills/syncing-scopes/scripts/check_evidence_links.py --broken-only --summary
 python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 20
 ```
 

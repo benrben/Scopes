@@ -57,5 +57,4 @@ Follow them exactly, including:
 ## Post-Write Validation (Default)
 
 After writing/updating scopes:
-- `python3 skills/syncing-scopes/scripts/check_evidence_links.py --broken-only --summary`
 - `python3 skills/syncing-scopes/scripts/drift_detector.py --stale-only --limit 20`

@@ -1,65 +1,146 @@
 ---
 name: update-skills
-description: Refresh installed Scopes skills in a project by syncing packaged skill folders from upstream. Use when you want the latest upstream skills locally.
+description: Refreshes local Scopes skills from upstream repository. Includes pre-update snapshots, change visibility, and post-update integrity validation to catch broken references.
 model: inherit
-compatibility: Requires `bash` + `git` and write access to `.cursor/skills`, `.claude/skills`, or `.agent/skills`.
-metadata:
-  short-description: Refresh installed Scopes skills in a project
-  author: Scopes
-  disable-model-invocation: "true"
 ---
 
-# Update Scopes Skills
+# Update Skills — Self-Healing Updates
 
-This skill refreshes **Skills only**.
+You update the local skills, agents, and scripts from the upstream repository. After updating, you automatically validate that all references are intact.
 
 ## When to use this skill
-Use this skill when your installed Scopes skills are stale and you want to refresh them locally from upstream.
+Use when skills, agents, or scripts need to be refreshed from upstream. This could be triggered by the user or detected when a referenced file is missing.
+
+## Prerequisites
+- Git installed.
+- Network access to clone the upstream repo.
+- Existing skills directory structure.
 
 ## Safety and confirmations
-- This workflow clones a repo and overwrites target skill folders; ask before running it if the user has local modifications they want to keep.
+- Always check for local modifications before overwriting.
+- Ask before overwriting files with local changes.
 
-## Helper scripts (optional)
-- `skills/update-skills/scripts/update-skills.sh`: refresh installed skills from upstream `skills/`.
+---
 
-## Scopes-first Policy Check (Post-update)
-After syncing skills, verify that execution/planning/research skills keep this startup contract:
-- Start every mission by navigating `Scopes/INDEX.md` and `Scopes/GRAPH.md`.
-- Read only relevant anchor capability scopes under `Scopes/Product/**` (not all scopes).
-- Follow scope trace/evidence links down into code/tests/config before acting.
-- Treat `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`, and `Scopes/Work/Standards/WRITE_STYLE.md` as supporting docs for implementation/refactoring/tooling.
+## Workflow: Snapshot → Update → Validate
 
-## Usage
+### Step 1: Pre-Update Snapshot
 
-From your project root, run the script from the folder you installed this skill into:
-
-- Cursor:
+Capture current state to enable rollback:
 
 ```bash
-bash .cursor/skills/update-skills/scripts/update-skills.sh
+# Snapshot current skill versions
+git log -1 --format="%H %s" -- skills/ agents/ commands/ scripts/
+
+# Check for local modifications
+git status --porcelain skills/ agents/ commands/ scripts/
 ```
 
-- Claude:
+**IF local modifications exist:**
+- List the modified files
+- Ask user: "These files have local changes. Overwrite or skip?"
+- Record the decision
+
+---
+
+### Step 2: Update (Manual Sync)
 
 ```bash
-bash .claude/skills/update-skills/scripts/update-skills.sh
+# Clone upstream to temp directory
+git clone --depth 1 <upstream_repo_url> /tmp/scopes-upstream
+
+# Sync with change visibility
+rsync -avh --itemize-changes /tmp/scopes-upstream/skills/ ./skills/
+rsync -avh --itemize-changes /tmp/scopes-upstream/agents/ ./agents/
+rsync -avh --itemize-changes /tmp/scopes-upstream/commands/ ./commands/
+rsync -avh --itemize-changes /tmp/scopes-upstream/scripts/ ./scripts/ 2>/dev/null || true
+
+# Clean up
+rm -rf /tmp/scopes-upstream
 ```
 
-- Antigravity:
+The `--itemize-changes` flag shows exactly which files were added, changed, or deleted.
+
+---
+
+### Step 3: Post-Update Integrity Validation
+
+For each updated `SKILL.md`, verify all references are intact:
 
 ```bash
-bash .agent/skills/update-skills/scripts/update-skills.sh
+# Check that all referenced scripts exist
+for skill_file in skills/*/SKILL.md; do
+  # Extract script references (paths ending in .py)
+  grep -oP '[\w/.-]+\.py' "$skill_file" | while read script; do
+    if [ ! -f "$script" ] && [ ! -f "skills/$script" ]; then
+      echo "BROKEN: $skill_file references $script (not found)"
+    fi
+  done
+done
+
+# Check that all referenced agents exist
+for skill_file in skills/*/SKILL.md; do
+  grep -oP 'agents/[\w-]+\.md' "$skill_file" | while read agent; do
+    if [ ! -f "$agent" ]; then
+      echo "BROKEN: $skill_file references $agent (not found)"
+    fi
+  done
+done
+
+# Check that all shared protocols exist
+for skill_file in skills/*/SKILL.md; do
+  grep -oP 'skills/_shared/[\w_]+\.md' "$skill_file" | while read proto; do
+    if [ ! -f "$proto" ]; then
+      echo "BROKEN: $skill_file references $proto (not found)"
+    fi
+  done
+done
 ```
 
-### Common targets
+**Smoke test:**
+```bash
+# Run drift detector as a basic sanity check
+python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 5
+```
 
-- Cursor skills: `.cursor/skills`
-- Claude skills: `.claude/skills`
-- Antigravity skills: `.agent/skills`
+---
 
-**In Cursor**, use `.cursor/skills` only. If a link or tab opens `.claude/skills/...`, that path is for Claude; close it and use the same skill under `.cursor/skills/...`.
+### Step 4: Report
 
-## Notes
+```markdown
+## UPDATE
+Files Changed: <list from rsync --itemize-changes>
+Files Added: <list>
+Files Deleted: <list>
+Integrity Check: PASS | FAIL (<broken references>)
+Local Mods Preserved: <list of skipped files, if any>
+```
 
-- This skill is self-contained. It updates skills by cloning the Scopes repo and syncing packaged skill folders under `skills/`.
-- If your project doesn’t have the `update-skills` skill yet, copy the `skills/update-skills/` folder from this repo.
+---
+
+## Scopes-First Policy Check
+
+After updating, verify the updated skills still follow Scopes-first policy:
+- Each SKILL.md should reference `skills/_shared/SCOPES_PROTOCOL.md`
+- Each skill should have a Mission Start section
+- Agent orchestration should use `skills/_shared/SLICE_CONTRACT.md`
+
+If any policy violations are found, report them but don't auto-fix (the upstream may have intentional changes).
+
+---
+
+## Blocked Runbook
+- No network access: set `Verdict: Blocked`.
+- Local modifications and user declines overwrite: set `Verdict: Blocked`, list files.
+- Broken references after update: report each one, set `Verdict: Proceed (with warnings)`.
+
+## Output Contract
+
+```markdown
+## SKILL UPDATE
+Verdict: Proceed | Blocked
+Updated: <count> files
+Added: <count> files
+Integrity: PASS | FAIL
+Next: <any follow-up needed>
+```

@@ -1,15 +1,22 @@
-# Agent Workflow — Parallel Development Pattern
+# Agent Workflow — Micro-Swarm Orchestration Pattern
 
 > **Skills embed their own Agent Orchestration** with concrete prompts, parallel
 > groupings, and output-handling instructions. This document is the architectural
 > reference for the agent system. See individual `skills/*/SKILL.md` files for
 > the executable orchestration steps that implement these patterns.
 
-Based on [Zach Wills' three core principles](https://zachwills.net/how-to-use-claude-code-subagents-to-parallelize-development/):
+Based on three orchestration primitives:
 
-1. **Parallel Execution for Speed** — run independent agents concurrently
-2. **Sequential Handoffs for Automation** — output of one feeds the next
-3. **Context Isolation for Quality** — each agent gets its own dedicated context
+1. **Skills** = reusable SOPs (the `SKILL.md` files — what to do)
+2. **Subagents** = focused contractors with context isolation (the `agents/*.md` files — who does it)
+3. **Agent Teams** = multiple Claude Code sessions coordinating via shared tasks + messaging (for heavy parallel work)
+
+And four hard constraints:
+
+1. **Coordination overhead is real** → minimize handoffs; use Slice Contracts to give each worker everything upfront
+2. **Context must be decomposed hard** → each subagent/teammate gets a tiny, self-contained slice
+3. **Agent teams are experimental** → enforce ownership (one slice = one agent), no cross-agent file edits
+4. **Long-running work needs artifacts** → every cycle MUST leave a structured artifact, not just a summary
 
 ---
 
@@ -17,44 +24,94 @@ Based on [Zach Wills' three core principles](https://zachwills.net/how-to-use-cl
 
 | Agent | Role | Phase | Writes Code? | Background? |
 |---|---|---|---|---|
-| `scope-navigator` | Find relevant scopes | Planning | No | No |
 | `bug-scanner` | Scan hotspots & security | Investigation | No | No |
-| `code-architect` | Produce architecture blueprint | Planning | No | No |
-| `code-explorer` | Trace feature implementations | Investigation | No | No |
-| `code-reviewer` | Review changes (high-confidence) | Review | No | No |
+| `code-reviewer` | Review changes (high-confidence) | Review (Final Gate) | No | No |
 | `code-simplifier` | Simplify recent changes | Refinement | Yes | No |
-| `scope-writer` | Update Scopes documentation | Documentation | Docs only | No |
-| `scope-auditor` | Validate Scopes accuracy | Validation | No (readonly) | Yes |
 | `context-summarizer` | Stabilize working set | Support | Docs only | No |
+| `scope-filler` | Fill new scope skeletons | Scope maintenance | Scopes only | No |
 
 ---
 
-## Core Principle: Why Subagents?
+## Core Principle: Context Isolation + Slice Contracts
 
-Subagents are NOT primarily about parallelism — they are about **context isolation**.
+Subagents and teammates are about **context isolation**: verbose work (reading 20 files, running test suites, scanning patterns) stays contained. The orchestrator only receives structured JSON receipts.
 
-Each agent runs in its own context window. Verbose work (reading 20 files,
-running test suites, scanning for patterns) stays contained. The main
-conversation only receives structured summaries, keeping it sharp and focused.
-
-Parallelism is a bonus: when agents are independent, run them concurrently.
-When they depend on each other, chain them sequentially.
+**Every delegation MUST use a Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`):
+- **Target**: what to work on
+- **Ownership**: files this agent may edit (exclusive — no overlaps)
+- **Context bundle**: pre-gathered info so the agent doesn't re-discover
+- **Acceptance**: checkable definition of done + guard command
+- **Artifact required**: what the agent MUST leave behind
 
 ---
 
-## When to Delegate vs Keep in Lead
+## When to Use Subagents vs Agent Teams vs Lead-Only
 
-| Situation | Use a subagent? | Recommended agent(s) |
+⚠️ **Spawn ALL subagents in a SINGLE tool-call batch** for parallelism. Spawning one per turn makes them sequential.
+
+| Situation | Approach | Why |
 |---|---|---|
-| Need 1-3 scope entry points fast | Yes | `scope-navigator` |
-| Need deep end-to-end trace | Yes | `code-explorer` |
-| Need decisive architecture + file plan | Yes | `code-architect` |
-| Need mechanical hotspot scan | Yes | `bug-scanner` |
-| Need behavior-preserving cleanup | Yes | `code-simplifier` |
-| Need drift/link validation | Yes | `scope-auditor` |
-| Tool-heavy phase just finished; need stable summary | Yes | `context-summarizer` |
-| Tight edit -> verify -> edit loop | No | main agent |
-| Needs user choice / product decision | No | main agent |
+| 1 scope fill | **Subagent** (single) | Low overhead |
+| 2+ scope fills | **Agent Team** (Preferred) | Guaranteed parallelism |
+| Feature Implementation (TDD/Verified) | **Subagents** (parallel batches) | Lead orchestrates, agents do the work |
+| Simple/Tiny edit (< 5 mins) | **Lead only** | Subagent overhead exceeds benefit |
+| Multi-aspect review (security + perf + coverage) | **Agent Team** (3 reviewers) | Each reviewer is independent, can share findings |
+| Bug investigation with competing hypotheses | **Agent Team** (investigators) | Can debate and disprove each other |
+| Needs user choice / product decision | **Lead only** | Decisions can't be delegated |
+| code-simplifier after implementation | **Subagent** (single) | One focused task, clear ownership |
+| code-reviewer as final gate | **Subagent** (single) | One focused task, clear verdict |
+| Need stable summary after tool-heavy work | **Subagent** (`context-summarizer`) | Context compression |
+
+---
+
+## Agent Teams — When and How
+
+Agent teams coordinate multiple Claude Code sessions with shared tasks and messaging.
+
+### Enable
+
+Set in your `settings.json`:
+```json
+{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }
+```
+
+### Spawn Patterns
+
+**Scope filling (4+ scopes):**
+> Create an agent team with {N} teammates. Each teammate fills one scope file.
+> Assign each teammate a scope from this list: {scope_list}.
+> Each teammate reads their Slice Contract from `{contract_file}`.
+> Use Sonnet for each teammate.
+
+**Parallel code review:**
+> Create an agent team with 3 reviewers:
+> - One focused on security (token handling, input validation, secrets)
+> - One on performance (N+1 queries, unnecessary allocations, blocking calls)
+> - One on test coverage (missing edge cases, brittle assertions)
+> Each reviewer reads the diff: `git diff {base}..HEAD`
+> Report findings with confidence ≥ 80%.
+
+**Bug investigation:**
+> Spawn {N} teammates to investigate different hypotheses for: {bug_description}.
+> Have them talk to each other to disprove each other's theories.
+> Update `Scopes/Work/Bugs/{slug}.md` with consensus.
+
+### Rules
+
+1. **WIP limits**: max 6 teammates for scope filling, max 3 for reviews, max 2 for implementation slices
+2. **Exclusive ownership**: each teammate owns specific files — no overlapping edits
+3. **Slice Contracts**: every teammate gets a pre-built contract (from `slice_contract_builder.py` or manually)
+4. **Wait for completion**: always tell the lead to wait for teammates before proceeding
+5. **Clean up**: always clean up the team when done: `Clean up the team`
+6. **No nested teams**: teammates cannot spawn their own teams
+
+### Quality Gates (Hooks)
+
+Use `TeammateIdle` and `TaskCompleted` hooks to enforce standards:
+- `TeammateIdle`: check if the teammate actually wrote a JSON receipt → if not, send feedback
+- `TaskCompleted`: run `drift_detector.py --scope {target}` → if stale, prevent completion
+
+---
 
 ## Summarization Checkpoint (Mandatory Pattern)
 
@@ -72,183 +129,212 @@ If the summary would be long, invoke `context-summarizer` to write a durable not
 
 ## Workflows
 
-### 1. New Feature Implementation
+### 1. New Feature Implementation (Micro-Swarm per Behavior)
 
 ```
-┌─────────── PHASE 1: PLANNING ───────────────────────┐
-│                                                      │
-│  scope-navigator ──→ code-architect ──→ blueprint     │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+┌─────────── STEP 1: SLICE (Lead only) ─────────────────┐
+│                                                        │
+│  scope_map.py --query "<goal>" → anchor scope(s)       │
+│  Break goal into independent behavior slices           │
+│  Each slice = { behavior, inputs, outputs,             │
+│                 acceptance examples, test command }     │
+│  WIP LIMIT: max 2 active slices                        │
+│                                                        │
+└────────────────────────────────────────────────────────┘
                           │
                           ▼
-┌─────────── PHASE 2: IMPLEMENTATION ─────────────────┐
-│                                                      │
-│  Main agent implements + verifies in terminal         │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+┌─────────── STEP 2: PARALLEL PHASE-GATED TDD ──────────┐
+│                                                        │
+│  Lead acts as ORCHESTRATOR (runs tests/gates only)     │
+│                                                        │
+│  For each phase (RED → GREEN → REFACTOR):              │
+│  1. Spawn parallel subagents (one per slice)           │
+│     "Spawn ALL in a SINGLE tool-call batch"            │
+│  2. Agents do the work (write test / impl / refactor)  │
+│  3. Wait for all to complete                           │
+│  4. GATE: Orchestrator runs full test suite            │
+│     IF pass → next phase                               │
+│     IF fail → route back to agent                      │
+│                                                        │
+│  Refactor is auto-triggered if diff > 20 lines.        │
+│                                                        │
+└────────────────────────────────────────────────────────┘
                           │
                           ▼
-┌─────────── PHASE 2.5: SIMPLIFY (optional) ──────────┐
-│                                                      │
-│  code-simplifier ──→ behavior-preserving refactor     │
-│                                                      │
-└──────────────────────────────────────────────────────┘
+┌─────────── STEP 3: FINAL GATE (always) ───────────────┐
+│                                                        │
+│  Spawn code-reviewer on complete diff (subagent)       │
+│  Confidence ≥ 80 filter. Must report Scopes impact.    │
+│  IF issues found → fix cycle (lead)                    │
+│                                                        │
+└────────────────────────────────────────────────────────┘
                           │
                           ▼
-┌─────────── PHASE 2.75: REVIEW (optional) ───────────┐
-│                                                      │
-│  code-reviewer ──→ high-confidence issues only        │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────── PHASE 3: DOCUMENTATION (parallel) ───────┐
-│                                                      │
-│  scope-writer ───┐                                   │
-│                   ├──→ Scopes updated & validated     │
-│  scope-auditor ──┘                                   │
-│  (background)                                        │
-└──────────────────────────────────────────────────────┘
+┌─────────── STEP 4: SCOPE SYNC (conditional) ──────────┐
+│                                                        │
+│  IF scope-linked files in git diff:                    │
+│  └── Update affected scope(s) + drift_detector.py     │
+│  ELSE: skip scope update                               │
+│                                                        │
+│  Leave durable artifacts:                              │
+│  - Session log in Scopes/Work/STDD/ or DEV/           │
+│  - Parking lot → task files                            │
+│  - context-summarizer if session was large              │
+│                                                        │
+└────────────────────────────────────────────────────────┘
 ```
 
-**Phase 1 — Planning:**
-Run `scope-navigator` to locate relevant Scopes and dependency context, then
-invoke `code-architect` to produce the architecture blueprint.
-
-**Phase 3 — Documentation (parallel):**
-Run `scope-writer` and `scope-auditor` concurrently. Writer updates affected
-scope docs. Auditor validates all scopes are still accurate.
+**Step 2 details:**
+- Each slice exits as **green + simplified** before the next starts (no queues)
+- Refactor is "now" not "later"
+- `code-simplifier` gets a tight Slice Contract: exact file list + guard command
+- The session log entry is mandatory, not optional
 
 ---
 
 ### 2. Bug Investigation & Fix
 
 ```
-┌─────────── PHASE 1: INVESTIGATION (parallel) ───────┐
+┌─────────── STEP 1: INVESTIGATE (parallel) ────────────┐
+│                                                        │
+│  IF simple (one area):                                 │
+│    Spawn bug-scanner (subagent)                        │
+│                                                        │
+│  IF complex (multiple hypotheses):                     │
+│    Spawn Agent Team with 2-4 investigators             │
+│    Each investigates a different hypothesis             │
+│    They message each other to debate/disprove          │
+│    Converge on consensus → write findings artifact     │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────── STEP 2: FIX (lead, micro-swarm loop) ──────┐
+│                                                        │
+│  Same RED → GREEN → REFACTOR micro-swarm as features   │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────── STEP 3: FINAL GATE + ARTIFACTS ────────────┐
+│                                                        │
+│  code-reviewer (subagent) + conditional scope sync     │
+│  Write bug report to Scopes/Work/Bugs/                 │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 3. Scope Maintenance (Discovery Micro-Swarm)
+
+```
+┌─────────── STEP 1: DISCOVER (lead only) ──────────────┐
+│                                                        │
+│  IF Scopes/ is empty/missing:                          │
+│    Infer areas from repo structure                      │
+│    Build Slice Contracts: slice_contract_builder.py    │
+│    Bootstrap META files first (DEVELOPER_INFO, etc.)   │
+│  ELSE:                                                 │
+│    drift_detector.py --all --format json               │
+│    Build Slice Contracts from drift output              │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────── STEP 2: FILL (Parallel, WIP ≤ 6) ──────────┐
+│                                                        │
+│  1 scope:    Subagent                                  │
+│  2+ scopes:  Agent Team (Preferred)                    │
+│  Fallback:   Parallel Subagents (ALL in one batch)     │
+│                                                        │
+│  Each filler gets a full Slice Contract:               │
+│  - Scope path + likely entrypoints + tech stack        │
+│  - Test command + related scopes                       │
+│  - Must return JSON receipt                            │
+│                                                        │
+│  All workers run simultaneously → receipts feed S3     │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────── STEP 3: STITCH (lead, incremental) ────────┐
+│                                                        │
+│  Read JSON receipts from all fillers                   │
+│  Update INDEX.md with new scope references             │
+│  Update GRAPH.md from graph_edges_found                │
+│  Run drift_detector.py as final validation gate        │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 4. Planning / Research (Artifact-First)
+
+```
+┌─────────── SINGLE PASS: BLUEPRINT ────────────────────┐
+│                                                        │
+│  scope_map.py --query → anchor scopes (instant route)  │
+│  rg for prior plans + research (parallel)              │
+│  Write plan directly to Scopes/Work/Planning/          │
+│  Plan's ## Links section IS the handoff for next skill │
+│                                                        │
+└────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 5. Pre-Merge Validation (Parallel Review Team)
+
+```
+┌─────────── AGENT TEAM: 3 REVIEWERS ──────────────────┐
 │                                                       │
-│  bug-scanner ─────┐                                   │
-│                    ├──→ Main agent reviews both        │
-│  scope-navigator ─┘    and diagnoses the issue        │
+│  Reviewer 1: Security focus                           │
+│  Reviewer 2: Performance focus                        │
+│  Reviewer 3: Test coverage focus                      │
+│                                                       │
+│  Each reads `git diff` independently                  │
+│  Confidence ≥ 80 filter                               │
+│  Merge verdicts → go/no-go                            │
 │                                                       │
 └───────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────── PHASE 2: FIX ────────────────────────────┐
-│                                                      │
-│  Main agent implements + verifies in terminal         │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────── PHASE 2.5: SIMPLIFY (optional) ──────────┐
-│                                                      │
-│  code-simplifier ──→ behavior-preserving refactor     │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────── PHASE 2.75: REVIEW (optional) ───────────┐
-│                                                      │
-│  code-reviewer ──→ high-confidence issues only        │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────── PHASE 3: CLEANUP (parallel) ─────────────┐
-│                                                      │
-│  scope-writer + scope-auditor (if scopes affected)   │
-└──────────────────────────────────────────────────────┘
 ```
-
----
-
-### 3. Planning / Research Only
-
-```
-┌─────────── RESEARCH ─────────────────────────────────┐
-│                                                      │
-│  scope-navigator ──→ Main agent makes decisions       │
-│                                                      │
-└──────────────────────────────────────────────────────┘
-```
-
-Fire `scope-navigator`. It returns quickly with scope paths. The main agent
-does any deeper reading directly as needed.
-
----
-
-### 3.5. Feature Deep Dive (Understanding)
-
-Use when you need to understand an existing feature deeply before changing it:
-`scope-navigator` → `code-explorer` → main agent synthesizes.
-
----
-
-### 4. Scope Maintenance
-
-```
-scope-auditor (background) → scope-navigator → scope-writer → scope-auditor
-```
-
-Auditor finds stale scopes. Navigator maps affected areas. Writer updates
-the drifted scopes. Auditor re-validates.
-
----
-
-### 5. Pre-Merge Validation (parallel)
-
-```
-┌─────────── VALIDATION ──────────────────────────────┐
-│                                                      │
-│  scope-auditor                                       │
-│                                                      │
-│  Returns verdict → merge decision                     │
-└──────────────────────────────────────────────────────┘
-```
-
-For pre-merge, run `scope-auditor` to ensure Scopes evidence links and drift
-checks are clean before merging.
 
 ---
 
 ## Handoff Principles
 
-1. **Parallel when independent, sequential when dependent.** If you have both
-   documentation updates and validation, run `scope-writer` and `scope-auditor`
-   in parallel.
+1. **Slice Contracts for every delegation.** No naked prompts — always include target, ownership, context, acceptance, and artifact requirements.
 
-2. **Context isolation preserves quality.** Each agent gets its own full context
-   window. Verbose scanning and validation stays contained; only structured
-   summaries return.
+2. **Micro-swarms, not assembly lines.** Each slice exits as green + simplified. No queues, no "refactor later" debt.
 
-3. **Structured output enables automation.** Every agent returns a parseable
-   report with a clear **Verdict**. The main agent reads the verdict to decide
-   the next step (proceed, loop back, or escalate).
+3. **Artifact-driven chaining.** The output of one skill feeds the next through `## Links` sections, JSON receipts, and session logs — not through re-navigation.
 
-4. **File-as-memory for handoff artifacts.** `bug-scanner` writes to
-   `Scopes/Work/Bugs/`.
-   These persist across sessions and can be read by any agent.
+4. **Deterministic triggers, not judgment calls.** `code-simplifier` triggers at >50 lines or >3 files. `code-reviewer` always runs as final gate. Scope sync triggers when scope-linked files are in the diff.
 
-5. **Chain, don't nest.** Agents cannot spawn other agents. The main agent
-   orchestrates by reading one agent's output and invoking the next.
+5. **WIP limits prevent coordination breakdown.** Max 6 fillers, max 2 behavior slices, max 3 reviewers.
+
+6. **Exclusive ownership prevents conflicts.** When using agent teams, no two teammates may edit the same file.
+
+7. **JSON receipts enable orchestration.** Every subagent/teammate returns a machine-parseable receipt. The lead uses it to make deterministic next-step decisions.
 
 ---
 
-## Orchestration Pattern (for the main agent)
+## Orchestration Pattern (for the lead agent)
 
-When implementing a feature, the main agent follows this script:
+When implementing a feature, the lead follows this script:
 
 ```
-1. Fire scope-navigator
-2. Read its summary and open the referenced scopes/evidence
-3. (Optional) Invoke code-explorer for a deep feature trace
-4. (Optional) Invoke code-architect for a full blueprint
-5. Implement the change and verify in terminal
-6. (Optional) Invoke code-simplifier on the changed files
-7. (Optional) Invoke code-reviewer on the diff (confidence ≥ 80 only)
-8. Invoke scope-writer + scope-auditor in parallel (if Scopes are affected)
-9. Done
+1. Route: scope_map.py --query "<goal>" → anchor scope(s)
+2. Slice: break into ≤ 2 active behavior slices with acceptance examples
+3. Per phase (RED → GREEN → REFACTOR):
+   a. Spawn parallel subagents for all slices
+   b. Orchestrator gates with test suite
+4. After all phases: code-reviewer on full diff (ALWAYS, not optional)
+5. Conditional scope sync: only if scope-linked files are in the diff
+6. Leave artifacts: session log + parking lot → task files + context summary
+7. Done
 ```
 
-This is the engineering lifecycle: plan → implement → document → validate.
+This is the engineering lifecycle: **slice → implement → refactor → review → document → validate**.

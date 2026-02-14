@@ -1,128 +1,162 @@
 ---
 name: querying-scopes
-description: Answers project questions by navigating Scopes documentation and verifying claims against code evidence. Use when the user asks how something works, where behavior lives, what depends on what, what changed, or what to read first.
+description: Answers questions by instantly routing through scope_map.py, verifying with code evidence, and auto-delegating diagnostic questions to bug-scanner. Includes freshness notes on every scope-backed answer.
 model: inherit
 ---
 
-# Querying Scopes
+# Querying Scopes — Instant Route + Diagnostic Delegation
 
-**You are the Scope Guide.** You answer user questions about the project by using `Scopes/` as the navigation layer and code evidence as the proof layer. You do not guess — you answer from documented scope reality, then verify with linked code evidence.
+You answer questions about the codebase by navigating Scopes documentation and verifying claims with code evidence. You route instantly via `scope_map.py` (no manual INDEX.md crawling), and delegate "what's wrong?" questions to `bug-scanner`.
 
 ## When to use this skill
-Use when a user asks how a feature works, where behavior lives in code, what depends on what, what changed in a capability, or what to read first.
+Use when the user asks questions about how the codebase works, what depends on what, what's broken, or what they should read.
 
 ## Prerequisites
-Requires a Scopes-enabled repo (a `Scopes/` directory) and readable code files referenced by scope evidence links.
-
-## Safety and constraints
-- Do not implement code in this skill.
-- Do not rewrite scope docs unless the user explicitly asks.
-- If Scopes are missing/stale, say so and recommend `syncing-scopes`.
+- `Scopes/` exists with at least `INDEX.md`.
+- If Scopes are completely missing, recommend `/sync` first.
 
 ## Mission Start
-**You MUST read the shared protocol before proceeding.** Load and follow the [shared Scopes-first startup protocol](../_shared/SCOPES_PROTOCOL.md) (located at `skills/_shared/SCOPES_PROTOCOL.md`).
-
-## Agent Orchestration
-
-Default: when the question spans multiple areas or sub-questions, spawn one `scope-navigator` per area (and one `code-explorer` per trace in Phase 2 if needed) in parallel; use single agents for narrow scope (1-3 scopes).
-
-### Phase 1: Navigation (before Diagnose)
-**Spawn `scope-navigator`:**
-> Find the scopes relevant to this question: "{user's question}". Return scope paths, dependency edges, and a recommended reading order.
-
-**Handle output:** Read the returned scope paths. Use them as the anchor for your answer.
-
-### Phase 2: Deep Trace (conditional — only if the question requires "how it works" tracing)
-**Spawn `code-explorer`:**
-> Trace how "{feature/behavior from user's question}" works end-to-end, starting from these scope evidence links: {links from the anchor scopes read in Phase 1}.
-
-**Handle output:** Merge the Feature Trace into your answer's Evidence section.
+Load `skills/_shared/SCOPES_PROTOCOL.md`.
 
 ---
 
-## Question Intake
-If the question is broad or ambiguous, ask one short clarifying question:
-- "Which area/capability do you want first?"
+## Workflow: Classify → Route → Answer
 
-Otherwise, proceed directly.
+### Step 0: Instant Route (< 30 seconds)
 
-## Method (Silent) + Output Contract (Visible)
-Do the method silently; output only the answer format below.
-
-### 1) Deconstruct (Silent)
-- Identify the user's target capability/question.
-- Determine if it's about **current behavior**, **dependency map**, or **history/rationale**.
-
-### 2) Diagnose (Silent)
-- Navigate via `INDEX.md` and `GRAPH.md` to select anchor scopes.
-- Validate key claims via code evidence links.
-- Mark missing proof as `[Unknown]`.
-
-### 3) Develop (Silent)
-- Build a concise answer grounded in scope claims and evidence.
-- Separate "current behavior" from "recommendations" or "possible next steps".
-
-### 4) Deliver (Visible)
-```markdown
-## Answer
-<direct answer in concise bullets>
-
-## Scope Paths Used
-- `Scopes/...`
-
-## Evidence
-- `[path:Lx-Ly](path#Lx-Ly)` — what this proves
-
-## Confidence
-- High / Medium / Low
-- Notes: `[Unknown]` / `[Partially Traced]` where applicable
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+  --query "<question keywords>" --limit 5 --format json
 ```
 
-## When to Stop (Mandatory)
-- Stop once you can answer the question with evidence for each key claim **or** you've explicitly marked missing proof as `[Unknown]`.
-- Do not "keep looking" past diminishing returns: prefer 1-3 anchor scopes and at most 7 evidence links.
-- If the answer requires broad scanning across many areas, stop and recommend `syncing-scopes` (or ask a clarifying question to narrow scope).
+Result: ranked anchor scopes + code paths + evidence counts.
 
-## Blocked Runbook (Mandatory)
-- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes`.
-- Question is too broad: ask one clarifying question; set `Verdict: Needs Narrowing` if the user does not narrow.
-- Evidence is missing: mark `[Unknown]` and stop (do not guess).
+**IF zero results AND Scopes/ exists:**
+Don't give up — fall back to codebase search:
+```bash
+grep -rn "<keywords>" --include="*.ts" --include="*.py" --include="*.go" \
+  --include="*.js" --include="*.md" . | head -20
+```
+
+**IF zero results AND no Scopes/:**
+Set `Verdict: Needs Sync`, recommend `/sync`.
+
+---
+
+### Step 1: Classify Question Type
+
+| Question Pattern | Type | Action |
+|---|---|---|
+| "How does X work?" | **Explainer** | Read scope + follow evidence |
+| "What depends on X?" | **Dependency** | Read GRAPH.md + scope network |
+| "What's wrong with X?" / "Why is X broken?" | **Diagnostic** | Delegate to `bug-scanner` |
+| "What changed in X?" | **Changelog** | `git log` + scope drift comparison |
+| "What should I read first?" | **Navigator** | Return ordered scope tree |
+| "Where is X configured?" | **Locator** | Follow evidence links in scope |
+
+---
+
+### Step 2: Answer (type-specific)
+
+#### For Explainer / Dependency / Locator / Navigator:
+1. Read the top 1-3 anchor scopes from Step 0
+2. Follow evidence links into code for verification:
+   - Open the linked file:line ranges
+   - Confirm the claim in the scope still matches the code
+3. Compose answer with evidence links
+
+#### For Diagnostic ("what's wrong?"):
+Spawn `bug-scanner` as a subagent:
+> **SLICE CONTRACT**
+> - **Target**: Scan `{area}` for bug-prone patterns, security hotspots, and documentation drift
+> - **Ownership**: Read-only (no edits)
+> - **Context**: Anchor scope at `{scope_path}`, files to scan: `{entrypoints from scope}`
+> - **Acceptance**: Return findings with severity ratings
+> - **Artifact**: Write findings to `Scopes/Work/Bugs/scan-<area>-<date>.md`
+
+Merge `bug-scanner` findings into your answer.
+
+#### For Changelog:
+```bash
+git log --oneline --since="2 weeks ago" -- <files from scope evidence> | head -20
+```
+Compare against scope's last-modified date to show drift.
+
+---
+
+### Step 3: Freshness Note (mandatory on every scope-backed answer)
+
+Every answer that cites a scope MUST include a freshness note:
+
+```markdown
+> **Freshness**: Scope last updated <scope_date>. Code last changed <code_date>.
+> <IF drift > 14 days: "⚠ This scope may be outdated. Consider running /sync.">
+> <IF drift ≤ 14 days: "✓ Scope appears current.">
+```
+
+To get the dates:
+```bash
+# Scope file last commit
+git log -1 --format="%ci" -- <scope_path>
+
+# Code files last commit (from scope evidence paths)
+git log -1 --format="%ci" -- <code_path>
+```
+
+---
+
+### Step 4: Handoff Recommendations (automatic)
+
+Based on what you found, recommend the appropriate next skill:
+
+| Finding | Recommendation |
+|---|---|
+| Scope is stale/outdated | "Consider running `/sync` to update this area." |
+| Evidence links are broken | "Run `/sync` — evidence links need repair." |
+| User wants to change something | "Use `/plan` to create an implementation blueprint." |
+| Bug found | "Use `/tdd` to write a regression test and fix." |
+| User is onboarding | "Start with `Scopes/INDEX.md` → `DEVELOPER_INFO.md` → anchor scope." |
+| Answer confidence is Low | "⚠ Low confidence. Consider running `/sync` to refresh documentation." |
+
+---
+
+## Confidence Levels
+
+| Level | Criteria |
+|---|---|
+| **High** | Scope evidence links verified in code, dates < 14 days drift |
+| **Medium** | Scope exists but some evidence is `[Unknown]` or dates > 14 days |
+| **Low** | No scope covers this area, or scope is very stale (> 30 days) |
+
+---
+
+## Artifacts (conditional)
+
+**IF the question required > 5 minutes of tracing** (complex investigation):
+- Invoke `context-summarizer` to write a research note to `Scopes/Work/Notes/`
+- This prevents re-investigation of the same question in future sessions
+
+**IF diagnostic question** (bug-scanner was invoked):
+- The bug-scanner's findings file IS the artifact
+
+---
+
+## Blocked Runbook
+- No Scopes/ exists: set `Verdict: Needs Sync`.
+- Scope exists but all evidence is `[Unknown]`: answer what you can from code, recommend `/sync`.
+- Question is about something outside the repo: answer from general knowledge, clearly mark as non-evidence-based.
 
 ## Output Contract
 
-Return <= 20 lines:
+Return a natural-language answer with evidence, followed by:
 
 ```markdown
 ## QUERY
-Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
-Decision: <one sentence answer>
+Verdict: Answered | Partial | Needs Sync
+Confidence: High | Medium | Low
+Freshness: <scope_date> vs <code_date>
 Evidence:
-- `[path:Lx-Ly](path#Lx-Ly)` — <what this proves>
-Unknowns:
-- <only if blocked/partial>
-Next: <one action; e.g. read a specific scope or run syncing-scopes>
-Artifact: (none)
+- [path:Lx-Ly](path#Lx-Ly) — <what it proves>
+Handoff: <recommended next skill, if any>
+Artifact: <path to research note, if created>
 ```
-
-## Tiny Example (format only; uses real paths from this repo)
-If asked: "Where is the Capability Scope template defined?"
-
-```markdown
-## Answer
-- Capability scope templates are defined in the `syncing-scopes` references.
-
-## Scope Paths Used
-- `[No Scopes/ directory in this repo]` — this repository is the Scopes skills package itself
-
-## Evidence
-- `[../syncing-scopes/references/TEMPLATES.md:L1-L80](../syncing-scopes/references/TEMPLATES.md#L1-L80)` — capability scope template structure
-
-## Confidence
-- High
-```
-
-## Typical Hand-offs
-- If docs are stale/missing: `syncing-scopes`
-- If the user wants implementation: `developing-verified` or `developing-tdd`
-- If the user wants a plan: `planning-idea` or `planning-refactor`
-- If the user wants executable tasks: `writing-tasks`

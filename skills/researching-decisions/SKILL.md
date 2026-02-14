@@ -1,151 +1,117 @@
 ---
 name: researching-decisions
-description: Researches decision questions by combining internal repo truth (Scopes + code) with external web sources, keeping the two strictly separated. Use when external info is needed to unblock a decision, evaluate options, or compare technologies.
+description: Researches technical decisions, compares approaches, and documents findings with evidence-backed ADRs (Architecture Decision Records) under Scopes/Decisions/ADRs/.
 model: inherit
 ---
 
-# Researching Decisions
+# Researching Decisions — Evidence-Backed ADR Generation
 
-**You are the Scope Researcher.** Your job is to answer complex questions by combining **Internal Truth** (from `Scopes/` and Code) with **External Truth** (Web Research), strictly separating the two. You provide clarity, not code. You produce decision-enabling deliverables that feed back into the Scope system.
+You research technical decisions by gathering evidence, comparing approaches, and producing structured ADRs. Every recommendation must cite evidence from the codebase, official docs, or experiments.
 
-## When to Use / When Not to Use
-- **Use when**: there's a decision, uncertainty, or unfamiliar tech and you need structured evidence + tradeoffs.
-- **Don't use when**: the question can be answered purely by reading the repo (use `syncing-scopes`), or the user wants implementation (use `developing-tdd` / `writing-tasks`).
+## When to use this skill
+Use when the user needs to make a technical decision — choosing between approaches, evaluating a library, deciding on architecture, or assessing trade-offs.
 
 ## Prerequisites
-Requires a Scopes-enabled repo. External research requires web access.
+- Read `skills/_shared/SCOPES_PROTOCOL.md` for Scopes-first startup.
 
 ## Mission Start
-**You MUST read the shared protocol before proceeding.** Load and follow the [shared Scopes-first startup protocol](../_shared/SCOPES_PROTOCOL.md) (located at `skills/_shared/SCOPES_PROTOCOL.md`).
-
-## Kickoff (Ask After Scope Startup)
-Ask the user one simple question:
-- "What question are we trying to answer, and what decision will it unblock?"
-
-## Scope Connections
-- **Upstream inputs**: `Scopes/Work/Planning/**`, `Scopes/Work/Ideas/**`, `Scopes/Decisions/ADRs/**`, `Scopes/Product/**`
-- **Downstream outputs**: Research report (`Scopes/Research/**`)
-- **Typical next commands**: `planning-idea`, `writing-adr`, `writing-tasks`
-- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
-
-## Agent Orchestration
-
-Default: when the research question spans multiple capability areas or sub-questions, spawn one `scope-navigator` per area in parallel; use a single navigator for narrow scope (1-3 scopes).
-
-### Phase 1: Navigation (before Diagnose)
-**Spawn `scope-navigator`** (or one per area if multiple):
-> Find the 1-3 scopes relevant to this research question: "{user's question}". Include dependency edges and any related ADRs under Scopes/Decisions/ADRs/.
-
-**Handle output:** Use the returned scope paths to ground your Internal Repo Truth section. Read them before proceeding to Diagnose.
+Load `skills/_shared/SCOPES_PROTOCOL.md`.
 
 ---
 
-## Working Model
-```mermaid
-flowchart TD
-  Q[Research Question] --> I[Internal Repo Truth]
-  Q --> E[External Research]
-  I --> S[Synthesis: Constraints + Options]
-  E --> S
-  S --> R[Recommendation + Decision Notes]
-  R --> U[Explicit Scope Update List]
+## Workflow
+
+### Step 1: Frame the Decision
+
+1. Identify what decision needs to be made (1 sentence).
+2. List the constraints from Scopes (anchor scope, tech stack, existing patterns).
+3. Identify 2-4 options to evaluate.
+
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+  --query "<decision topic>" --limit 5 --format json
 ```
 
-## Method (Silent) + Output Contract (Visible)
+### Step 2: Research Each Option
 
-### 1) Deconstruct (Silent)
-- Clarify: decision to be made, systems/technologies involved, success criteria.
+For each option, gather:
+- **Pros**: concrete benefits with evidence
+- **Cons**: concrete risks with evidence
+- **Pattern conformance**: does it match existing codebase patterns?
+- **Migration cost**: what changes are needed to adopt?
+- **Reversibility**: how easy is it to change course later?
 
-### 2) Diagnose (Silent)
-- Internal audit: read INDEX, GRAPH, DEVELOPER_INFO, relevant capability scopes.
-- Identify precise unknowns.
+Sources to check (in order):
+1. Existing codebase patterns (`rg` for similar implementations)
+2. `Scopes/Onboarding/TECH_STACK.md` for current stack constraints
+3. Official documentation (use `search_web` or `read_url_content`)
+4. Prior ADRs under `Scopes/Decisions/ADRs/` for precedent
 
-### 3) Develop (Silent)
-- Branch A (Internal): Trace entry -> logic -> data -> output. Only claim what you can evidence.
-- Branch B (External): Use authoritative sources. Compare against internal constraints.
-- Synthesize: Map external options to internal reality.
+### Step 3: Write the ADR
 
-### 4) Deliver (Visible)
-Write research report under `Scopes/Research/**`.
-
-## Rules
-1. **Truth Separation**: Clearly label "Internal Repo Truth" vs "External Research".
-2. **Evidence-Backed**: Internal claims cite `[path:Lx-Ly](path#Lx-Ly)`. External claims cite URLs.
-3. **No Ambiguity**: If unknown, say `[Unknown]`.
-4. **Cross-linking (MANDATORY)**: Link to primary Capability Scopes, relevant ADRs, tasks/plans.
-5. **Offline Mode (No Web Access)**: If web research is blocked/unavailable, still deliver the report with a complete Internal Truth section and mark the External section as `[Blocked]` with a checklist of sources/questions to verify later.
-6. **Source cap (default)**: Use at most 5 external sources unless the user explicitly asks for more.
-
-## Research Report Template
-
-**File Path**: `Scopes/Research/<YYYY-MM-DD>-<topic-slug>.md`
+Write to `Scopes/Decisions/ADRs/<YYYY-MM-DD>-<slug>.md`:
 
 ```markdown
-# Research: <Topic Title>
+# ADR: <Title>
 
-## Executive Summary
-> One paragraph answer or recommendation.
+## Status
+Proposed | Accepted | Rejected | Superseded by [ADR-xxx]
 
-## 1. Project Reality (Internal Truth)
-- **Current Pattern**: <statement>. Evidence: `[path:Lx-Ly](path#Lx-Ly)`.
-- **Constraints**: <statement>. Evidence: `[path:Lx-Ly](path#Lx-Ly)`.
-- **Scope References**: [Scopes/Product/...](link), [Scopes/GRAPH.md](link)
+## Context
+<What problem or decision prompted this? Include evidence links.>
 
-## 2. External Analysis
-- **Option A**: Description. Source: [link]
-- **Option B**: Description. Source: [link]
-If external research is not possible, write:
-- `[Blocked: no web access]` and list the exact sources you would check (official docs, RFCs, vendor guides) and what you’re trying to confirm.
+## Decision
+<What was decided and why.>
 
-## 3. Options & Tradeoffs
-| Option | Pros | Cons | Fit for Repo |
-|--------|------|------|--------------|
-| A      | ...  | ...  | High         |
-| B      | ...  | ...  | Medium       |
+## Options Considered
 
-## 4. Recommendation
-**Selected Path**: Option A.
-**Rationale**: ...
+### Option A: <Name>
+- **Pros**: ...
+- **Cons**: ...
+- **Evidence**: `[path:Lx-Ly](path#Lx-Ly)`
+- **Pattern fit**: matches/conflicts with existing pattern at `<path>`
 
-## 5. Scope Updates Needed
-- Update `Scopes/Product/...` (traces, evidence, diagrams)
-- Update `Scopes/GRAPH.md` edges
-- Create/update ADR if needed
+### Option B: <Name>
+- **Pros**: ...
+- **Cons**: ...
+- **Evidence**: ...
 
-## 6. Next Steps
-- [ ] Create task file(s)
-- [ ] Create plan (optional)
+## Consequences
+- **Positive**: ...
+- **Negative**: ...
+- **Scopes impact**: which scopes need updating if accepted?
 
-## Audit Checklist
-- [ ] Internal section uses evidence links only
-- [ ] External section uses URL sources only
-- [ ] At least 2 outer scope links
-- [ ] Concrete recommendation with tradeoffs
+## Links
+- **Anchor Scopes**: [Scopes/Product/...](path)
+- **Related ADRs**: ...
+- **External Docs**: ...
+```
 
-## When to Stop (Mandatory)
-- Default budgets: 1-3 anchor scopes, 3-10 code files for internal audit; mark gaps as `[Unknown]`.
-- Internal-only mode (no web needed/available): stop once internal constraints + patterns are documented with evidence.
-- External mode: stop after at most 5 external sources unless the user asks to go broader.
-- Stop once the report has recommendation + options/tradeoffs + explicit scope updates list.
+### Step 4: Recommend
 
-## Blocked Runbook (Mandatory)
-- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes` before external research.
-- No web access: mark External section as `[Blocked]` and proceed with internal-only report.
-- Question too broad: ask one narrowing question; otherwise set `Verdict: Needs Narrowing`.
+State your recommendation clearly with rationale. If the evidence is inconclusive, say so — don't force a recommendation.
+
+---
+
+## Blocked Runbook
+- No clear decision to research: ask for clarification, set `Verdict: Needs Narrowing`.
+- Not enough evidence to compare options: document what you found, set `Verdict: Partial`.
+- Decision depends on product/business context you don't have: recommend the user decide, present the trade-offs.
 
 ## Output Contract
 
-Return <= 20 lines:
+Return <= 15 lines:
 
 ```markdown
 ## RESEARCH
-Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
-Decision: <one sentence recommendation or current best answer>
+Verdict: Proceed | Blocked | Needs Narrowing
+Decision: <one sentence summary of recommendation>
+Options Evaluated: <count>
 Evidence:
-- `Scopes/Research/YYYY-MM-DD-<topic-slug>.md`
+- `[path:Lx-Ly](path#Lx-Ly)` — <key finding>
+Recommendation: <option name> — <one line why>
 Unknowns:
 - <only if blocked/partial>
-Next: <one action; e.g. write ADR or create tasks>
-Artifact: `Scopes/Research/YYYY-MM-DD-<topic-slug>.md`
-```
+Artifact: Scopes/Decisions/ADRs/<date>-<slug>.md
+Next: <one action>
 ```

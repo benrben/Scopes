@@ -39,8 +39,9 @@ The file must contain:
 
 ## Output Contract
 
-Return <= 15 lines:
+Return BOTH a summary AND a JSON receipt.
 
+### Summary (<= 15 lines):
 ```
 ## SUMMARY
 Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
@@ -53,6 +54,20 @@ Next: <one recommended next action>
 Artifact: `Scopes/Work/Notes/summary-YYYY-MM-DD-<topic>.md`
 ```
 
+### JSON Receipt (mandatory):
+```json
+{
+  "slice_target": "<topic summarized>",
+  "status": "complete | partial",
+  "artifact": "Scopes/Work/Notes/summary-YYYY-MM-DD-<topic>.md",
+  "goals_count": 0,
+  "unknowns_count": 0,
+  "verdict": "Proceed | Needs Narrowing"
+}
+```
+
 ## Rules
 - Do not dump history or tool output.
 - Prefer concrete, noun-phrase bullets over prose.
+- The summary file MUST be self-contained enough for a new session to resume work from it without reading the original conversation.
+

@@ -1,160 +1,193 @@
 ---
 name: planning-refactor
-description: Plans safe, incremental refactors (green-to-green) with verification gates and explicit Scopes evidence/trace maintenance. Use when the user wants to refactor, restructure, or reorganize code while preserving behavior.
+description: Plans safe, incremental refactors using mechanical risk assessment. Conditional plan depth based on test coverage, blast radius, and file movements. Integrates scope_rename_guard.py for file moves.
 model: inherit
 ---
 
-# Planning a Refactor
+# Planning Refactor — Mechanical Risk Assessment
 
-**You are the Safety Engineer.** Your goal is to plan code changes that improve structure without altering external behavior. Refactoring is dangerous — your strict plans mitigate risk through **incremental phases** and **verification gates**, while keeping Scope documentation perfectly synced.
+You plan safe, incremental refactors guided by mechanical risk signals — not judgment calls. Every refactor plan is "green-to-green": the code must pass its verification signal before AND after every step.
 
 ## When to use this skill
-Use when the user wants to refactor safely without changing external behavior.
+Use when you need to restructure code without changing behavior: extracting modules, renaming, moving files, simplifying abstractions, reducing duplication.
 
 ## Prerequisites
-Requires a Scopes-enabled repo and a repeatable verification signal (tests/scripts).
+- `Scopes/` exists with at least `INDEX.md`, `GRAPH.md`, and anchor scope for the refactor target.
+- If Scopes are missing, recommend `/sync` first.
+- Read `skills/_shared/SCOPES_PROTOCOL.md`.
 
 ## Mission Start
-**You MUST read the shared protocol before proceeding.** Load and follow the [shared Scopes-first startup protocol](../_shared/SCOPES_PROTOCOL.md) (located at `skills/_shared/SCOPES_PROTOCOL.md`).
-
-## Kickoff (Ask After Scope Startup)
-Ask the user one simple question:
-- "What are we refactoring (exact module/area), and what behaviors must stay identical?"
-
-## Scope Connections
-- **Upstream inputs**: `Scopes/Work/Bugs/**`, `Scopes/Work/Tasks/**`, capability scopes under `Scopes/Product/**`
-- **Downstream outputs**: Refactor plan (`Scopes/Work/Refactors/**`), follow-on tasks via `writing-tasks`
-- **Typical next command**: `developing-tdd` to execute the plan safely.
-- **Scope artifacts often impacted**: `Scopes/Product/**`, `Scopes/GRAPH.md`, `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`
-
-## Agent Orchestration
-
-Default: when the refactor spans multiple modules/areas, spawn one `scope-navigator` per area and/or one `code-architect` per area in parallel; use single agents for narrow scope (1-3 scopes).
-
-### Phase 1: Navigation (before Deconstruct)
-**Spawn `scope-navigator`:**
-> Find the scopes covering "{refactor target module/area}". Map dependency edges and downstream dependents that could break. Return NAV.
-
-**Handle output:** Use the returned scope paths as your anchor scopes. Their Rules/Traces become your refactor invariants.
-
-### Phase 2: Architecture (after Diagnose, before Develop)
-**Spawn `code-architect`:**
-> Using anchor scopes: {paths from Phase 1} and invariants: {snapshotted rules/traces}. Design a phased refactor plan for: "{refactor target}". Each phase must end green. Return Blueprint.
-
-**Handle output:** The blueprint's phases and file plan feed directly into the Execution Phases of the refactor plan.
+Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
+Load `skills/_shared/SLICE_CONTRACT.md` for delegation rules.
 
 ---
 
-## Scopes-first Navigation
-1. **Treat the Scope as the contract**: snapshot the scope's Rules/Traces as refactor invariants.
-2. **Lock invariants**: Add characterization tests if coverage is weak.
-3. **Plan for link-rot**: Any move/rename must include a step to update evidence links + trace line numbers.
-4. **Graph-aware sequencing**: Use `Scopes/GRAPH.md` to plan safer order of operations.
-5. **Rollback plan (mandatory when risky)**: If you touch public interfaces or move/rename files, include a rollback strategy (revert path, compatibility layer, or feature flag).
+## Workflow: Risk-Driven Refactor Planning
 
-## Refactor Safety Model
-```mermaid
-flowchart TD
-  Contract["Snapshot Contract"] --> Lock["Phase 0: Characterization Tests"]
-  Lock --> Steps["Incremental Phases: Green-to-Green"]
-  Steps --> Docs["Update Evidence Links + Traces + Diagrams"]
-  Docs --> Graph["Update GRAPH.md edges if needed"]
+### Step 0: Mechanical Risk Profile (deterministic, < 3 min)
+
+Gather four signals mechanically — no judgment calls:
+
+**Signal 1: Blast Radius** (from GRAPH.md)
+```bash
+# Count downstream dependents of the refactor target
+grep -c "<target scope name>" Scopes/GRAPH.md
+```
+Result: `blast_radius = <count of downstream scopes>`
+
+**Signal 2: Test Coverage** (from codebase)
+```bash
+# Count test files that import/reference the refactor target
+find . -path "*test*" -o -path "*spec*" -o -path "*__tests__*" | \
+  xargs grep -l "<target module/file>" 2>/dev/null | wc -l
+```
+Result: `coverage = STRONG (>3 test files) | WEAK (1-2) | NONE (0)`
+
+**Signal 3: File Movements**
+Does this refactor involve moving or renaming files? `moves_files = true | false`
+
+**Signal 4: Public API Change**
+Does this refactor change any exported function signatures, endpoint paths, or database schema? `api_change = true | false`
+
+**Risk Profile:**
+```json
+{
+  "blast_radius": 3,
+  "coverage": "STRONG",
+  "moves_files": true,
+  "api_change": false
+}
 ```
 
-## Method (Silent) + Output Contract (Visible)
+---
 
-### 1) Deconstruct (Silent)
-- Identify refactor intent and precise target.
-- Snapshot invariants and traces from capability scopes.
+### Step 1: Conditional Plan Depth (based on risk profile)
 
-### 2) Diagnose (Silent)
-- If coverage weak: include Phase 0 (Characterization Tests).
-- Use `Scopes/GRAPH.md` to identify downstream dependents.
+The risk profile determines how deep the plan needs to be:
 
-### 3) Develop (Silent)
-- Choose strategy (Strangler Fig / Parallel Change / Extract Method/Class).
-- Break into phases where each ends green.
-- Include explicit Scope Maintenance tasks for every move/rename.
-- Include an explicit rollback plan if the refactor changes public interfaces or moves/renames files.
-
-### 4) Deliver (Visible)
-Write refactor plan to `Scopes/Work/Refactors/<YYYY-MM-DD>-<slug>.md`.
-
-## Pattern Conformance (Mandatory)
-
-Before planning any structural change, you MUST discover the project's existing patterns (see [Pattern Discovery](../_shared/SCOPES_PROTOCOL.md)).
-
-1. **During Deconstruct**: Identify which project patterns exist in the refactor target area. Document them as "Pattern Invariants" alongside behavior invariants.
-2. **During Develop**: Ensure the refactored structure preserves or improves alignment with established patterns — never break a convention in the process of restructuring.
-3. **In the Plan output**: Include a "Pattern Alignment" section that lists which patterns are preserved, improved, or need migration.
-4. **If patterns conflict**: The refactor plan should explicitly address the pattern consolidation (e.g., "Migrate from two data access approaches to one").
+| Risk Signal | Plan Consequence |
+|---|---|
+| `coverage == NONE` | **Include Phase 0**: characterization tests MUST be written first |
+| `coverage == WEAK` | **Recommend Phase 0**: characterization tests strongly recommended |
+| `coverage == STRONG` | **Skip Phase 0**: existing tests serve as the behavior contract |
+| `moves_files == true` | **Include scope_rename_guard.py** step with rename map |
+| `moves_files == true` | **Rollback plan is MANDATORY** (auto-included, no judgment call) |
+| `api_change == true` | **Rollback plan is MANDATORY** |
+| `blast_radius > 3` | **Include "strangler fig" phasing** (gradual migration, not big bang) |
+| All signals low | **Lightweight plan**: skip Phase 0, skip rollback, minimal ceremony |
 
 ---
 
-## Rules
-1. **Green-to-Green**: Tests pass at every checkpoint.
-2. **No Logic Changes**: Structural only. Do not mix with feature work.
-3. **Pattern Preservation**: Refactors MUST preserve established project patterns or explicitly plan their migration.
-4. **Scope Updates (MANDATORY)**: Update evidence links, traces, and diagrams after moves/renames.
-5. **Post-move/rename checklist (MANDATORY)**: after any move/rename, run `check_evidence_links.py --broken-only --summary` (or invoke `scope-auditor`) and record results in the plan.
+### Step 2: Generate the Refactor Blueprint
 
-## Refactor Plan Template
-
-**File Path**: `Scopes/Work/Refactors/<YYYY-MM-DD>-<slug>.md`
+Write directly to `Scopes/Work/Refactors/<date>-<slug>.md`:
 
 ```markdown
 # Refactor: <Title>
 
-## 1. The Contract
-**Module**: `src/old_module.ts`
-**Invariants**: ...
-**Evidence**: `[tests/old_module.test.ts](link)`
-**Scope Reference**: `[Scopes/Product/Legacy/Module.md](link)`
+## Links
+- **Anchor Scope**: [<scope>](path.md)
+- **GRAPH.md dependents**: <list from blast radius>
+- **Test coverage**: <STRONG | WEAK | NONE>
+- **DEVELOPER_INFO**: [commands](Scopes/DEVELOPER_INFO.md)
 
-## 2. Strategy: <Pattern Name>
-
-## 3. Rollback Plan (Required for moves/public interfaces)
-- **Revert strategy**: <how to undo quickly (revert commit, restore old entrypoints)>
-- **Compatibility** (if needed): <adapter/shim/feature flag to preserve callers>
-- **Scope recovery**: <how to restore evidence links if rollback happens>
-
-## 4. Execution Phases
-
-### Phase 0: Lockdown (Safety)
-- [ ] Write Characterization Tests
-
-### Phase 1: The Seam
-- [ ] Create interface
-- [ ] **Scope Update**: Add interface to Scope
-
-### Phase 2: New Implementation
-- [ ] Create new module + tests
-
-### Phase 3: The Swap
-- [ ] Update factory/routing
-- [ ] Verify integration tests
-
-### Phase 4: Cleanup
-- [ ] Delete old module
-- [ ] **Scope Maintenance**: Update all evidence links, diagrams, traces, graph edges
+## Risk Profile
+```json
+{ "blast_radius": N, "coverage": "...", "moves_files": bool, "api_change": bool }
 ```
 
-## Audit Checklist
-- [ ] Phase 0 included if coverage is weak
-- [ ] Every phase ends in green test suite
-- [ ] Rollback plan included if refactor moves files or changes public interfaces
-- [ ] All impacted `Scopes/Product/**` evidence links updated after moves/renames
-- [ ] Exactly 2 diagrams remain in each substantial Capability Scope
+## Current State (Code Snapshot)
+- <What the code looks like now, with evidence links>
+- <Key patterns/structures being refactored>
 
-## When to Stop (Mandatory)
-- Stop once phases, verification gates, rollback plan, and scope maintenance steps are complete.
-- Avoid over-phasing: keep it to the minimum number of green-to-green checkpoints.
-- Default caps: 1-3 anchor scopes, 3-7 evidence links, 3-10 code files; mark gaps as `[Unknown]`.
+## Desired State
+- <What the code should look like after refactoring>
+- <Why this is better>
 
-## Blocked Runbook (Mandatory)
-- Missing/empty `Scopes/`: set `Verdict: Needs Sync` and recommend `syncing-scopes`.
-- No runnable verification signal: record exact blocker + suggested command; set `Verdict: Blocked`.
-- Refactor goal is too broad: ask one narrowing question; if not narrowed, set `Verdict: Needs Narrowing`.
+<!-- CONDITIONAL: Include only if coverage == NONE or WEAK -->
+## Phase 0: Characterization Tests
+Before touching production code, capture existing behavior:
+1. Write tests that pass against the current code
+2. These tests ARE the behavior contract
+3. Verify: all new tests pass before proceeding
+
+## Refactor Phases (Green-to-Green)
+### Phase 1: <name> (The Seam)
+- **What**: <describe the structural change>
+- **Verification**: `<test command>` must pass after this phase
+- **Files**: <exact file list>
+- **Pattern**: follow `<existing pattern in the codebase>`
+
+### Phase 2: <name>
+...
+
+<!-- CONDITIONAL: Include only if moves_files == true -->
+## File Movement Plan
+| Old Path | New Path |
+|----------|----------|
+| `src/old/file.ts` | `src/new/file.ts` |
+
+### Rename Guard (Automatic)
+After file movements, run:
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
+  --map '<old_path>:<new_path>,<old2>:<new2>' --repo-root .
+```
+
+### Rename Guard Dry-Run (Preview)
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
+  --map '<rename_map>' --dry-run --repo-root .
+```
+This shows which Scopes links would break and how they'd be fixed.
+
+<!-- CONDITIONAL: Include if moves_files or api_change -->
+## Rollback Plan
+If any phase breaks verification:
+1. `git stash` or `git checkout -- <files>`
+2. Verify tests pass (green baseline)
+3. Re-plan the failing phase with a smaller step
+
+<!-- CONDITIONAL: Include if blast_radius > 3 -->
+## Strangler Fig Strategy
+Instead of a big-bang refactor, introduce the new structure alongside the old:
+1. Create the new module/structure
+2. Redirect callers one at a time
+3. Remove the old code only after all callers are migrated
+4. Each step must be green-to-green
+
+## Scope Maintenance
+After the refactor is complete:
+- Update evidence links in affected scopes
+- If files moved: scope_rename_guard.py updates links
+- If behavior didn't change: only links need updating (not behavioral descriptions)
+
+## Definition of Done
+- [ ] All phases green-to-green
+- [ ] No new test failures
+- [ ] Scope links updated (rename_guard if files moved)
+- [ ] GRAPH.md updated if dependency edges changed
+```
+
+---
+
+### Step 3: Validation Preview (if moves_files)
+
+If the refactor involves file movements, run the rename guard in dry-run mode and include the output in the plan:
+
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
+  --map '<rename_map>' --dry-run --repo-root .
+```
+
+This preview shows the user exactly which Scopes links would break and how they'd be fixed — before any code is changed.
+
+---
+
+## Blocked Runbook
+- No test coverage and characterization tests can't be written: set `Verdict: Blocked`.
+- Target module is too tangled (circular deps): recommend breaking into smaller refactors.
+- Scopes are stale for the target area: recommend `/sync` first, set `Verdict: Needs Sync`.
 
 ## Output Contract
 
@@ -163,11 +196,11 @@ Return <= 20 lines:
 ```markdown
 ## REFACTOR PLAN
 Verdict: Proceed | Blocked | Needs Sync | Needs Narrowing
-Decision: <one sentence summary of the refactor target + strategy>
-Evidence:
-- `Scopes/Work/Refactors/YYYY-MM-DD-<slug>.md`
-Unknowns:
-- <only if blocked/partial>
-Next: <one action; e.g. hand off to writing-tasks or developing-tdd>
-Artifact: `Scopes/Work/Refactors/YYYY-MM-DD-<slug>.md`
+Decision: <one sentence summary>
+Risk Profile: blast_radius=N, coverage=STRONG|WEAK|NONE, moves_files=T/F, api_change=T/F
+Phases: <count>
+Rollback Plan: Included | Not needed
+Rename Guard: Included | Not needed
+Artifact: Scopes/Work/Refactors/<date>-<slug>.md
+Next: /tasks to create task files, or /develop to implement directly
 ```

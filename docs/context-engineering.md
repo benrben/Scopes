@@ -35,11 +35,10 @@ Keep work in the lead thread when:
 ## Parallelization Guidelines
 
 Parallelize subagents when they do not depend on each other:
-- `scope-navigator` + `bug-scanner`
-- `scope-writer` + `scope-auditor`
+- `bug-scanner` + `code-reviewer` (independent scan + review)
 
 Sequence subagents when outputs depend on each other:
-- `scope-navigator` -> `code-explorer` -> `code-architect`
+- `bug-scanner` -> main agent diagnosis (when scan results drive next steps)
 
 ## Summarization Checkpoint Pattern
 
