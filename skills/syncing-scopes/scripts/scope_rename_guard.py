@@ -19,6 +19,8 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from _md_links import parse_link_destination, resolve_repo_relative_path
+
 
 MD_LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 
@@ -63,47 +65,6 @@ def _load_rename_map(arg: str) -> dict[str, str]:
     raise ValueError("rename map must be a JSON object or array")
 
 
-def _parse_dest(dest: str) -> tuple[str, str, str]:
-    raw = dest.strip()
-    if raw.startswith("<") and raw.endswith(">"):
-        raw = raw[1:-1].strip()
-    path_part = raw
-    rest = ""
-    if " " in raw or "\t" in raw:
-        parts = raw.split()
-        path_part = parts[0]
-        rest = " " + " ".join(parts[1:])
-    fragment = ""
-    if "#" in path_part:
-        path_part, fragment = path_part.split("#", 1)
-        fragment = "#" + fragment
-    return path_part, fragment, rest
-
-
-def _resolve_link(repo_root: Path, src_file: Path, link_path: str) -> str | None:
-    raw = link_path.strip().replace("\\", "/")
-    if not raw:
-        return None
-    p = raw
-    if not p:
-        return None
-    if p.startswith(("http://", "https://")):
-        return None
-    if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", p):
-        return None
-    if p.startswith("/"):
-        p = p[1:]
-        resolved = (repo_root / p).resolve()
-    elif p.startswith("./") or p.startswith("../"):
-        resolved = (src_file.parent / p).resolve()
-    else:
-        resolved = (repo_root / _norm_path(p)).resolve()
-    try:
-        return resolved.relative_to(repo_root).as_posix()
-    except Exception:
-        return None
-
-
 def _is_root_style(original_path: str) -> bool:
     s = original_path.strip()
     return s.startswith(("/Scopes/", "Scopes/", "./Scopes/"))
@@ -126,8 +87,10 @@ def _rewrite_links_in_text(
         label = m.group(1)
         dest = m.group(2)
 
-        path_part, fragment, rest = _parse_dest(dest)
-        resolved = _resolve_link(repo_root, src_file, path_part)
+        path_part, fragment, rest = parse_link_destination(dest)
+        resolved = resolve_repo_relative_path(
+            repo_root, src_file, path_part, normalize_bare=_norm_path
+        )
 
         if resolved and resolved in rename_map:
             new_repo_rel = rename_map[resolved]
@@ -167,8 +130,10 @@ def _count_leftover_mapped_links(
 ) -> dict[str, int]:
     counts: dict[str, int] = {}
     for _label, dest in MD_LINK_RE.findall(text):
-        path_part, _fragment, _rest = _parse_dest(dest)
-        resolved = _resolve_link(repo_root, src_file, path_part)
+        path_part, _fragment, _rest = parse_link_destination(dest)
+        resolved = resolve_repo_relative_path(
+            repo_root, src_file, path_part, normalize_bare=_norm_path
+        )
         if resolved and resolved in mapped_old_paths:
             counts[resolved] = counts.get(resolved, 0) + 1
     return counts
@@ -214,6 +179,11 @@ def main() -> int:
         help="Write changes to files (default: dry-run).",
     )
     ap.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview only. Equivalent to the default mode.",
+    )
+    ap.add_argument(
         "--update-plain",
         action="store_true",
         help="Also rewrite exact plain-text occurrences of mapped paths (best-effort).",
@@ -225,6 +195,10 @@ def main() -> int:
     )
     ap.add_argument("--format", choices=["compact", "json"], default="compact")
     args = ap.parse_args()
+
+    if args.apply and args.dry_run:
+        print("error: use either --apply or --dry-run, not both", file=sys.stderr)
+        return 2
 
     repo_root = Path(args.repo_root).resolve()
     scopes_root = repo_root / "Scopes"

@@ -30,6 +30,7 @@ class SliceContract:
     target: str                              # scope file path
     ownership: list[str] = field(default_factory=list)   # files the filler may edit
     priority: str = "medium"                 # high | medium | low
+    wip_slot: str = ""                       # "i of N" for parallel batching (informational)
     context: dict[str, Any] = field(default_factory=dict)
     acceptance: dict[str, str] = field(default_factory=dict)
 
@@ -166,15 +167,25 @@ def build_from_drift(drift_json: dict, repo_root: Path) -> list[SliceContract]:
     tech_stack = _extract_tech_stack_summary(repo_root)
     test_cmd = _extract_test_command(repo_root)
 
-    entries = drift_json if isinstance(drift_json, list) else drift_json.get("entries", drift_json.get("results", []))
+    if isinstance(drift_json, list):
+        entries = drift_json
+    else:
+        entries = (
+            drift_json.get("items")
+            or drift_json.get("entries")
+            or drift_json.get("results")
+            or []
+        )
 
     for entry in entries:
         scope_path = entry.get("scope", entry.get("scope_file", ""))
         if not scope_path:
             continue
 
-        stale = entry.get("stale", entry.get("is_stale", False))
-        priority = "high" if stale else "medium"
+        status = str(entry.get("status", "")).lower()
+        is_problem = status in ("stale", "missing")
+        stale = entry.get("stale", entry.get("is_stale", is_problem))
+        priority = "high" if stale or is_problem else "medium"
 
         # Extract area name from path for entrypoint inference
         parts = Path(scope_path).parts
@@ -193,7 +204,7 @@ def build_from_drift(drift_json: dict, repo_root: Path) -> list[SliceContract]:
             },
             acceptance={
                 "done_when": "All sections filled with evidence or marked [Unknown]. Exactly 2 Mermaid diagrams. Trace table present.",
-                "guard_command": f"python3 skills/syncing-scopes/scripts/drift_detector.py --scope {scope_path}",
+                "guard_command": f'python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --scope {scope_path}',
                 "artifact_required": "JSON receipt with evidence_count, unknowns, graph_edges_found",
             },
         )
@@ -230,7 +241,7 @@ def build_from_skeleton_output(skeleton_json: dict, repo_root: Path) -> list[Sli
             },
             acceptance={
                 "done_when": "All sections filled with evidence or marked [Unknown]. Exactly 2 Mermaid diagrams. Trace table present.",
-                "guard_command": f"python3 skills/syncing-scopes/scripts/drift_detector.py --scope {scope_path}",
+                "guard_command": f'python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --scope {scope_path}',
                 "artifact_required": "JSON receipt with evidence_count, unknowns, graph_edges_found",
             },
         )
@@ -283,7 +294,7 @@ def build_from_repo_inference(repo_root: Path) -> list[SliceContract]:
                 },
                 acceptance={
                     "done_when": "All sections filled with evidence or marked [Unknown]. Exactly 2 Mermaid diagrams.",
-                    "guard_command": "python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only",
+                    "guard_command": 'python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-only',
                     "artifact_required": "JSON receipt with evidence_count, unknowns, graph_edges_found",
                 },
             )
@@ -309,7 +320,7 @@ def build_from_repo_inference(repo_root: Path) -> list[SliceContract]:
                     },
                     acceptance={
                         "done_when": "All sections filled with evidence or marked [Unknown]. Exactly 2 Mermaid diagrams.",
-                        "guard_command": "python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only",
+                        "guard_command": 'python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-only',
                         "artifact_required": "JSON receipt with evidence_count, unknowns, graph_edges_found",
                     },
                 )
@@ -342,10 +353,6 @@ def main() -> int:
     source.add_argument("--infer", action="store_true",
                         help="Infer capability areas from repo structure (for empty Scopes/)")
 
-    ap.add_argument("--tech-stack", metavar="FILE",
-                    help="Override: path to TECH_STACK.md for context")
-    ap.add_argument("--dev-info", metavar="FILE",
-                    help="Override: path to DEVELOPER_INFO.md for test commands")
     ap.add_argument("--limit", type=int, default=0,
                     help="Max number of contracts to produce (0 = no limit)")
 
@@ -373,6 +380,11 @@ def main() -> int:
 
     if args.limit > 0:
         contracts = contracts[:args.limit]
+
+    # Assign WIP slots for parallel batching (informational; orchestrator still chooses batch size)
+    total = len(contracts)
+    for idx, contract in enumerate(contracts):
+        contract.wip_slot = f"{idx + 1} of {total}"
 
     output = {
         "contracts": [c.to_dict() for c in contracts],

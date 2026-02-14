@@ -98,7 +98,7 @@ Set in your `settings.json`:
 
 ### Rules
 
-1. **WIP limits**: max 6 teammates for scope filling, max 3 for reviews, max 2 for implementation slices
+1. **WIP limits**: max 6 teammates for scope filling, max 3 for reviews, max 4 for implementation slices
 2. **Exclusive ownership**: each teammate owns specific files — no overlapping edits
 3. **Slice Contracts**: every teammate gets a pre-built contract (from `slice_contract_builder.py` or manually)
 4. **Wait for completion**: always tell the lead to wait for teammates before proceeding
@@ -138,7 +138,7 @@ If the summary would be long, invoke `context-summarizer` to write a durable not
 │  Break goal into independent behavior slices           │
 │  Each slice = { behavior, inputs, outputs,             │
 │                 acceptance examples, test command }     │
-│  WIP LIMIT: max 2 active slices                        │
+│  WIP LIMIT: max 4 active slices                        │
 │                                                        │
 └────────────────────────────────────────────────────────┘
                           │
@@ -156,7 +156,8 @@ If the summary would be long, invoke `context-summarizer` to write a durable not
 │     IF pass → next phase                               │
 │     IF fail → route back to agent                      │
 │                                                        │
-│  Refactor is auto-triggered if diff > 20 lines.        │
+│  Refactor ALWAYS runs via `code-simplifier`            │
+│  (one per slice, in parallel).                         │
 │                                                        │
 └────────────────────────────────────────────────────────┘
                           │
@@ -311,9 +312,9 @@ If the summary would be long, invoke `context-summarizer` to write a durable not
 
 3. **Artifact-driven chaining.** The output of one skill feeds the next through `## Links` sections, JSON receipts, and session logs — not through re-navigation.
 
-4. **Deterministic triggers, not judgment calls.** `code-simplifier` triggers at >50 lines or >3 files. `code-reviewer` always runs as final gate. Scope sync triggers when scope-linked files are in the diff.
+4. **Deterministic triggers, not judgment calls.** `code-simplifier` ALWAYS runs in the REFACTOR phase. `code-reviewer` always runs as final gate. Scope sync triggers when scope-linked files are in the diff.
 
-5. **WIP limits prevent coordination breakdown.** Max 6 fillers, max 2 behavior slices, max 3 reviewers.
+5. **WIP limits prevent coordination breakdown.** Max 6 fillers, max 4 behavior slices, max 3 reviewers.
 
 6. **Exclusive ownership prevents conflicts.** When using agent teams, no two teammates may edit the same file.
 

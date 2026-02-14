@@ -1,6 +1,6 @@
 ---
 name: syncing-scopes
-description: Generates or updates Scopes documentation from code, tests, config, and schema while maintaining INDEX.md, GRAPH.md, and DEVELOPER_INFO.md with evidence-backed claims. Use when Scopes are missing, stale, or drifted from code reality.
+description: Generates or updates Scopes docs from code/tests/config with evidence-backed claims (INDEX.md, GRAPH.md, DEVELOPER_INFO.md). Use when Scopes are missing, stale, or drifted from code reality. Do NOT use just to answer a question — use querying-scopes.
 model: inherit
 ---
 
@@ -10,6 +10,11 @@ You generate/repair `Scopes/` from observable repo truth. No guessing: missing p
 
 ## When to use this skill
 Use when `Scopes/` is missing, stale, or you suspect scope drift (broken evidence links, outdated traces, missing capability coverage).
+
+## Example prompts
+- "My Scopes docs are stale; update them from the code."
+- "Generate Scopes/ from scratch for this repo."
+- "Fix broken evidence links and refresh INDEX/GRAPH."
 
 ## Prerequisites
 - Read access to the repo code/tests/config.
@@ -26,25 +31,12 @@ For delegation rules, load `skills/_shared/SLICE_CONTRACT.md`.
 
 ## Script Discovery (MANDATORY — do this FIRST)
 
-Before doing ANY work, resolve the scripts root:
-
-```bash
-# Resolve SKILLS_ROOT
-if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -d "$CLAUDE_PLUGIN_ROOT/skills" ]]; then
-  SKILLS_ROOT="$CLAUDE_PLUGIN_ROOT/skills"
-else
-  for d in .claude/skills .cursor/skills .agent/skills skills; do
-    if [[ -d "$d" ]]; then
-      SKILLS_ROOT="$d"
-      break
-    fi
-  done
-fi
-echo "SKILLS_ROOT=$SKILLS_ROOT"
-
-# Verify scripts exist
-ls "$SKILLS_ROOT/syncing-scopes/scripts/"*.py
-```
+Before doing ANY work:
+- Resolve `SKILLS_ROOT` using `skills/_shared/SCRIPT_DISCOVERY.md`.
+- Verify scripts exist:
+  ```bash
+  ls "$SKILLS_ROOT/syncing-scopes/scripts/"*.py
+  ```
 
 If SKILLS_ROOT cannot be resolved or scripts are missing, STOP and tell the user.
 

@@ -1,6 +1,6 @@
 ---
 name: researching-decisions
-description: Researches technical decisions, compares approaches, and documents findings with evidence-backed ADRs (Architecture Decision Records) under Scopes/Decisions/ADRs/.
+description: Researches a technical decision, compares options, and writes an evidence-backed ADR under Scopes/Decisions/ADRs/. Use when you need to choose between approaches. Do NOT use for simple implementation work — use developing-*.
 model: inherit
 ---
 
@@ -11,11 +11,19 @@ You research technical decisions by gathering evidence, comparing approaches, an
 ## When to use this skill
 Use when the user needs to make a technical decision — choosing between approaches, evaluating a library, deciding on architecture, or assessing trade-offs.
 
+## Example prompts
+- "Compare Option A vs B and write an ADR."
+- "What’s the best approach here given our current patterns?"
+- "Research this library choice and document the tradeoffs."
+
 ## Prerequisites
 - Read `skills/_shared/SCOPES_PROTOCOL.md` for Scopes-first startup.
 
 ## Mission Start
 Load `skills/_shared/SCOPES_PROTOCOL.md`.
+
+Resolve `SKILLS_ROOT` using the shared snippet:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
@@ -44,7 +52,7 @@ For each option, gather:
 Sources to check (in order):
 1. Existing codebase patterns (`rg` for similar implementations)
 2. `Scopes/Onboarding/TECH_STACK.md` for current stack constraints
-3. Official documentation (use `search_web` or `read_url_content`)
+3. Official documentation (use your environment’s web-browsing tool if available; otherwise note the blocker and rely on repo evidence/experiments)
 4. Prior ADRs under `Scopes/Decisions/ADRs/` for precedent
 
 ### Step 3: Write the ADR

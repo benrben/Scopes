@@ -1,6 +1,6 @@
 ---
 name: update-skills
-description: Refreshes local Scopes skills from upstream repository. Includes pre-update snapshots, change visibility, and post-update integrity validation to catch broken references.
+description: Refreshes local Scopes skills/agents from an upstream repo with a snapshot, visible diffs, and integrity checks. Use when a referenced skill/script/agent is missing or outdated. Do NOT use if you can’t access the upstream repo/network.
 model: inherit
 ---
 
@@ -10,6 +10,11 @@ You update the local skills, agents, and scripts from the upstream repository. A
 
 ## When to use this skill
 Use when skills, agents, or scripts need to be refreshed from upstream. This could be triggered by the user or detected when a referenced file is missing.
+
+## Example prompts
+- "Update my installed Scopes skills from upstream."
+- "Refresh skills/agents and verify nothing broke."
+- "I’m missing a referenced script; sync from upstream safely."
 
 ## Prerequisites
 - Git installed.
@@ -30,10 +35,10 @@ Capture current state to enable rollback:
 
 ```bash
 # Snapshot current skill versions
-git log -1 --format="%H %s" -- skills/ agents/ commands/ scripts/
+git log -1 --format="%H %s" -- skills/ agents/ .claude-plugin/ docs/ 2>/dev/null || true
 
 # Check for local modifications
-git status --porcelain skills/ agents/ commands/ scripts/
+git status --porcelain skills/ agents/ .claude-plugin/ docs/ 2>/dev/null || true
 ```
 
 **IF local modifications exist:**
@@ -52,8 +57,18 @@ git clone --depth 1 <upstream_repo_url> /tmp/scopes-upstream
 # Sync with change visibility
 rsync -avh --itemize-changes /tmp/scopes-upstream/skills/ ./skills/
 rsync -avh --itemize-changes /tmp/scopes-upstream/agents/ ./agents/
-rsync -avh --itemize-changes /tmp/scopes-upstream/commands/ ./commands/
-rsync -avh --itemize-changes /tmp/scopes-upstream/scripts/ ./scripts/ 2>/dev/null || true
+if [ -d /tmp/scopes-upstream/.claude-plugin/ ]; then
+  rsync -avh --itemize-changes /tmp/scopes-upstream/.claude-plugin/ ./.claude-plugin/
+fi
+if [ -d /tmp/scopes-upstream/docs/ ]; then
+  rsync -avh --itemize-changes /tmp/scopes-upstream/docs/ ./docs/
+fi
+if [ -d /tmp/scopes-upstream/commands/ ]; then
+  rsync -avh --itemize-changes /tmp/scopes-upstream/commands/ ./commands/
+fi
+if [ -d /tmp/scopes-upstream/scripts/ ]; then
+  rsync -avh --itemize-changes /tmp/scopes-upstream/scripts/ ./scripts/
+fi
 
 # Clean up
 rm -rf /tmp/scopes-upstream
@@ -115,6 +130,10 @@ Files Deleted: <list>
 Integrity Check: PASS | FAIL (<broken references>)
 Local Mods Preserved: <list of skipped files, if any>
 ```
+
+Also write a durable update note:
+- Preferred (when installed into a project that has Scopes): `Scopes/Work/Notes/skill-update-$(date +%F).md`
+- Fallback (when Scopes/ doesn’t exist): `docs/skill-update-$(date +%F).md` (or print the report if docs/ is missing)
 
 ---
 

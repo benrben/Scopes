@@ -37,6 +37,15 @@ GRAPH_ROW_RE = re.compile(
     r"^\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|\s*([^|]+)\|", re.MULTILINE
 )
 
+TOKEN_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_/-]{1,}")
+
+STOP_WORDS = {
+    "the", "and", "for", "with", "that", "this", "from", "into", "what", "where",
+    "when", "which", "how", "why", "are", "was", "were", "have", "has", "had",
+    "your", "their", "our", "about", "after", "before", "under", "over", "flow",
+    "scope", "scopes", "code", "task", "plan", "file",
+}
+
 # ---------------------------------------------------------------------------
 # Data
 # ---------------------------------------------------------------------------
@@ -65,6 +74,77 @@ class GraphEdge:
 # ---------------------------------------------------------------------------
 # Parsing
 # ---------------------------------------------------------------------------
+
+
+def _tokenize(text: str) -> set[str]:
+    return {
+        t.lower()
+        for t in TOKEN_RE.findall(text)
+        if len(t) > 1 and t.lower() not in STOP_WORDS
+    }
+
+
+def _score_entry(entry: ScopeEntry, terms: set[str]) -> int:
+    if not terms:
+        return 0
+    hay = {
+        "title": _tokenize(entry.title),
+        "area": _tokenize(entry.area),
+        "path": _tokenize(entry.path),
+        "summary": _tokenize(entry.summary),
+    }
+    score = 0
+    for term in terms:
+        if term in hay["title"]:
+            score += 8
+        if term in hay["area"]:
+            score += 6
+        if term in hay["path"]:
+            score += 4
+        if term in hay["summary"]:
+            score += 3
+    return score
+
+
+def _rank_entries(entries: list[ScopeEntry], query: str) -> list[ScopeEntry]:
+    terms = _tokenize(query)
+    if not terms:
+        return entries
+    scored = [(entry, _score_entry(entry, terms)) for entry in entries]
+    scored = [row for row in scored if row[1] > 0]
+    scored.sort(key=lambda row: (-row[1], row[0].area, row[0].title))
+    return [row[0] for row in scored] or entries
+
+
+def _artifact_scope_paths_and_query(artifact_path: Path, repo_root: Path) -> tuple[set[str], str]:
+    text = artifact_path.read_text(encoding="utf-8", errors="replace")
+    scope_paths: set[str] = set()
+
+    for _label, dest in SCOPE_LINK_RE.findall(text):
+        raw = dest.strip()
+        if not raw:
+            continue
+        path_part = raw.split()[0].split("#", 1)[0]
+        if path_part.startswith("<") and path_part.endswith(">"):
+            path_part = path_part[1:-1].strip()
+        if not path_part or path_part.startswith(("http://", "https://")):
+            continue
+
+        if path_part.startswith("/"):
+            resolved = (repo_root / path_part[1:]).resolve()
+        elif path_part.startswith("./") or path_part.startswith("../"):
+            resolved = (artifact_path.parent / path_part).resolve()
+        else:
+            resolved = (repo_root / path_part).resolve()
+
+        try:
+            rel = resolved.relative_to(repo_root).as_posix()
+        except Exception:
+            continue
+        if rel.startswith("Scopes/Product/") and rel.endswith(".md"):
+            scope_paths.add(rel)
+
+    return scope_paths, text
 
 def _parse_scope(
     path: Path, repo_root: Path, want_summary: bool, want_evidence: bool,
@@ -212,6 +292,8 @@ def main() -> int:
             "  scope_map.py --depth 1                         # areas only (~5 lines)\n"
             "  scope_map.py --depth 2 --area Auth             # Auth scopes + links\n"
             "  scope_map.py --scope Scopes/Product/Auth/Login.md  # single scope\n"
+            "  scope_map.py --query \"login auth\" --limit 5 --format json\n"
+            "  scope_map.py --from-artifact Scopes/Work/Tasks/x.md --depth 3 --only tree\n"
             "  scope_map.py --only stats                      # 1-line counts\n"
             "  scope_map.py --depth 3 --area Auth --format json   # full JSON\n"
         ),
@@ -224,6 +306,12 @@ def main() -> int:
     )
     ap.add_argument("--area", action="append", default=[], help="Whitelist area(s). Repeatable.")
     ap.add_argument("--scope", default="", help="Single scope path (relative to repo).")
+    ap.add_argument("--query", default="", help="Keyword query used to rank matching scopes.")
+    ap.add_argument(
+        "--from-artifact",
+        default="",
+        help="Route from a task/plan/research artifact by following linked Scopes/Product paths.",
+    )
     ap.add_argument("--only", choices=["tree", "graph", "stats"], default="", help="One section only.")
     ap.add_argument("--format", choices=["compact", "json"], default="compact", help="Output format.")
     ap.add_argument("--no-summary", action="store_true", help="Omit summaries even at depth 3.")
@@ -237,8 +325,9 @@ def main() -> int:
         print("error: Scopes/Product/ not found", file=sys.stderr)
         return 2
 
-    want_summary = not args.no_summary and args.depth >= 3
-    want_evidence = not args.no_evidence and args.depth >= 3
+    use_query_mode = bool(args.query.strip() or args.from_artifact.strip())
+    want_summary = (not args.no_summary and args.depth >= 3) or use_query_mode
+    want_evidence = (not args.no_evidence and args.depth >= 3) or use_query_mode
 
     # Collect
     entries: list[ScopeEntry] = []
@@ -253,6 +342,21 @@ def main() -> int:
         if args.scope and e.path != args.scope:
             continue
         entries.append(e)
+
+    query_text = args.query.strip()
+    if args.from_artifact:
+        artifact = Path(args.from_artifact)
+        artifact_path = artifact if artifact.is_absolute() else (repo_root / artifact)
+        if not artifact_path.exists():
+            print(f"error: artifact not found: {args.from_artifact}", file=sys.stderr)
+            return 2
+        linked_scopes, artifact_text = _artifact_scope_paths_and_query(artifact_path, repo_root)
+        if linked_scopes:
+            entries = [e for e in entries if e.path in linked_scopes]
+        query_text = f"{artifact_text} {query_text}".strip()
+
+    if query_text:
+        entries = _rank_entries(entries, query_text)
 
     if args.limit > 0:
         entries = entries[: args.limit]

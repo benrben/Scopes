@@ -17,6 +17,7 @@ import re
 import subprocess
 import sys
 from dataclasses import asdict, dataclass
+from datetime import date as Date
 from pathlib import Path
 
 EVIDENCE_RE = re.compile(
@@ -33,9 +34,12 @@ class DriftItem:
     status: str       # ok | stale | missing | untracked
 
 
-def _git_date(repo_root: Path, rel: str) -> str:
+def _git_date(repo_root: Path, rel: str, cache: dict[str, str]) -> str:
     """Last commit date for *rel* (YYYY-MM-DD), or a status tag."""
+    if rel in cache:
+        return cache[rel]
     if not (repo_root / rel).exists():
+        cache[rel] = "missing"
         return "missing"
     try:
         r = subprocess.run(
@@ -43,8 +47,11 @@ def _git_date(repo_root: Path, rel: str) -> str:
             cwd=str(repo_root), capture_output=True, text=True, timeout=10,
         )
         d = r.stdout.strip()
-        return d[:10] if d else "untracked"
+        out = d[:10] if d else "untracked"
+        cache[rel] = out
+        return out
     except Exception:
+        cache[rel] = "unknown"
         return "unknown"
 
 
@@ -77,7 +84,11 @@ def main() -> int:
     ap.add_argument("--repo-root", default=".", help="Repo root (default: .).")
     ap.add_argument("--scope", default="", help="Check single scope file.")
     ap.add_argument("--area", default="", help="Check all scopes in area (e.g. Auth).")
-    ap.add_argument("--all", action="store_true", help="Check all scopes.")
+    ap.add_argument(
+        "--all",
+        action="store_true",
+        help="Check all scopes (default when no --scope/--area is provided).",
+    )
     ap.add_argument("--stale-only", action="store_true", help="Show only stale/missing items.")
     ap.add_argument(
         "--days", type=int, default=0,
@@ -93,7 +104,10 @@ def main() -> int:
         print("error: Scopes/Product/ not found", file=sys.stderr)
         return 2
 
-    # Resolve scope file list
+    # Resolve scope file list (default to --all for convenience)
+    if not args.scope and not args.area and not args.all:
+        args.all = True
+
     files: list[Path] = []
     if args.scope:
         p = repo_root / args.scope
@@ -112,24 +126,23 @@ def main() -> int:
             )
     elif args.all:
         files = sorted(scopes_dir.rglob("*.md"))
-    else:
-        print("error: specify --scope, --area, or --all", file=sys.stderr)
-        return 2
 
     if not files:
         print("No scope files found.", file=sys.stderr)
         return 1
 
+    date_cache: dict[str, str] = {}
+
     items: list[DriftItem] = []
     for sf in files:
         srel = sf.relative_to(repo_root).as_posix()
-        sdate = _git_date(repo_root, srel)
+        sdate = _git_date(repo_root, srel, date_cache)
         try:
             text = sf.read_text(encoding="utf-8", errors="replace")
         except Exception:
             continue
         for tgt in _evidence_targets(text):
-            cdate = _git_date(repo_root, tgt)
+            cdate = _git_date(repo_root, tgt, date_cache)
             if cdate == "missing":
                 status = "missing"
             elif cdate in ("untracked", "unknown") or sdate in ("untracked", "unknown"):
@@ -138,8 +151,7 @@ def main() -> int:
                 status = "stale"
                 if args.days > 0:
                     try:
-                        from datetime import date as D
-                        if (D.fromisoformat(cdate) - D.fromisoformat(sdate)).days < args.days:
+                        if (Date.fromisoformat(cdate) - Date.fromisoformat(sdate)).days < args.days:
                             status = "ok"
                     except Exception:
                         pass

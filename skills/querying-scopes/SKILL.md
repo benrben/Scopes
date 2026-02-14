@@ -1,6 +1,6 @@
 ---
 name: querying-scopes
-description: Answers questions by instantly routing through scope_map.py, verifying with code evidence, and auto-delegating diagnostic questions to bug-scanner. Includes freshness notes on every scope-backed answer.
+description: Answers “how/where/what depends on what/what’s broken” questions by routing through scope_map.py and verifying with code evidence. Use when you need understanding or diagnosis (not code changes). Do NOT use for implementation — use developing-*.
 model: inherit
 ---
 
@@ -11,12 +11,20 @@ You answer questions about the codebase by navigating Scopes documentation and v
 ## When to use this skill
 Use when the user asks questions about how the codebase works, what depends on what, what's broken, or what they should read.
 
+## Example prompts
+- "Where is X configured?"
+- "How does login work end-to-end?"
+- "Why is X broken? What should I check first?"
+
 ## Prerequisites
 - `Scopes/` exists with at least `INDEX.md`.
 - If Scopes are completely missing, recommend `/sync` first.
 
 ## Mission Start
 Load `skills/_shared/SCOPES_PROTOCOL.md`.
+
+Resolve `SKILLS_ROOT` using the shared snippet:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ---
 

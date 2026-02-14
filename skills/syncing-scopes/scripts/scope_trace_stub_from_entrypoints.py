@@ -20,6 +20,8 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
+from _md_links import parse_link_destination, resolve_repo_relative_path
+
 
 H2_RE = re.compile(r"^##\s+(.+?)\s*$", re.MULTILINE)
 BULLET_LABEL_RE = re.compile(r"^\s*-\s*\*\*(.+?)\*\*", re.IGNORECASE)
@@ -60,50 +62,6 @@ def _layer_from_label(label: str) -> str:
         return "UI"
     return "Unspecified"
 
-
-def _parse_link_destination(dest: str) -> tuple[str, str, str]:
-    """Return (path_part, fragment, rest_after_path) from a markdown destination."""
-    raw = dest.strip()
-    if raw.startswith("<") and raw.endswith(">"):
-        raw = raw[1:-1].strip()
-
-    # Handle optional title: (path "title") or (path 'title')
-    path_part = raw
-    rest = ""
-    if " " in raw or "\t" in raw:
-        parts = raw.split()
-        path_part = parts[0]
-        rest = " " + " ".join(parts[1:])
-
-    fragment = ""
-    if "#" in path_part:
-        path_part, fragment = path_part.split("#", 1)
-        fragment = "#" + fragment
-    return path_part, fragment, rest
-
-
-def _resolve_repo_relative_path(repo_root: Path, scope_file: Path, link_path: str) -> str | None:
-    """Resolve a markdown link path to a repo-relative posix path (best-effort)."""
-    p = link_path.strip().replace("\\", "/")
-    if not p:
-        return None
-    if p.startswith(("http://", "https://")):
-        return None
-    if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", p):  # mailto:, vscode:, etc
-        return None
-    if p.startswith("/"):
-        p = p[1:]
-
-    if p.startswith("./") or p.startswith("../"):
-        resolved = (scope_file.parent / p).resolve()
-    else:
-        resolved = (repo_root / p).resolve()
-    try:
-        return resolved.relative_to(repo_root).as_posix()
-    except Exception:
-        return None
-
-
 def _entrypoint_links(
     repo_root: Path,
     scope_file: Path,
@@ -122,11 +80,11 @@ def _entrypoint_links(
             current_label = lm.group(1).strip()
 
         for text, dest in MD_LINK_RE.findall(line):
-            path_part, fragment, rest = _parse_link_destination(dest)
+            path_part, fragment, rest = parse_link_destination(dest)
             if require_line_anchors and not LINE_ANCHOR_RE.search(fragment):
                 continue
 
-            resolved = _resolve_repo_relative_path(repo_root, scope_file, path_part)
+            resolved = resolve_repo_relative_path(repo_root, scope_file, path_part)
             if resolved and resolved.startswith("Scopes/") and resolved.endswith(".md"):
                 continue
 

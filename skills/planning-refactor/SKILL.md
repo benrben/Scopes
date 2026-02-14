@@ -1,6 +1,6 @@
 ---
 name: planning-refactor
-description: Plans safe, incremental refactors using mechanical risk assessment. Conditional plan depth based on test coverage, blast radius, and file movements. Integrates scope_rename_guard.py for file moves.
+description: Plans safe, step-by-step refactors using mechanical risk checks (blast radius, coverage, file moves). Use when you want to restructure code without changing behavior. Do NOT use for feature work — use developing-*.
 model: inherit
 ---
 
@@ -11,6 +11,11 @@ You plan safe, incremental refactors guided by mechanical risk signals — not j
 ## When to use this skill
 Use when you need to restructure code without changing behavior: extracting modules, renaming, moving files, simplifying abstractions, reducing duplication.
 
+## Example prompts
+- "Plan a safe refactor of module X without behavior changes."
+- "I need to move files; plan it so Scopes links don’t break."
+- "Make a green-to-green refactor plan with rollback steps."
+
 ## Prerequisites
 - `Scopes/` exists with at least `INDEX.md`, `GRAPH.md`, and anchor scope for the refactor target.
 - If Scopes are missing, recommend `/sync` first.
@@ -19,6 +24,9 @@ Use when you need to restructure code without changing behavior: extracting modu
 ## Mission Start
 Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
 Load `skills/_shared/SLICE_CONTRACT.md` for delegation rules.
+
+Resolve `SKILLS_ROOT` using the shared snippet:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
@@ -131,13 +139,13 @@ Before touching production code, capture existing behavior:
 After file movements, run:
 ```bash
 python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
-  --map '<old_path>:<new_path>,<old2>:<new2>' --repo-root .
+  --map '{"Scopes/Product/Old.md":"Scopes/Product/New.md"}' --apply --repo-root .
 ```
 
-### Rename Guard Dry-Run (Preview)
+### Rename Guard Preview (Dry-Run)
 ```bash
 python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
-  --map '<rename_map>' --dry-run --repo-root .
+  --map '{"Scopes/Product/Old.md":"Scopes/Product/New.md"}' --repo-root .
 ```
 This shows which Scopes links would break and how they'd be fixed.
 
@@ -177,7 +185,7 @@ If the refactor involves file movements, run the rename guard in dry-run mode an
 
 ```bash
 python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
-  --map '<rename_map>' --dry-run --repo-root .
+  --map '{"Scopes/Product/Old.md":"Scopes/Product/New.md"}' --repo-root .
 ```
 
 This preview shows the user exactly which Scopes links would break and how they'd be fixed — before any code is changed.

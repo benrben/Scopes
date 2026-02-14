@@ -70,7 +70,7 @@ This wastes tokens, creates context duplication, and risks coordination failures
 | Task Type | Max Concurrent |
 |---|---|
 | Scope filling (`scope-filler`) | 6 teammates/subagents |
-| Behavior implementation (TDD/Verified) | 2 slices |
+| Behavior implementation (TDD/Verified) | 4 slices |
 | Code review | 3 reviewers (different focus areas) |
 | Bug scanning | 3 scanners (different areas) |
 | Planning/Research | No limit (read-only, no conflicts) |

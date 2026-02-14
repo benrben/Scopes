@@ -27,12 +27,11 @@ Every behavior slice follows the same 3-Amigos micro-swarm:
    - TDD: write failing test(s) for the acceptance examples
    - Verified: identify existing verification signal (test suite, script, curl, REPL, build)
 3. **GREEN**: implement minimal code so verification passes.
-4. **REFACTOR** (auto-triggered):
-   - IF `git diff --stat` shows >50 lines or >3 files → spawn `code-simplifier` (subagent with Slice Contract)
-   - ELSE → lead does inline cleanup
+4. **REFACTOR** (required):
+   - ALWAYS spawn `code-simplifier` (subagent with Slice Contract) for each slice
 5. **ARTIFACT** (mandatory, every slice):
    - Append to session log: decision, tradeoffs, follow-ups, files changed
-6. **Repeat** for next slice (WIP limit: max 2 active slices)
+6. **Repeat** for next slice (WIP limit: max 4 active slices)
 
 ## Pattern Conformance (Mandatory)
 
@@ -81,7 +80,7 @@ These artifacts enable session resumption and prevent context loss between conve
 
 | Trigger | Threshold | Action |
 |---|---|---|
-| `code-simplifier` | diff > 50 lines OR > 3 files | Spawn as subagent with Slice Contract |
+| `code-simplifier` | ALWAYS after each slice GREEN | Spawn as subagent with Slice Contract |
 | `code-reviewer` | ALWAYS after all slices | Spawn as subagent |
 | Scope update | scope-linked files in git diff | Update affected scopes |
 | `context-summarizer` | > 10 tool calls in session | Spawn to write durable note |

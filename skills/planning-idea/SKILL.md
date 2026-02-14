@@ -1,6 +1,6 @@
 ---
 name: planning-idea
-description: Transforms a raw idea, feature request, or problem statement into a concrete implementation blueprint with risk analysis, pattern references, and sequenced TODO scopes. Write-as-you-go — no silent phases.
+description: Transforms a raw idea into a concrete implementation blueprint with risk analysis, pattern references, and sequenced TODO scopes. Use when you want a clear plan before tasks/implementation. Do NOT use when you just need to implement a small change — use developing-*.
 model: inherit
 ---
 
@@ -11,6 +11,11 @@ You transform raw ideas into concrete implementation blueprints. You produce the
 ## When to use this skill
 Use when the user has an idea that needs to be turned into a plan before implementation.
 
+## Example prompts
+- "Turn this idea into a safe implementation plan."
+- "Write a blueprint with risks, patterns, and verification."
+- "Plan first, then hand off to writing-tasks."
+
 ## Prerequisites
 - `Scopes/` exists (at least `INDEX.md` and some `Product/**` files).
 - If Scopes are missing, recommend `/sync` first.
@@ -20,13 +25,16 @@ Use when the user has an idea that needs to be turned into a plan before impleme
 Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
 Load `skills/_shared/SLICE_CONTRACT.md` for delegation rules.
 
+Resolve `SKILLS_ROOT` using the shared snippet:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
+
 ---
 
 ## Workflow: Artifact-First Planning
 
 ### Step 0: Rapid Context Bundle (parallel, < 3 min)
 
-Run these in parallel — they're independent:
+These checks are independent. If your environment supports true parallel subagents/teammates, you can run them in parallel (spawn all in one batch). Otherwise, run them one after the other.
 
 **Lane A: Route to anchor scopes**
 ```bash

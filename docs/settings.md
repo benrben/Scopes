@@ -31,17 +31,5 @@ If you maintain your own fork or pinned reference, prefer configuring your insta
 - For Claude Code plugin installs, prefer script paths rooted at `$CLAUDE_PLUGIN_ROOT` so commands work regardless of where the plugin is installed.
 - For manual installs (Cursor/other assistants), use the skills directory in the target project (for example `.cursor/skills/` or `.claude/skills/`).
 
-If you need a single variable for helper scripts (used in skill/agent docs), resolve `SKILLS_ROOT` like this:
-
-```bash
-if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -d "$CLAUDE_PLUGIN_ROOT/skills" ]]; then
-  SKILLS_ROOT="$CLAUDE_PLUGIN_ROOT/skills"
-else
-  for d in .claude/skills .cursor/skills .agent/skills skills; do
-    if [[ -d "$d" ]]; then
-      SKILLS_ROOT="$d"
-      break
-    fi
-  done
-fi
-```
+If you need a single variable for helper scripts (used in skill/agent docs), use:
+- `skills/_shared/SCRIPT_DISCOVERY.md`

@@ -44,6 +44,8 @@ Instead of dumping code into context, the assistant loads **one anchor Scope**, 
 
 Want the deeper explanation? Start here: [docs/why-scopes.md](docs/why-scopes.md)
 Want “set-and-forget” maintenance workflows? See: [docs/automations.md](docs/automations.md)
+Need authoring constraints and output schemas? See: [docs/contracts.md](docs/contracts.md) and [docs/context-engineering.md](docs/context-engineering.md)
+Need local plugin setup details? See: [docs/settings.md](docs/settings.md)
 
 ![Intent to Code](docs/assets/intent_to_code.png)
 ```mermaid
@@ -93,6 +95,8 @@ This repository is the **source package** for Scopes skills/agents you install i
 - `developing-verified` — implement changes with sandbox verification (no new test files)
 - `developing-tdd` — implement changes via strict TDD (failing test first)
 - `planning-refactor` — plan safe green-to-green refactors with scope link maintenance
+- `researching-decisions` — compare options and write evidence-backed ADRs
+- `update-skills` — refresh installed Scopes skills/agents from upstream with validation
 
 ### Shared infrastructure
 
@@ -193,10 +197,7 @@ Scopes provides:
 
 That's less context, higher signal, and dramatically less room for guessing.
 
-When you already have a task/plan/research artifact, route from it instead of searching from scratch:
-```bash
-python3 skills/syncing-scopes/scripts/scope_map.py --from-artifact Scopes/Work/Tasks/<file>.md --depth 3 --only tree
-```
+When you already have a task/plan/research artifact, open it and follow its `## Links` section (anchor scopes, pattern references, verification commands). Use `scope_map.py --query "<keywords>"` if you need a fast route to related scopes.
 
 ---
 

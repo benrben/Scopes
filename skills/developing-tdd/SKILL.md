@@ -1,6 +1,6 @@
 ---
 name: developing-tdd
-description: Implements features via parallel TDD — agents write failing tests simultaneously, orchestrator gates each phase (RED → GREEN → REFACTOR) by running the test suite, and routes failures back to the relevant agents.
+description: Implements features via parallel TDD (RED → GREEN → REFACTOR) with test-suite gates and slice contracts. Use when you need to add new tests to lock in behavior. Do NOT use when you can verify with existing tests only — use developing-verified.
 model: inherit
 ---
 
@@ -10,6 +10,11 @@ You implement features using strict TDD with **parallel agents per phase**. The 
 
 ## When to use this skill
 Use when you need to implement something with new tests. If no new tests are needed (just running existing ones), use `developing-verified` instead.
+
+## Example prompts
+- "Add a regression test for this bug and fix it."
+- "Implement feature X with strict TDD."
+- "Write failing tests first, then make them pass."
 
 ## Prerequisites
 - The repo has a working test runner (from `Scopes/DEVELOPER_INFO.md` or detectable).
@@ -22,6 +27,9 @@ Load and follow the shared protocols:
 - `skills/_shared/DEVELOPING_PROTOCOL.md` (verification-first loops)
 - `skills/_shared/SLICE_CONTRACT.md` (delegation format)
 - `skills/_shared/SESSION_LOG_TEMPLATES.md` (session log structure for TDD)
+
+Resolve `SKILLS_ROOT` using the shared snippet:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
@@ -104,7 +112,7 @@ Break the user's goal into **independent behavior slices**. Each slice becomes a
 - Each slice has **exclusive file ownership**: test file + impl files
 - If two slices need to edit the same file → merge them into one slice
 
-**Max slices per batch:** 6 (queue the rest for the next cycle)
+**Max slices per batch:** 4 (queue the rest for the next cycle)
 
 ---
 
@@ -180,7 +188,7 @@ Wait for ALL agents to complete.
 
 ⚠️ **Spawn ALL simplifier agents in a SINGLE tool-call batch.**
 
-For each slice with diff > 20 lines OR touching > 2 files, spawn a `code-simplifier` subagent:
+For each slice, spawn a `code-simplifier` subagent:
 
 > **SLICE CONTRACT — REFACTOR PHASE**
 > - **Target**: Simplify the code changed in slice: {slice_id}
@@ -188,8 +196,6 @@ For each slice with diff > 20 lines OR touching > 2 files, spawn a `code-simplif
 > - **Guard command**: `{test_command}` — run after every simplification
 > - **Acceptance**: All tests still pass. Code is cleaner. No behavior change.
 > - **Artifact**: Return JSON: `{ "slice_id": "...", "files_simplified": N, "lines_removed": N, "guard_result": "PASS" }`
-
-For slices with small diffs (≤ 20 lines, ≤ 2 files): orchestrator does inline cleanup (rename variables, extract helpers). This is the ONLY time the orchestrator edits code directly.
 
 Wait for ALL agents to complete.
 
@@ -281,7 +287,7 @@ If the repo has no test framework or test files:
 1. Each slice has a declared `test_file` and `impl_files` list
 2. No two slices may share ANY file in their ownership lists
 3. If a shared file is needed → merge those slices into one
-4. The orchestrator ONLY runs tests and reads output — it does NOT edit owned files (except small inline refactors for tiny diffs)
+4. The orchestrator ONLY runs tests and reads output — it does NOT edit owned files
 5. Agents may NOT edit files outside their ownership list
 
 ---

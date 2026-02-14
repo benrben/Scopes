@@ -33,18 +33,8 @@ When invoked WITHOUT a Slice Contract, accept a general area or health check req
 - If `Scopes/` is missing, stop early and set `Verdict: Needs Sync`.
 
 ### Helper Script Paths
-```bash
-if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -d "$CLAUDE_PLUGIN_ROOT/skills" ]]; then
-  SKILLS_ROOT="$CLAUDE_PLUGIN_ROOT/skills"
-else
-  for d in .claude/skills .cursor/skills .agent/skills skills; do
-    if [[ -d "$d" ]]; then
-      SKILLS_ROOT="$d"
-      break
-    fi
-  done
-fi
-```
+Resolve `SKILLS_ROOT` using:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ### Step 1: Static Hotspot Scan
 
@@ -164,7 +154,7 @@ Confidence: High | Medium | Low
 - Every finding MUST include evidence-link format `[path:Lx-Ly](path#Lx-Ly)`.
 - Always include scope context in the saved report (which scope covers the affected file).
 - Saved report MUST include a `## Links` section with 1-3 anchor scopes under `Scopes/Product/**` (or `(none)` if blocked).
-- Use `--skip-comments` to reduce false positives.
+- Reduce false positives by excluding comments/noise in search patterns where possible.
 - Prioritize HIGH severity findings over MED/LOW.
 - Always persist the full report to `Scopes/Work/Bugs/`.
 - Noise control: if many findings are essentially the same pattern, collapse to the top 5 examples plus a count.

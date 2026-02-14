@@ -1,6 +1,6 @@
 ---
 name: writing-tasks
-description: Converts plans, ideas, or user intent into engineer-ready task files with acceptance examples, pattern references, and dependency chains. Reads upstream plan artifacts directly to avoid redundant scope navigation.
+description: Converts a plan or intent into engineer-ready task files with acceptance examples, pattern references, and dependencies. Use when you want clean task breakdowns (often after planning-*). Do NOT use for implementation — use developing-*.
 model: inherit
 ---
 
@@ -11,6 +11,11 @@ You convert plans, ideas, or freestanding requests into engineer-ready task file
 ## When to use this skill
 Use when you need to break down work into task files that developers (or `developing-tdd` / `developing-verified`) can pick up and implement.
 
+## Example prompts
+- "Turn this plan into task files with acceptance examples."
+- "Break this into 1–4 hour tasks with dependencies."
+- "Generate parallelizable tasks where possible."
+
 ## Prerequisites
 - Ideally: an upstream plan artifact at `Scopes/Work/Planning/**` or `Scopes/Work/Refactors/**`.
 - Minimum: a clear user intent plus `Scopes/` documentation.
@@ -19,6 +24,9 @@ Use when you need to break down work into task files that developers (or `develo
 ## Mission Start
 Load `skills/_shared/SCOPES_PROTOCOL.md`.
 Load `skills/_shared/SLICE_CONTRACT.md` for understanding how tasks become slice contracts during development.
+
+Resolve `SKILLS_ROOT` using the shared snippet:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ---
 

@@ -50,19 +50,8 @@ If the syncing-scopes helper scripts are available, you may use:
 - `python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_trace_stub_from_entrypoints.py" --scope <scope.md> --apply`
 - `python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" --depth 3 --format json` (only if it helps find real entrypoints)
 
-If `SKILLS_ROOT` is not set, compute it like this:
-```bash
-if [[ -n "${CLAUDE_PLUGIN_ROOT:-}" && -d "$CLAUDE_PLUGIN_ROOT/skills" ]]; then
-  SKILLS_ROOT="$CLAUDE_PLUGIN_ROOT/skills"
-else
-  for d in .claude/skills .cursor/skills .agent/skills skills; do
-    if [[ -d "$d" ]]; then
-      SKILLS_ROOT="$d"
-      break
-    fi
-  done
-fi
-```
+Resolve `SKILLS_ROOT` using:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ## Workflow (Do This)
 1. **Read your Slice Contract** — use the `likely_entrypoints` and `tech_stack_summary` to orient yourself immediately. Do NOT navigate INDEX.md or GRAPH.md from scratch.

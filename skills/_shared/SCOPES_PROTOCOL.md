@@ -86,8 +86,8 @@ When a skill specifies Agent Orchestration phases:
 4. **Sequential phases**: Wait for the previous phase's outputs before spawning the next.
 5. **Prompt templates**: Fill in `{placeholders}` with concrete values from the current session (user's goal, scope paths, file lists, etc.).
 6. **Handle outputs**: Follow the "Handle output" instruction for each phase before proceeding to the next method step.
-7. **Deterministic triggers (not judgment calls)**: Agent invocations should be triggered by mechanical thresholds, not subjective decisions. Examples: `code-simplifier` auto-triggers at >50 lines or >3 files changed; `code-reviewer` ALWAYS runs as final gate.
-8. **WIP limits**: Never run more than 6 subagents/teammates for scope-filling, 2 concurrent behavior slices for development, or 3 concurrent reviewers. Queue the rest.
+7. **Deterministic triggers (not judgment calls)**: Agent invocations should be triggered by mechanical thresholds, not subjective decisions. Examples: `code-simplifier` ALWAYS runs in the REFACTOR phase; `code-reviewer` ALWAYS runs as final gate.
+8. **WIP limits**: Never run more than 6 subagents/teammates for scope-filling, 4 concurrent behavior slices for development, or 3 concurrent reviewers. Queue the rest.
 
 ### Parallelism Rules
 

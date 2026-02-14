@@ -1,6 +1,6 @@
 ---
 name: developing-verified
-description: Implements features via parallel agents verified against existing test suites, scripts, REPL, or curl. Does NOT write new tests — orchestrator runs verification between each phase and routes failures back to agents.
+description: Implements changes in parallel using existing verification signals (tests/scripts/build/REPL), gated between phases with slice contracts. Use when you can verify without writing new tests. Do NOT use when you must add new tests — use developing-tdd.
 model: inherit
 ---
 
@@ -10,6 +10,11 @@ You implement features using **existing verification signals** (test suites, scr
 
 ## When to use this skill
 Use when existing tests, scripts, or commands can verify your changes. If you need to write new tests, use `developing-tdd` instead.
+
+## Example prompts
+- "Make this change and verify with the existing test suite."
+- "Fix this behavior without adding new tests; pick the best verification command."
+- "Implement these slices in parallel and gate with verification."
 
 ## Prerequisites
 - The repo has at least one runnable verification signal (tests, build, scripts, REPL).
@@ -21,6 +26,9 @@ Load and follow the shared protocols:
 - `skills/_shared/DEVELOPING_PROTOCOL.md` (verification-first loops)
 - `skills/_shared/SLICE_CONTRACT.md` (delegation format)
 - `skills/_shared/SESSION_LOG_TEMPLATES.md` (session log structure for Verified)
+
+Resolve `SKILLS_ROOT` using the shared snippet:
+- `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
@@ -105,7 +113,7 @@ Break the user's goal into **independent behavior slices**:
 - Slices MUST be **independent** — no shared file edits across slices
 - Each slice has **exclusive file ownership**
 - If two slices need to edit the same file → merge them into one slice
-- Max **6 slices** per batch (queue the rest)
+- Max **4 slices** per batch (queue the rest)
 
 ---
 
@@ -147,7 +155,7 @@ Wait for ALL agents to complete.
 
 ⚠️ **Spawn ALL simplifier agents in a SINGLE tool-call batch.**
 
-For each slice with diff > 20 lines OR touching > 2 files, spawn `code-simplifier`:
+For each slice, spawn `code-simplifier`:
 
 > **SLICE CONTRACT — REFACTOR PHASE**
 > - **Target**: Simplify the code changed in slice: {slice_id}
@@ -155,8 +163,6 @@ For each slice with diff > 20 lines OR touching > 2 files, spawn `code-simplifie
 > - **Guard command**: `{verification_command}` — run after every simplification
 > - **Acceptance**: Verification still passes. Code is cleaner. No behavior change.
 > - **Artifact**: Return JSON: `{ "slice_id": "...", "files_simplified": N, "lines_removed": N }`
-
-For slices with small diffs: orchestrator does inline cleanup.
 
 Wait for ALL agents to complete.
 
@@ -217,7 +223,7 @@ Per slice entry:
 1. Each slice has a declared `impl_files` list
 2. No two slices may share ANY file
 3. If a shared file is needed → merge those slices
-4. The orchestrator ONLY runs verification — it does NOT edit owned files (except small inline refactors)
+4. The orchestrator ONLY runs verification — it does NOT edit owned files
 5. Agents may NOT edit files outside their ownership list
 
 ---
