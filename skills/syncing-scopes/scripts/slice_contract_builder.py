@@ -38,6 +38,13 @@ class SliceContract:
         return asdict(self)
 
 
+def _slug(text: str) -> str:
+    cleaned = re.sub(r"[^A-Za-z0-9 _-]+", "", text).strip()
+    cleaned = re.sub(r"\s+", "-", cleaned)
+    cleaned = re.sub(r"-{2,}", "-", cleaned)
+    return cleaned or "Unnamed"
+
+
 def _read_file_safe(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="replace")
@@ -161,6 +168,12 @@ def _infer_entrypoints_for_area(area_name: str, repo_root: Path) -> list[str]:
     return candidates
 
 
+def _is_micro_scope(scope_path: str) -> bool:
+    parts = Path(scope_path).parts
+    # Scopes/Product/<Area>/<Capability>/<Micro>.md
+    return len(parts) >= 5
+
+
 def build_from_drift(drift_json: dict, repo_root: Path) -> list[SliceContract]:
     """Build slice contracts from drift_detector.py JSON output."""
     contracts = []
@@ -191,6 +204,14 @@ def build_from_drift(drift_json: dict, repo_root: Path) -> list[SliceContract]:
         parts = Path(scope_path).parts
         area_name = parts[-2] if len(parts) >= 2 else parts[-1].replace(".md", "")
 
+        done_when = (
+            "All sections filled with evidence or marked [Unknown]. Trace table present. "
+            "Diagrams updated to match evidence (keep required diagrams; delete optional ones that don't apply)."
+            if _is_micro_scope(scope_path)
+            else "Overview scope updated with evidence-backed entrypoints + child-scope links. "
+                 "Diagrams updated (core flow + dependencies + sequence; delete optional state/data if not applicable)."
+        )
+
         contract = SliceContract(
             target=scope_path,
             ownership=[scope_path],
@@ -203,7 +224,7 @@ def build_from_drift(drift_json: dict, repo_root: Path) -> list[SliceContract]:
                 "related_scopes": _find_related_scopes(scope_path, repo_root),
             },
             acceptance={
-                "done_when": "All sections filled with evidence or marked [Unknown]. Exactly 2 Mermaid diagrams. Trace table present.",
+                "done_when": done_when,
                 "guard_command": f'python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --scope {scope_path}',
                 "artifact_required": "JSON receipt with evidence_count, unknowns, graph_edges_found",
             },
@@ -228,6 +249,14 @@ def build_from_skeleton_output(skeleton_json: dict, repo_root: Path) -> list[Sli
         parts = Path(scope_path).parts
         area_name = parts[-2] if len(parts) >= 2 else parts[-1].replace(".md", "")
 
+        done_when = (
+            "All sections filled with evidence or marked [Unknown]. Trace table present. "
+            "Diagrams updated to match evidence (keep required diagrams; delete optional ones that don't apply)."
+            if _is_micro_scope(scope_path)
+            else "Overview scope updated with evidence-backed entrypoints + child-scope links. "
+                 "Diagrams updated (core flow + dependencies + sequence; delete optional state/data if not applicable)."
+        )
+
         contract = SliceContract(
             target=scope_path,
             ownership=[scope_path],
@@ -240,7 +269,7 @@ def build_from_skeleton_output(skeleton_json: dict, repo_root: Path) -> list[Sli
                 "related_scopes": _find_related_scopes(scope_path, repo_root),
             },
             acceptance={
-                "done_when": "All sections filled with evidence or marked [Unknown]. Exactly 2 Mermaid diagrams. Trace table present.",
+                "done_when": done_when,
                 "guard_command": f'python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --scope {scope_path}',
                 "artifact_required": "JSON receipt with evidence_count, unknowns, graph_edges_found",
             },
@@ -280,7 +309,8 @@ def build_from_repo_inference(repo_root: Path) -> list[SliceContract]:
         if not subdirs:
             # The src dir itself is a capability
             area_name = src_dir.name.replace("_", " ").replace("-", " ").title()
-            scope_path = f"Scopes/Product/{area_name}/{area_name}.md"
+            area_slug = _slug(area_name)
+            scope_path = f"Scopes/Product/{area_slug}/{area_slug}.md"
             contract = SliceContract(
                 target=scope_path,
                 ownership=[scope_path],
@@ -293,7 +323,7 @@ def build_from_repo_inference(repo_root: Path) -> list[SliceContract]:
                     "related_scopes": [],
                 },
                 acceptance={
-                    "done_when": "All sections filled with evidence or marked [Unknown]. Exactly 2 Mermaid diagrams.",
+                    "done_when": "All sections filled with evidence or marked [Unknown]. Diagrams updated as needed (no placeholders).",
                     "guard_command": 'python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-only',
                     "artifact_required": "JSON receipt with evidence_count, unknowns, graph_edges_found",
                 },
@@ -301,8 +331,11 @@ def build_from_repo_inference(repo_root: Path) -> list[SliceContract]:
             contracts.append(contract)
         else:
             for subdir in subdirs[:10]:  # cap at 10 areas
-                area_name = subdir.name.replace("_", " ").replace("-", " ").title()
-                scope_path = f"Scopes/Product/{src_dir.name.title()}/{area_name}.md"
+                parent_area_name = src_dir.name.replace("_", " ").replace("-", " ").title()
+                parent_area_slug = _slug(parent_area_name)
+                cap_name = subdir.name.replace("_", " ").replace("-", " ").title()
+                cap_slug = _slug(cap_name)
+                scope_path = f"Scopes/Product/{parent_area_slug}/{cap_slug}.md"
                 entrypoints = []
                 for ext in ["*.py", "*.ts", "*.tsx", "*.js", "*.jsx", "*.go", "*.rs"]:
                     entrypoints.extend(str(f.relative_to(repo_root)) for f in sorted(subdir.glob(ext))[:2])
@@ -319,7 +352,7 @@ def build_from_repo_inference(repo_root: Path) -> list[SliceContract]:
                         "related_scopes": [],
                     },
                     acceptance={
-                        "done_when": "All sections filled with evidence or marked [Unknown]. Exactly 2 Mermaid diagrams.",
+                        "done_when": "All sections filled with evidence or marked [Unknown]. Diagrams updated as needed (no placeholders).",
                         "guard_command": 'python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-only',
                         "artifact_required": "JSON receipt with evidence_count, unknowns, graph_edges_found",
                     },

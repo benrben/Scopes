@@ -1,119 +1,37 @@
 <TEMPLATES>
 
-### 1) CAPABILITY SCOPE FILE TEMPLATE
-**Filename (preferred):** `Scopes/Product/<Area>/<Capability>.md`
-**Alternate:** `Scopes/Product/<Area>/<Capability>/<SubCapability>.md`
-**Rule:** Follow this structure exactly.
+### 1) CAPABILITY OVERVIEW SCOPE TEMPLATE (Router)
+**File:** `Scopes/Product/<Area>/<Capability>.md`
+**Rule:** Keep this file short; push details into micro scopes. Diagrams are encouraged: include all diagrams that are actually useful, and delete the ones that don’t apply.
 
-```markdown
-# <Scope / Capability Name>
+````markdown
+# <Capability Name>
 
 ## Summary
-1–3 sentences describing what this scope does today based on observable code.
+1–3 sentences describing what this capability does today based on observable code.
 
 ## Where to Start in Code
 Fast entry points for future readers (no speculation; evidence-backed):
 - **Primary entrypoint(s)**: `[path:Lx-Ly](path#Lx-Ly)`
 - **Key orchestrator/service**: `[path:Lx-Ly](path#Lx-Ly)`
-- **Data layer / schema** (if applicable): `[path:Lx-Ly](path#Lx-Ly)`
-- **UI surface** (if applicable): `[path:Lx-Ly](path#Lx-Ly)`
+- **Core data model / schema** (if applicable): `[path:Lx-Ly](path#Lx-Ly)`
+- **Primary UI surface** (if applicable): `[path:Lx-Ly](path#Lx-Ly)`
 
-## Tech Stack & Skills (Evidence-backed)
-What this capability uses, how it’s used, and (only if explicitly documented) why.
+## Sub-Scopes (Smaller, Linked)
+These files split the capability into smaller slices. Fill them first, then keep this file as the router.
+- [<Capability>: <Micro Scope>](./<Capability>/<MicroScope>.md) — one-line purpose
 
-### Libraries / Tools Used
-List the major libraries/tools directly involved in this capability.
-Each bullet MUST include evidence.
-- **<Library/Tool>**: what it does here
-  - **Evidence**: `[path:Lx-Ly](path#Lx-Ly)` (dependency/config/usage)
-  - **Docs**: <external link> — one-line reason it’s relevant
+## What Happens (High-Level)
+Inputs → Processing → Outputs.
 
-### How It’s Used (Integration Points)
-Point to the concrete integration points for this capability.
-- **<integration point>**: `[path:Lx-Ly](path#Lx-Ly)` — one-line description
+## Diagrams (Mermaid)
+Rules:
+- Diagrams must match observable repo evidence (entrypoints, traces, wiring). No vibes.
+- Never leave placeholder diagrams unchanged. Update them or delete them.
+- Minimum for router scopes: Core Flow + Dependencies + one Sequence (happy path).
+- Add State/Data diagrams only when the capability is stateful or has stable persisted entities.
 
-### Skills You Need (Grounded in the above)
-List the practical skills/concepts an engineer needs to work on this capability, grounded in the libraries/tools actually used here.
-- **<Skill>**: tied to <Library/Tool> or <integration point>
-
-### Why This (Only if explicitly documented)
-- **Rationale**: <reason or `[Unknown]`>
-  - **Evidence** (if available): `[path:Lx-Ly](path#Lx-Ly)` (ADR/README/etc)
-
-### References
-External docs you relied on while interpreting this capability (link + one-line reason).
-
-## Users & Triggers
-Who initiates this? (User action, API client, cron, system event)
-
-## What Happens
-High-level flow: Inputs → Processing → Outputs.
-
-## Rules & Constraints
-System-enforced rules (validation, permissions, limits).
-Each bullet MUST have evidence.
-
-## Edge Cases & Failure Outcomes
-Error states, retries, fallbacks, empty states.
-
-## Use Cases
-List 3–7 concrete “user stories” that are true today, each linked to evidence.
-- **Use case**: <short>
-  - **Trigger**: <what starts it>
-  - **Outcome**: <what user/system gets>
-  - **Evidence**: `[path:Lx-Ly](path#Lx-Ly)`
-
-<!-- SECTION: UI SURFACE (Only for UI Pages/Components) -->
-<!-- Remove this section if backend-only -->
-## UI Surface
-
-### Page Identity
-- **Route / Path**: `[path:Lx-Ly](path#Lx-Ly)`
-- **User Intent**: What is the primary goal here?
-
-### UI Mock (Low-fidelity, Evidence-backed)
-Construct an ASCII representation of the UI structure found in code.
-Do NOT invent visual details; only include what the JSX/HTML literally shows.
-
-```
-+------------------------------------------+
-| Header (Evidence: [link])                |
-+------------------------------------------+
-| [ Input Field ] [ Button ]               |
-| (Evidence: [link])                       |
-+------------------------------------------+
-```
-
-### Interactions & State
-- **Navigation**: buttons/links → destinations `[evidence]`
-- **Validation**: form rules in code `[evidence]`
-- **States**: loading / error / empty `[evidence]`
-
-### Data Binding
-- **Displayed Data**: fields shown `[evidence]`
-- **Actions**: handlers invoked `[evidence]`
-<!-- END UI SECTION -->
-
-## Scope Navigation
-- **Parent**: [Name](relative_path.md)
-- **Children**
-  - [Name](relative_path.md)
-
-## Scope Network (Cross-links)
-Every relationship must include evidence, or be placed under “Possible Relations”.
-
-- **Depends on / Uses (Upstream)**
-  - [Scope Name](path.md) — utilized via `[path:Lx-Ly](path#Lx-Ly)`
-- **Used by / Downstream**
-  - [Scope Name](path.md) — consumed via `[path:Lx-Ly](path#Lx-Ly)`
-- **Shares Data / Topics**
-  - [Scope Name](path.md) — shared via `[path:Lx-Ly](path#Lx-Ly)`
-- **Possible Relations (Low Confidence)**
-  - [Scope Name](path.md) — explain why evidence is missing and what file you would expect to prove it.
-
-## Diagrams (Mermaid inline) — exactly 2
-
-### Diagram 1: Core Flow
+### Core Flow (High-Level)
 ```mermaid
 flowchart TD
   A[Entry] --> B[Validation]
@@ -122,7 +40,7 @@ flowchart TD
   D --> E[Output]
 ```
 
-### Diagram 2: Ecosystem / Dependencies
+### Dependencies / Boundaries
 ```mermaid
 flowchart TD
   Actor["User / API / Cron"] --> ThisScope["This Scope"]
@@ -131,36 +49,151 @@ flowchart TD
   ThisScope --> OtherScopes["Other Scopes"]
 ```
 
+### Happy Path Sequence (One End-to-End Trace)
+```mermaid
+sequenceDiagram
+  participant Actor as Actor
+  participant Entry as Entry Point
+  participant Svc as Service / Use Case
+  participant Data as DB / Cache / External
+  Actor->>Entry: Trigger / request
+  Entry->>Svc: Call w/ validated input
+  Svc->>Data: Read/Write
+  Data-->>Svc: Result
+  Svc-->>Entry: Output
+  Entry-->>Actor: Response / UI update
+```
+
+### State Model (If Stateful; Otherwise Delete)
+```mermaid
+stateDiagram-v2
+  [*] --> Idle
+  Idle --> Processing: trigger
+  Processing --> Success: ok
+  Processing --> Failed: error
+  Success --> Idle
+  Failed --> Idle
+```
+
+### Data Model (If Applicable; Otherwise Delete)
+```mermaid
+erDiagram
+  ENTITY_A ||--o{ ENTITY_B : relates_to
+  ENTITY_A {
+    string id
+  }
+  ENTITY_B {
+    string id
+  }
+```
+
+## Scope Network (Cross-links)
+- **Children (micro scopes)**
+  - [<Capability>: <Micro Scope>](./<Capability>/<MicroScope>.md)
+- **Depends on / Uses (Upstream)**
+  - [Scope Name](path.md) — evidence: `[path:Lx-Ly](path#Lx-Ly)`
+- **Used by / Downstream**
+  - [Scope Name](path.md) — evidence: `[path:Lx-Ly](path#Lx-Ly)`
+
+## Confidence & Notes
+- **Confidence**: High / Medium / Low
+- **Notes**: ambiguity, missing links, or conflicts.
+````
+
+---
+
+### 1b) MICRO SCOPE FILE TEMPLATE (Small Slice)
+**File:** `Scopes/Product/<Area>/<Capability>/<MicroScope>.md`
+**Rule:** Keep micro scopes lean. Prefer diagrams over prose when they add clarity.
+
+````markdown
+# <Capability>: <Micro Scope>
+
+## Summary
+1–2 sentences describing this slice of behavior.
+
+## Where to Start in Code
+- **Primary entrypoint(s)**: `[path:Lx-Ly](path#Lx-Ly)`
+- **Key file(s)**: `[path:Lx-Ly](path#Lx-Ly)`
+
+## Diagrams (Mermaid)
+Rules:
+- Diagrams must match the trace + evidence links below.
+- Delete any diagram that doesn’t apply. Never leave placeholders unchanged.
+
+### Slice Flow
+```mermaid
+flowchart TD
+  A[Entry] --> B[Validation]
+  B --> C["Slice Logic"]
+  C --> D["Data / Side Effects"]
+  D --> E[Output]
+```
+
+### Slice Sequence (From One Real Trace)
+```mermaid
+sequenceDiagram
+  participant Caller as Caller
+  participant Entry as Entry Point
+  participant Logic as Slice Logic
+  participant Data as DB / Cache / External
+  Caller->>Entry: Trigger / request
+  Entry->>Logic: Call
+  Logic->>Data: Read/Write
+  Data-->>Logic: Result
+  Logic-->>Entry: Output
+  Entry-->>Caller: Response / UI update
+```
+
+### State Model (Optional; Delete If Not Stateful)
+```mermaid
+stateDiagram-v2
+  [*] --> Idle
+  Idle --> Running: trigger
+  Running --> Done: ok
+  Running --> Failed: error
+  Done --> Idle
+  Failed --> Idle
+```
+
 ## Usage & Flow Traces
-Provide at least one end-to-end trace per major path.
+At least one end-to-end trace for this micro-scope.
 
 | Step | Layer | Evidence Link | Description |
 |------|-------|---------------|-------------|
-| 1 | Entry | [path:L10-L15](path#L10-L15) | Trigger received |
-| 2 | Validation | [path:L20-L40](path#L20-L40) | Validation/authorization |
-| 3 | Logic | [path:L41-L80](path#L41-L80) | Core processing |
-| 4 | Data | [path:L81-L110](path#L81-L110) | Storage/network side effects |
-| 5 | Output | [path:L111-L140](path#L111-L140) | Response/UI update |
+| 1 | Entry | [path:Lx-Ly](path#Lx-Ly) | Trigger received |
+| 2 | Validation | [path:Lx-Ly](path#Lx-Ly) | Validation/authorization |
+| 3 | Logic | [path:Lx-Ly](path#Lx-Ly) | Core processing |
+| 4 | Data | [path:Lx-Ly](path#Lx-Ly) | Storage/network side effects |
+| 5 | Output | [path:Lx-Ly](path#Lx-Ly) | Response/UI update |
 
-## Code Evidence (Consolidated)
+## Rules & Failure Outcomes
+- **Rule / constraint**: <rule>
+  - **Evidence**: `[path:Lx-Ly](path#Lx-Ly)`
+- **Failure mode**: <failure>
+  - **Evidence**: `[path:Lx-Ly](path#Lx-Ly)`
+
+## Evidence Index
 | Evidence Link | What it proves |
 |--------------|-----------------|
 | [path:Lx-Ly](path#Lx-Ly) | <claim proven> |
 
-## Deep Dives / Sub-capabilities
-Merge tiny scopes here. Mini-format: Summary → Trace → Evidence.
+## Links
+- **Parent**: [<Capability>](../<Capability>.md)
+- **Siblings**
+  - [<Capability>: <Sibling>](./<Sibling>.md)
 
 ## Confidence & Notes
 - **Confidence**: High / Medium / Low
-- **Notes**: Any ambiguity, missing links, or conflicting signals.
-```
+- **Notes**: ambiguity, missing links, or conflicts.
+````
 
 ---
 
 ### 2) INDEX.md TEMPLATE
 **File:** `Scopes/INDEX.md`
 
-```markdown
+````markdown
 # Project Scopes (System Encyclopedia)
 
 ## Purpose
@@ -179,14 +212,14 @@ What this documentation set is and how to use it.
 - [Glossary](./GLOSSARY.md) (optional)
 - [Tech Stack](./Onboarding/TECH_STACK.md)
 - [Code Style & Engineering Standards](./Work/Standards/WRITE_STYLE.md)
-```
+````
 
 ---
 
 ### 3) GRAPH.md TEMPLATE
 **File:** `Scopes/GRAPH.md`
 
-```markdown
+````markdown
 # Scope Network Graph
 
 ## Legend
@@ -205,7 +238,7 @@ flowchart TD
 | From | To | Relationship | Evidence Link |
 |------|----|--------------|---------------|
 | A | B | Calls API | [path:L10-L20](path#L10-L20) |
-```
+````
 
 
 ---
@@ -213,7 +246,7 @@ flowchart TD
 ### 4) DEVELOPER_INFO.md TEMPLATE
 **File:** `Scopes/DEVELOPER_INFO.md`
 
-```markdown
+````markdown
 # Developer Info & Commands
 
 ## Quick Start
@@ -237,14 +270,14 @@ flowchart TD
 ## References
 List external documentation you relied on while writing/verifying the commands above.
 Keep entries short: link + one-line reason.
-```
+````
 
 ---
 
 ### 5) WRITE_STYLE.md TEMPLATE
 **File:** `Scopes/Work/Standards/WRITE_STYLE.md`
 
-```markdown
+````markdown
 # Code Style & Engineering Standards
 
 ## Why this exists
@@ -269,6 +302,7 @@ Keep engineering changes consistent, maintainable, and easy to review. Reduce du
 - **Composition over inheritance**: keep building blocks small and swappable.
 - **Functional core, imperative shell**: isolate IO (DB/network/files) from pure business logic.
 - **Adapter at boundaries**: map external shapes (HTTP/DB/vendor) into internal domain models once.
+- **GoF vocabulary (optional)**: use consistent pattern names + tradeoffs (`skills/_shared/GOF_PATTERNS.md`) when it helps communication; don’t cargo-cult patterns.
 - **Small interfaces**: depend on minimal contracts; avoid “god” services/modules.
 - **Consistency beats cleverness**: prefer the repo’s established patterns over novelty.
 
@@ -286,7 +320,7 @@ Add short sections only when an Area has stable conventions that are repeatedly 
 
 ## References
 List external documentation used to justify standards in this file (link + one-line reason).
-```
+````
 
 </TEMPLATES>
 
@@ -295,7 +329,7 @@ List external documentation used to justify standards in this file (link + one-l
 ### 6) TECH_STACK.md TEMPLATE
 **File:** `Scopes/Onboarding/TECH_STACK.md`
 
-```markdown
+````markdown
 # Tech Stack Inventory
 
 ## Summary
@@ -323,5 +357,4 @@ Only include rationale if explicitly documented; otherwise mark `[Unknown]`.
 
 ## References
 External docs used while writing this inventory (link + one-line reason).
-```
-
+````

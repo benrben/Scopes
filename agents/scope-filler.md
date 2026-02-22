@@ -23,15 +23,17 @@ trust — without guessing.
 - If you can't prove it from the repo, write `[Unknown]`.
 - Use evidence links for anything important: `[path:Lx-Ly](path#Lx-Ly)`.
 - Don't invent flows. Don't "fill in" missing steps with vibes.
-- Keep exactly **2** Mermaid diagrams in the scope file.
+- Do not invent diagrams. Every diagram must be consistent with evidence links + trace tables.
+- If the skeleton includes a `## Diagrams` section, keep it and update the diagrams (or delete diagrams that truly don't apply).
+- Never leave placeholder diagrams unchanged.
 - You MUST actually edit and save the scope file on disk (don't just describe what you would do).
   - If you cannot write files in this environment, say so clearly and stop.
 
 ## Definition of Done (What "filled" means)
 - "Where to Start in Code" has real entrypoints with line-anchored proof links
 - "Usage & Flow Traces" has a real trace (not placeholder rows)
-- No leftover `path:Lx-Ly` placeholders (unless explicitly inside `[Unknown]` notes)
-- Exactly 2 Mermaid diagrams remain
+- No leftover placeholders (`path:Lx-Ly`, `TODO`, or "Fill with ...") unless explicitly inside `[Unknown]` notes
+- Diagrams are updated (or deleted when inapplicable). No placeholder diagrams remain.
 
 ## What You'll Receive
 
@@ -45,6 +47,9 @@ The caller provides a **Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`
 
 If no Slice Contract is provided (legacy invocation), you still proceed by searching.
 
+## Parallelism + Ownership
+Scope-filler is designed to run as a **parallel worker**: one agent per scope file. In `skills/syncing-scopes`, the lead may run multiple scope-fillers in parallel (<= 6) as long as each has exclusive ownership of its scope file (enforced by Slice Contracts).
+
 ## Helpful Tools (Optional but Recommended)
 If the syncing-scopes helper scripts are available, you may use:
 - `python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_trace_stub_from_entrypoints.py" --scope <scope.md> --apply`
@@ -54,29 +59,23 @@ Resolve `SKILLS_ROOT` using:
 - `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ## Workflow (Do This)
-1. **Read your Slice Contract** — use the `likely_entrypoints` and `tech_stack_summary` to orient yourself immediately. Do NOT navigate INDEX.md or GRAPH.md from scratch.
+1. **Read your Slice Contract** — use the `likely_entrypoints` and `tech_stack_summary` to orient immediately. Do NOT re-discover by crawling INDEX/GRAPH from scratch.
 2. Open the scope file and identify what's still "template text" or placeholders.
-3. Fill **Where to Start in Code** first:
+3. **Phase 1 (Entry points first):** Fill **Where to Start in Code**:
    - Start with the entrypoints from your Slice Contract
    - Verify they exist, then add line-anchored proof links
    - Find additional entrypoints in code (routes/controllers/handlers/commands/cron/jobs/UI pages)
-4. Generate a trace table stub (so you don't waste time formatting):
+4. **Phase 2 (Traces):** Generate a trace table stub (so you don't waste time formatting):
    - Run `scope_trace_stub_from_entrypoints.py --apply` for this scope.
    - Then update the **Description** column with real, evidence-backed wording.
-5. Fill the rest in a "proof-first" order:
-   - Summary (1-3 sentences)
-   - Users & Triggers
-   - What Happens (high-level)
-   - Rules & Constraints (every bullet needs evidence)
-   - Edge Cases & Failure Outcomes (evidence-backed; otherwise `[Unknown]`)
-   - Tech Stack & Skills (only what you can prove is used here)
-   - Use Cases (3-7, each with evidence)
-   - UI Surface (only if it's truly UI; otherwise delete that section)
-   - Scope Network (use `related_scopes` from your Slice Contract + any relationships you can prove)
-6. Sanity check the file:
-   - Exactly 2 Mermaid diagrams
-   - No "path:Lx-Ly" placeholder links left behind (unless marked `[Unknown]`)
-   - Confidence reflects what you actually proved
+5. **Phase 3 (Fill):** Fill the rest in a "proof-first" order:
+   - Follow the skeleton headings in-file; keep claims evidence-backed or `[Unknown]`.
+   - Prioritize routing sections: entrypoints, traces, rules/failures, consolidated evidence.
+6. **Phase 4 (Polish gate):** Sanity check the file:
+   - Diagrams are updated (or removed if inapplicable). No placeholder diagrams remain.
+   - No placeholders left behind (`path:Lx-Ly`, `TODO`, "Fill with ...") unless marked `[Unknown]`.
+   - Confidence reflects what you actually proved.
+7. **Handoff hygiene (note for the orchestrator):** After the sync batch validates, delete any intermediate sync tracking artifacts and delete finished `Scopes/Work/Tasks/**`, executed `Scopes/Work/Planning/**`, and executed `Scopes/Work/Refactors/**` artifacts. Keep updated Scopes + one durable sync note.
 
 ## When to Stop
 Stop once the scope is "good enough to route engineers":
@@ -112,13 +111,17 @@ Next best step: <one suggestion>
   "files_changed": ["<scope file path>"],
   "evidence_count": 0,
   "unknowns": 0,
-  "diagrams": 2,
+  "diagrams": 0,
   "trace_rows": 0,
   "verdict": "Proceed | Blocked | Needs Sync",
   "graph_edges_found": [
     {"from": "<this scope>", "to": "<related scope>", "relation": "depends_on | calls | shares_data"}
   ],
-  "follow_ups": ["<deferred work items>"]
+  "follow_ups": ["<deferred work items>"],
+  "hygiene_handoff": {
+    "tasks_are_ephemeral": true,
+    "delete_when_done": ["<task/plan/refactor-plan artifacts to delete after completion>"]
+  }
 }
 ```
 

@@ -24,6 +24,8 @@ Use when you need to restructure code without changing behavior: extracting modu
 ## Mission Start
 Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
 Load `skills/_shared/SLICE_CONTRACT.md` for delegation rules.
+Design patterns (Full GoF catalog; use only when it helps name/compare refactor targets):
+- `skills/_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
 - `skills/_shared/SCRIPT_DISCOVERY.md`
@@ -34,7 +36,7 @@ Resolve `SKILLS_ROOT` using the shared snippet:
 
 ### Step 0: Mechanical Risk Profile (deterministic, < 3 min)
 
-Gather four signals mechanically — no judgment calls:
+Gather signals mechanically — no judgment calls. These checks are independent; **run them in parallel** and merge into a single Risk Profile. Parallel execution is mandatory (see SCOPES_PROTOCOL).
 
 **Signal 1: Blast Radius** (from GRAPH.md)
 ```bash
@@ -57,6 +59,9 @@ Does this refactor involve moving or renaming files? `moves_files = true | false
 **Signal 4: Public API Change**
 Does this refactor change any exported function signatures, endpoint paths, or database schema? `api_change = true | false`
 
+**Optional Signal 5: Refactor scan (Scopes-aware)**
+If the target area is large or unclear, run `scanning-refactor` (or spawn `refactor-scanner`) to get evidence-backed hotspot candidates and safe green-to-green steps. Include the resulting report link in the plan.
+
 **Risk Profile:**
 ```json
 {
@@ -75,8 +80,8 @@ The risk profile determines how deep the plan needs to be:
 
 | Risk Signal | Plan Consequence |
 |---|---|
-| `coverage == NONE` | **Include Phase 0**: characterization tests MUST be written first |
-| `coverage == WEAK` | **Recommend Phase 0**: characterization tests strongly recommended |
+| `coverage == NONE` | **Deterministic branch**: include Phase 0 and run `developing-tdd` to create characterization tests first |
+| `coverage == WEAK` | **Deterministic branch**: include Phase 0 and run `developing-tdd` to strengthen verification before refactor phases |
 | `coverage == STRONG` | **Skip Phase 0**: existing tests serve as the behavior contract |
 | `moves_files == true` | **Include scope_rename_guard.py** step with rename map |
 | `moves_files == true` | **Rollback plan is MANDATORY** (auto-included, no judgment call) |
@@ -170,6 +175,13 @@ After the refactor is complete:
 - If files moved: scope_rename_guard.py updates links
 - If behavior didn't change: only links need updating (not behavioral descriptions)
 
+## Plan Gate (mandatory)
+Before executing the plan (or handing off to `/tasks`), confirm:
+- Every phase has an explicit verification command and expected PASS condition.
+- Rollback steps are present when required (moves_files or api_change).
+- Rename guard preview is included when moves_files is true (dry-run output captured).
+- Scope maintenance steps are complete (which scopes to update, which validators to run).
+
 ## Definition of Done
 - [ ] All phases green-to-green
 - [ ] No new test failures
@@ -191,6 +203,13 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
 This preview shows the user exactly which Scopes links would break and how they'd be fixed — before any code is changed.
 
 ---
+
+## Lifecycle / Hygiene (mandatory rule)
+
+Refactor plan artifacts are not an archive. After the refactor is implemented and verified:
+- Delete the executed refactor plan file under `Scopes/Work/Refactors/`.
+- Delete completed refactor task files under `Scopes/Work/Tasks/`.
+- Keep a short durable completion note (and updated Scopes/ADRs/Notes as needed).
 
 ## Blocked Runbook
 - No test coverage and characterization tests can't be written: set `Verdict: Blocked`.

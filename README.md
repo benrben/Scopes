@@ -12,7 +12,8 @@ If you've ever watched an assistant "sound confident" while looking in the wrong
 
 - Engineers using AI assistants on real repos (not toy projects)
 - Teams that care about correctness, maintainability, and repeatable workflows
-- Anyone tired of paying tokens to brute-force "context"
+- Teams hitting context-window ceilings and facing slow, expensive LLM inferences
+- Anyone tired of paying tokens to brute-force "context" by pasting huge folders blindly
 
 ---
 
@@ -41,6 +42,23 @@ Scopes adds a first-class **navigation + compression layer** inside your repo:
 - `Scopes/Work/Standards/WRITE_STYLE.md` — engineering defaults for maintainable changes
 
 Instead of dumping code into context, the assistant loads **one anchor Scope**, follows **traces**, then jumps to the **exact evidence** it needs.
+
+### What a Scoped Repo Looks Like
+
+```text
+your-project/
+├── src/                  # Your actual code
+├── package.json          # Standard project files
+└── Scopes/               # The "Map & Truth" injected by Scopes
+    ├── INDEX.md          # The Map (What exists)
+    ├── GRAPH.md          # The Dependency graph (What touches what)
+    ├── DEVELOPER_INFO.md # How to run/test discovered in repo truth
+    └── Product/          
+        ├── Authentication/
+        │   └── Login_Flow.md  <-- "Anchor Scope" with exact code links
+        └── Payments/
+            └── Checkout.md
+```
 
 Want the deeper explanation? Start here: [docs/why-scopes.md](docs/why-scopes.md)
 Want “set-and-forget” maintenance workflows? See: [docs/automations.md](docs/automations.md)
@@ -95,8 +113,8 @@ This repository is the **source package** for Scopes skills/agents you install i
 - `developing-verified` — implement changes with sandbox verification (no new test files)
 - `developing-tdd` — implement changes via strict TDD (failing test first)
 - `planning-refactor` — plan safe green-to-green refactors with scope link maintenance
+- `scanning-refactor` — scan Scopes + code for refactor/simplification opportunities (report + tasks)
 - `researching-decisions` — compare options and write evidence-backed ADRs
-- `update-skills` — refresh installed Scopes skills/agents from upstream with validation
 
 ### Shared infrastructure
 
@@ -107,6 +125,7 @@ This repository is the **source package** for Scopes skills/agents you install i
 
 - `code-simplifier` — simplify recent changes without behavior changes
 - `bug-scanner` — hotspot scan + scope context (read-only)
+- `refactor-scanner` — scan for maintainability/refactor opportunities (read-only on source)
 - `code-reviewer` — review diffs and report only high-confidence issues
 - `context-summarizer` — stabilize a working-set summary after tool-heavy phases
 - `scope-filler` — fill new capability scope skeletons using evidence (run one per scope in parallel)
@@ -173,6 +192,22 @@ Generate or repair `Scopes/` so the rest of the system has a trustworthy map to 
 ```
 
 ### Use Scopes-first workflows day to day
+
+Here is how the day-to-day workflow looks when using these skills:
+
+```mermaid
+flowchart TD
+    Idea["💡 Idea/Task"] --> Plan["/scopes:plan (planning-idea)"]
+    Plan --> Tasks["/scopes:tasks (writing-tasks)"]
+    Tasks --> TDD["/scopes:tdd (developing-tdd)"]
+    Tasks --> Dev["/scopes:develop (developing-verified)"]
+    
+    TDD --> Code["Code & Tests Generated"]
+    Dev --> Code
+    
+    Code --> Sync["/scopes:sync (syncing-scopes)"]
+    Sync --> Update["Updates Scopes/ Map & Graph"]
+```
 
 Examples:
 

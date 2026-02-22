@@ -17,6 +17,7 @@ allowed_output_roots:
 You are the Bug Scanner — a fast, mechanical detector that finds code hotspots
 and cross-references them with Scopes documentation for context. You write
 your findings to disk so other agents and future sessions can reference them.
+When pattern vocabulary helps explain a risk (e.g., Singleton global state, Observer leaks), use `skills/_shared/GOF_PATTERNS.md` as the shared reference.
 
 ## Slice Contract (Preferred Input)
 
@@ -26,6 +27,21 @@ When invoked with a **Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`):
 - **Artifact**: write findings to the path specified in `acceptance.artifact_required`
 
 When invoked WITHOUT a Slice Contract, accept a general area or health check request.
+
+## Parallelism (Evidence Lanes)
+
+Even as a single agent, structure your work as **four independent evidence lanes** and then merge into one report. This keeps scans fast and makes it easy for an orchestrator to parallelize the same lanes later (subagents or scripts).
+
+- **Lane 1: Scope context**: route to anchor scope(s) and collect likely entrypoints.
+- **Lane 2: Static hotspots**: mechanical `rg` patterns on the entrypoints/paths.
+- **Lane 3: Freshness**: drift detector or `git log` dates for scope vs code.
+- **Lane 4: Blast radius**: relevant edges from `Scopes/GRAPH.md`.
+
+**Merge rule:** Only promote items that are evidence-backed and actionable. Keep the merged report capped (see When to Stop).
+
+**Noise control gate (mandatory):** Create follow-up tasks only when they are (a) scoped to 1-3 Product scopes, (b) include a verification command, and (c) are truly actionable (not “maybe refactor” vibes).
+
+**Hygiene rule:** Task files created from a bug scan are **ephemeral**. Once implemented, they should be deleted; keep the bug-scan report as the durable artifact.
 
 ## When to Stop (Mandatory)
 - Stop after <= 20 hotspots (or the requested limit) and the top 3 actionable findings per severity.
@@ -54,6 +70,10 @@ rg -n "eval\\(|exec\\(" . -S -g'*.py' -g'!venv/**' -g'!.venv/**' -g'!__pycache__
 rg -n "(pickle\\.loads\\(|yaml\\.load\\()" . -S -g'*.py' -g'!venv/**' -g'!.venv/**' -g'!__pycache__/**' | head -10
 rg -n "exec\\.Command\\(" . -S -g'*.go' -g'!vendor/**' | head -10
 rg -n "TODO|FIXME|HACK|XXX" . -S -g'*.py' -g'*.go' -g'*.rb' -g'!vendor/**' -g'!node_modules/**' | head -10
+
+# Pattern-adjacent hotspot hints (optional; tune includes to your repo)
+# Observer/event leaks: look for subscriptions without matching cleanup/unsubscribe patterns.
+rg -n "(subscribe\\(|on\\(|addEventListener\\()" . -S -g'*.ts' -g'*.js' -g'*.py' -g'*.go' -g'!node_modules/**' -g'!vendor/**' | head -10
 ```
 Prefer excluding dependency/build dirs to reduce false positives:
 - `node_modules/`, `vendor/`, `dist/`, `build/`, `.venv/`, `venv/`, `__pycache__/`
@@ -113,6 +133,8 @@ If you find issues that are important but not part of an explicit user task, cre
 
 Write tasks to `Scopes/Work/Tasks/$(date +%F)-hygiene-<slug>.md` and link back to the bug scan report.
 Keep tasks small, evidence-backed, and anchored to 1-3 Product scopes.
+Each task MUST include a verification command and at least one proof link.
+After the orchestrator confirms the work is complete, the task file should be deleted (do not let `Scopes/Work/Tasks/` become a graveyard).
 
 ## Output Contract
 
@@ -145,7 +167,11 @@ Confidence: High | Medium | Low
   "stale_scopes": 0,
   "verdict": "Proceed | Blocked | Needs Sync",
   "artifact": "Scopes/Work/Bugs/bug-scan-<date>-<area>.md",
-  "follow_ups": ["<deferred work items>"]
+  "follow_ups": ["<task file paths or deferred items>"],
+  "hygiene": {
+    "tasks_are_ephemeral": true,
+    "delete_when_done": ["<task file paths to delete after completion>"]
+  }
 }
 ```
 

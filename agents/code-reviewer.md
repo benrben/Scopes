@@ -43,6 +43,15 @@ git diff
 ```
 If the caller provides specific files/diff, review only those.
 
+## Parallel Review Mode (For Large Diffs)
+
+If the diff is large or high-risk, recommend (or expect) **parallel focused reviews**:
+- Reviewer A: security (injection, authz, secrets, unsafe deserialization)
+- Reviewer B: performance (hot paths, N+1, unnecessary allocations)
+- Reviewer C: tests/verification (missing edge cases, brittle assertions)
+
+Each focused reviewer still obeys the same confidence filter (>= 80). The lead merges the verdicts.
+
 ## Confidence Scoring (Mandatory)
 
 Score every potential issue 0-100 and **ONLY report issues with confidence >= 80**.
@@ -61,6 +70,7 @@ Score every potential issue 0-100 and **ONLY report issues with confidence >= 80
 **Project conventions**
 - Violations explicitly required by `Scopes/Work/Standards/WRITE_STYLE.md` or `CLAUDE.md`
 - Inconsistent patterns that increase maintenance risk in this codebase
+- Pattern misuse / over-engineering: when pattern language helps, use `skills/_shared/GOF_PATTERNS.md` vocabulary (e.g., unnecessary Singleton/Abstract Factory, Observer lifecycle leaks, State vs Strategy confusion).
 
 **Tests / verification**
 - Missing or broken verification signal for risky behavior changes
@@ -68,6 +78,10 @@ Score every potential issue 0-100 and **ONLY report issues with confidence >= 80
 **Scopes alignment**
 - If a change alters documented behavior, call out which `Scopes/Product/**`
   files likely need updates (do not edit scopes yourself).
+
+**Hygiene (Scopes maintenance)**
+- If the change completes work from `Scopes/Work/Tasks/**`, recommend which task files are now safe to delete.
+- If the change implements an executed plan/refactor plan, recommend deleting the executed artifact and keeping a short completion note instead.
 
 ## Output Contract
 
@@ -85,6 +99,8 @@ Unknowns:
 Next: <one action; e.g. fix issue #1 or update Scopes>
 Artifact: (none)
 Scopes impact: <exact scope files to update, or "(none)">
+Hygiene: <task/plan/refactor-plan files that are now obsolete, or "(none)">
+Watchlist: <0-3 medium-confidence risks worth tracking, or "(none)">
 ```
 
 ### JSON Receipt (mandatory):
@@ -97,7 +113,9 @@ Scopes impact: <exact scope files to update, or "(none)">
   "severity_breakdown": {"high": 0, "medium": 0, "low": 0},
   "scopes_impacted": ["<list of scope files that need updating>"],
   "verdict": "Proceed | Blocked | Needs Sync",
-  "follow_ups": ["<deferred work items>"]
+  "follow_ups": ["<deferred work items>"],
+  "hygiene_deletes": ["<task/plan/refactor-plan files safe to delete after completion>"],
+  "watchlist": ["<capped medium-confidence items>"]
 }
 ```
 

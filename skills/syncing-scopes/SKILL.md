@@ -19,6 +19,7 @@ Use when `Scopes/` is missing, stale, or you suspect scope drift (broken evidenc
 ## Prerequisites
 - Read access to the repo code/tests/config.
 - Permission to write under `Scopes/`.
+- **Parallel subagents are MANDATORY** when filling 2+ scopes: spawn all in one batch (see `skills/_shared/SCOPES_PROTOCOL.md`). No sequential fallback.
 
 ## Safety and confirmations
 - Prefer updating existing files over churn/renames.
@@ -39,6 +40,16 @@ Before doing ANY work:
   ```
 
 If SKILLS_ROOT cannot be resolved or scripts are missing, STOP and tell the user.
+
+## Parallel Wave Model (Preferred)
+
+Treat sync as a batch system with deterministic gates:
+- **Wave 0 (Preflight)**: resolve scripts, decide mode, and gather drift/gen signals (parallel where possible).
+- **Wave 1 (Fill)**: run multiple `scope-filler` workers in parallel (<= 6), one per scope file (exclusive ownership via Slice Contracts).
+- **Wave 2 (Stitch/Validate)**: lead stitches `INDEX.md` + `GRAPH.md` from receipts, then gates on `validate_scopes.py`.
+- Loop by batch until all scopes are valid.
+
+Intermediate JSON outputs (drift JSON, skeleton JSON, contract JSON) are **temporary**. Delete them after stitching/validation unless the user explicitly asks to keep them.
 
 ---
 
@@ -84,11 +95,15 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_skeleton_generator.py" \
   --item "Area1: Capability1" \
   --item "Area2: Capability2" \
   --item "Area3: Capability3" \
+  --micro \
   --format json \
   --repo-root .
 ```
 
-This creates empty skeleton scope files. Capture the JSON output — it lists the created files.
+This creates empty skeleton scope files. With `--micro`, each item produces:
+- 1 overview scope: `Scopes/Product/<Area>/<Capability>.md` (router)
+- N micro scopes: `Scopes/Product/<Area>/<Capability>/*.md` (smaller slices, linked)
+Capture the JSON output — it lists the created files. Treat this JSON as temporary (prefer a temp file under `/tmp` if you must write it to disk).
 
 **Step 3: Build Slice Contracts** (USE THE SCRIPT)
 
@@ -98,6 +113,7 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/slice_contract_builder.py" \
 ```
 
 This generates one Slice Contract per skeleton, pre-packaged with entrypoints, tech stack, and related scopes.
+Treat contract JSON outputs as temporary (delete after the batch validates).
 
 **Step 4: Delegate Filling to scope-filler Agents**
 
@@ -127,8 +143,12 @@ Each filler returns a JSON receipt with `evidence_count`, `unknowns`, `graph_edg
 3. Update `GRAPH.md` with dependency edges from `graph_edges_found` in receipts.
 4. Final validation:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-only
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all
 ```
+
+**Cleanup (mandatory):**
+- Delete intermediate JSON outputs (skeleton output, drift output, contract output) if written to disk.
+- Keep only `Scopes/` docs plus (optionally) one durable sync summary note under `Scopes/Work/Notes/`.
 
 ---
 
@@ -144,6 +164,7 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --format j
 ```
 
 Sort results by severity: `missing` > `stale` > `ok`. This sorted list IS the work backlog.
+Treat the drift JSON output as temporary (prefer a temp file under `/tmp` if you must write it to disk).
 
 **Step 2: Build Slice Contracts from drift output**
 ```bash
@@ -156,7 +177,7 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/slice_contract_builder.py" \
 For scopes that need updating, generate new skeletons if needed:
 ```bash
 python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_skeleton_generator.py" \
-  --items-json '<list of stale scopes>' --force --format json --repo-root .
+  --items-json '<list of stale scopes>' --force --micro --format json --repo-root .
 ```
 
 Then delegate filling to scope-filler subagents or agent team (same as Generation Mode Step 4).
@@ -169,9 +190,13 @@ Then delegate filling to scope-filler subagents or agent team (same as Generatio
 1. Update `INDEX.md` + `GRAPH.md` from filler receipts.
 2. Re-run drift detection as final gate:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-only
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all
 ```
 3. Fix any remaining issues inline.
+
+**Cleanup (mandatory):**
+- Delete intermediate JSON outputs (drift output, contract output, any regenerated skeleton output) if written to disk.
+- Keep only updated `Scopes/` docs plus one durable sync summary note.
 
 ---
 
@@ -193,8 +218,9 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-on
 
 | Script | Purpose | Key Flags |
 |---|---|---|
-| `scope_skeleton_generator.py` | Create empty skeleton files | `--item`, `--items-json`, `--format json`, `--force` |
+| `scope_skeleton_generator.py` | Create overview + micro scope skeletons | `--item`, `--items-json`, `--micro`, `--micro-scope`, `--micro-limit`, `--format json`, `--force` |
 | `drift_detector.py` | Detect stale evidence links | `--all`, `--stale-only`, `--format json` |
+| `validate_scopes.py` | Full gate: META present + links resolve + no placeholders + drift not stale | `--all`, `--scope`, `--area`, `--allow-stale`, `--format json` |
 | `scope_map.py` | Query scopes by keyword | `--query`, `--depth`, `--format json` |
 | `scope_trace_stub_from_entrypoints.py` | Generate trace table stubs | `--scope`, `--apply` |
 | `scope_rename_guard.py` | Fix evidence links after file moves | `--map`, `--dry-run` |
@@ -208,7 +234,7 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-on
 |---|---|---|---|
 | `scope-filler` | `agents/scope-filler.md` | Fills one scope skeleton with evidence | Subagent (Task tool) or Agent Team teammate |
 
-**Note:** There is NO `scope-auditor` or `scope-writer` agent. Filling goes through `scope-filler`; auditing goes through `drift_detector.py`.
+**Note:** There is NO `scope-auditor` or `scope-writer` agent. Filling goes through `scope-filler`; validation goes through `validate_scopes.py` (drift-only view is `drift_detector.py`).
 
 ---
 
@@ -221,6 +247,13 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-on
 - Stop once validators are clean for **all** areas OR you can precisely report what is blocked and why.
 - No scope cap: sync all areas. Label gaps as `[Unknown]` where evidence is missing.
 - If the repo is too large to sync in one run, split by capability areas and use agent teams per area; do not arbitrarily limit to 1-3 scopes.
+
+## Maintenance / Hygiene (mandatory)
+
+After a sync completes and validates:
+- Delete any “sync tracking” task files created during the run that are now complete.
+- Delete executed plan/refactor-plan artifacts created to manage the sync work.
+- Keep: updated `Scopes/` docs + one durable sync summary note (and ADR/Notes as needed).
 
 ## Blocked Runbook (Mandatory)
 - No `Scopes/` and generation from scratch is not approved: set `Verdict: Needs Narrowing` and ask for permission to generate (do not ask which area — generate all).

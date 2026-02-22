@@ -8,16 +8,25 @@ The goal is deterministic, evidence-first, token-bounded behavior that is regres
 
 ## Repo-Wide Defaults (Unless User Explicitly Requests Otherwise)
 
-- **Budgets**:
-  - 1-3 anchor scopes
-  - 3-7 evidence links
-  - 3-10 code files
-  - stop and label gaps as `[Unknown]`
-- **Verdict vocabulary** (skills + agents): `Proceed`, `Blocked`, `Needs Sync`, `Needs Narrowing`
-- **Evidence format**: `[path:Lx-Ly](path#Lx-Ly)`
-- **Firebreak**: subagents return results, not history (no tool dumps / no intermediate drafts).
+| Constraint | Limit / Rule |
+|---|---|
+| **Anchor scopes** | 1-3 |
+| **Evidence links** | 3-7 |
+| **Code files touched** | 3-10 |
+| **Missing info** | Stop and label as `[Unknown]` |
+| **Verdict vocabulary** | `Proceed`, `Blocked`, `Needs Sync`, `Needs Narrowing` |
+| **Evidence format** | `[path:Lx-Ly](path#Lx-Ly)` |
+| **Firebreak** | Subagents return results, not history (no tool dumps) |
 
 ## Artifact Offloading Policy (Mandatory)
+
+```mermaid
+flowchart LR
+    Agent["Subagent execution"] --> Data{"Data Size"}
+    Data -- "Under limits" --> Return["Return directly in Chat"]
+    Data -- "Exceeds limits" --> Disk["Save to Scopes/Work/..."]
+    Disk --> ReturnPtr["Return Artifact Path + Abstract"]
+```
 
 If a result would exceed the output contract line limit:
 1. Write an artifact file to disk under the correct root.

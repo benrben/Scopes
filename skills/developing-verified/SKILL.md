@@ -18,6 +18,7 @@ Use when existing tests, scripts, or commands can verify your changes. If you ne
 
 ## Prerequisites
 - The repo has at least one runnable verification signal (tests, build, scripts, REPL).
+- **Parallel subagents are MANDATORY**: the environment MUST support spawning multiple subagents in a single batch. Sequential fallback is not permitted. See `skills/_shared/SCOPES_PROTOCOL.md`.
 - Read `skills/_shared/SCOPES_PROTOCOL.md` and `skills/_shared/DEVELOPING_PROTOCOL.md`.
 
 ## Mission Start
@@ -26,36 +27,74 @@ Load and follow the shared protocols:
 - `skills/_shared/DEVELOPING_PROTOCOL.md` (verification-first loops)
 - `skills/_shared/SLICE_CONTRACT.md` (delegation format)
 - `skills/_shared/SESSION_LOG_TEMPLATES.md` (session log structure for Verified)
+Design patterns (practical subset in implementation; recognize full GoF catalog to avoid misapplication):
+- `skills/_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
 - `skills/_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
-## Architecture
+## Architecture (Wave Model)
 
-```
-┌─────────────────────────────────────────────────────────┐
-│                    ORCHESTRATOR (lead)                   │
-│                                                         │
-│  Responsibilities:                                      │
-│  • Slice the work into independent behavior slices      │
-│  • Run verification between EVERY phase                 │
-│  • Gate: verify expected results before next phase      │
-│  • Route failures back to the responsible agent         │
-│                                                         │
-│  The orchestrator's ONLY code interaction is running    │
-│  verification commands and reading results.             │
-└───────────────────────┬─────────────────────────────────┘
-                        │
-          ┌─────────────┼─────────────┐
-          ▼             ▼             ▼
-     ┌─────────┐  ┌─────────┐  ┌──────────┐
-     │  IMPL   │  │  IMPL   │  │ REFACTOR │
-     │ Agent 1 │  │ Agent 2 │  │ Agents   │
-     │(slice 1)│  │(slice 2)│  │(simpli-  │
-     │         │  │         │  │  fiers)  │
-     └─────────┘  └─────────┘  └──────────┘
+```mermaid
+flowchart TD
+  classDef green fill:#d6ffe0,stroke:#008a2e,color:#000
+  classDef blue fill:#d6e8ff,stroke:#0b4db3,color:#000
+  classDef gray fill:#f2f2f2,stroke:#666,color:#000
+
+  S["Lead intake"] --> P1
+  S --> P2
+  S --> P3
+
+  subgraph Preflight["Wave 0: parallel preflight (Scopes-first)"]
+    direction LR
+    P1["Route: scope_map.py to anchor scopes"]
+    P2["Pick narrowest verification signal + expected output"]
+    P3["Baseline run (verification)"]
+  end
+
+  P1 --> MergeP["Merge preflight"]
+  P2 --> MergeP
+  P3 --> MergeP
+  MergeP --> VGate["Gate: verification quality<br/>IF weak -> switch to developing-tdd"]
+  VGate --> Slice["Lead builds slices (<= 4)<br/>exclusive impl ownership"]
+
+  subgraph GreenWave["Wave 1: GREEN implementation (ALL slices parallel)"]
+    direction LR
+    G1["Implementer slice 1"]
+    G2["Implementer slice 2"]
+    GN["Implementer slice N"]
+  end
+  Slice --> G1
+  Slice --> G2
+  Slice --> GN
+  G1 --> Gate1["Gate: full verification PASS"]
+  G2 --> Gate1
+  GN --> Gate1
+
+  subgraph BlueWave["Wave 2: REFACTOR simplify (ALL slices parallel)"]
+    direction LR
+    B1["code-simplifier slice 1"]
+    B2["code-simplifier slice 2"]
+    BN["code-simplifier slice N"]
+  end
+  Gate1 --> B1
+  Gate1 --> B2
+  Gate1 --> BN
+  B1 --> Gate2["Gate: full verification PASS"]
+  B2 --> Gate2
+  BN --> Gate2
+
+  Gate2 --> Review["Final gate: code-reviewer"]
+  Review --> ScopeSync["Conditional scope sync + validate_scopes"]
+  ScopeSync --> Log["Write session log + any active tasks"]
+  Log --> Hygiene["Hygiene: delete finished Tasks/Planning/Refactors"]
+  Hygiene --> Done["Done"]
+
+  class S,MergeP,VGate,Slice,Gate1,Gate2,Review,ScopeSync,Log,Hygiene,Done gray
+  class G1,G2,GN green
+  class B1,B2,BN blue
 ```
 
 ---
@@ -63,6 +102,8 @@ Resolve `SKILLS_ROOT` using the shared snippet:
 ## Workflow
 
 ### Step 0: Smart Preflight (orchestrator, < 3 min)
+
+These checks are independent. **Run them in parallel** (spawn all in one batch); merge the outputs. Parallel execution is mandatory for this skill (see SCOPES_PROTOCOL).
 
 **Lane A: Route**
 ```bash
@@ -89,6 +130,10 @@ Record: `{ signal_type, exact_command, expected_output }`.
 Record: `baseline = PASS | FAIL (N failures)`.
 
 **Merge:** verification command ready + anchor scope identified + baseline captured.
+
+**Gate: verification quality (deterministic)**
+- If the best available signal is only “build compiles” or an ambiguous manual step, treat it as **weak** and switch to `developing-tdd` to create a behavior-linked test signal.
+- If baseline fails before your changes, record baseline failures and either narrow the command or switch to TDD to stabilize signal.
 
 ---
 
@@ -189,9 +234,13 @@ Wait for ALL agents to complete.
 ### Step 5: Conditional Scope Sync
 
 ```bash
-git diff --name-only | xargs -I{} grep -rl "{}" Scopes/Product/ 2>/dev/null
+git diff --name-only | xargs -I{} rg -l "{}" Scopes/Product/ 2>/dev/null
 ```
-IF output is non-empty → update affected scopes + run drift detector.
+IF output is non-empty → update affected scopes + run `validate_scopes.py` as the gate:
+
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all
+```
 ELSE → skip.
 
 ---
@@ -211,8 +260,17 @@ Per slice entry:
 - **Follow-ups**: <parking lot>
 ```
 
-2. Parking lot → task files
+2. Parking lot → task files (only for remaining work; tasks are not an archive)
 3. Context summary if tool-heavy
+
+---
+
+### Step 7: Maintenance / Hygiene (mandatory)
+
+`Scopes/Work/Tasks/` should contain only **active** work.
+- Delete task files that were completed in this session.
+- If you executed a plan/refactor plan artifact as part of this work, delete the executed artifact and keep a short durable completion note instead.
+- Keep: updated Scopes + session log (+ ADR/Notes as needed).
 
 ---
 

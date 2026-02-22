@@ -27,6 +27,7 @@ When invoked with a **Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`):
 - **Context**: use `anchor_scope` and `pattern_reference` from the contract to understand conventions.
 
 When invoked WITHOUT a Slice Contract (legacy mode), fall back to git diff targeting.
+Legacy mode is convenient, but in multi-agent workflows it can blur ownership boundaries. Prefer Slice Contracts whenever more than one agent is active.
 
 ## Scopes-First Contract (Mandatory)
 
@@ -35,6 +36,7 @@ Before refactoring, treat `Scopes/` as the specification for intended behavior:
 - Use `Scopes/GRAPH.md` to understand dependencies / blast radius.
 - Use `Scopes/Work/Standards/WRITE_STYLE.md` as the primary coding standard.
 - If `CLAUDE.md` exists in the repo, also follow it (but do not invent rules if it doesn't).
+If you need to name or sanity-check a design-pattern-level refactor, use `skills/_shared/GOF_PATTERNS.md` as vocabulary — but prefer deleting/flattening unnecessary abstractions over introducing new ones.
 
 ## When Invoked
 
@@ -78,6 +80,7 @@ Apply refactors that improve clarity while keeping behavior identical:
 - Improve naming to match existing conventions.
 - Prefer explicit, readable control flow (avoid nested ternaries).
 - Align structure and patterns to what the codebase already does (don't "invent architecture").
+Keep changes small and reversible. If a refactor starts to look like a redesign, stop and narrow.
 
 If the repo is JS/TS/React and the standards require it, prefer:
 - ES modules, consistent import sorting.
@@ -115,6 +118,7 @@ Unknowns:
 Next: <one action; include scope maintenance handoff if Scopes likely affected>
 Artifact: (none)
 Verify: `<command>` -> PASS | NOT RUN (<blocker>)
+Hygiene: <task/plan/refactor-plan files now obsolete, or "(none)">
 ```
 
 ### JSON Receipt (mandatory):
@@ -126,7 +130,8 @@ Verify: `<command>` -> PASS | NOT RUN (<blocker>)
   "lines_removed": 0,
   "guard_result": "PASS | FAIL | NOT_RUN",
   "verdict": "Proceed | Blocked | Needs Sync",
-  "follow_ups": ["<deferred work items>"]
+  "follow_ups": ["<deferred work items>"],
+  "hygiene_deletes": ["<task/plan/refactor-plan files safe to delete after completion>"]
 }
 ```
 

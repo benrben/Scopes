@@ -47,7 +47,9 @@ Subagents and teammates are about **context isolation**: verbose work (reading 2
 
 ## When to Use Subagents vs Agent Teams vs Lead-Only
 
-⚠️ **Spawn ALL subagents in a SINGLE tool-call batch** for parallelism. Spawning one per turn makes them sequential.
+**Parallel execution is MANDATORY** when delegating to 2+ subagents or teammates. All skills follow `skills/_shared/SCOPES_PROTOCOL.md`: no sequential fallback when work is split into multiple units.
+
+⚠️ **Spawn ALL subagents in a SINGLE tool-call batch** for parallelism. Spawning one per turn makes them sequential and violates the protocol.
 
 | Situation | Approach | Why |
 |---|---|---|
@@ -131,65 +133,89 @@ If the summary would be long, invoke `context-summarizer` to write a durable not
 
 ### 1. New Feature Implementation (Micro-Swarm per Behavior)
 
-```
-┌─────────── STEP 1: SLICE (Lead only) ─────────────────┐
-│                                                        │
-│  scope_map.py --query "<goal>" → anchor scope(s)       │
-│  Break goal into independent behavior slices           │
-│  Each slice = { behavior, inputs, outputs,             │
-│                 acceptance examples, test command }     │
-│  WIP LIMIT: max 4 active slices                        │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────── STEP 2: PARALLEL PHASE-GATED TDD ──────────┐
-│                                                        │
-│  Lead acts as ORCHESTRATOR (runs tests/gates only)     │
-│                                                        │
-│  For each phase (RED → GREEN → REFACTOR):              │
-│  1. Spawn parallel subagents (one per slice)           │
-│     "Spawn ALL in a SINGLE tool-call batch"            │
-│  2. Agents do the work (write test / impl / refactor)  │
-│  3. Wait for all to complete                           │
-│  4. GATE: Orchestrator runs full test suite            │
-│     IF pass → next phase                               │
-│     IF fail → route back to agent                      │
-│                                                        │
-│  Refactor ALWAYS runs via `code-simplifier`            │
-│  (one per slice, in parallel).                         │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────── STEP 3: FINAL GATE (always) ───────────────┐
-│                                                        │
-│  Spawn code-reviewer on complete diff (subagent)       │
-│  Confidence ≥ 80 filter. Must report Scopes impact.    │
-│  IF issues found → fix cycle (lead)                    │
-│                                                        │
-└────────────────────────────────────────────────────────┘
-                          │
-                          ▼
-┌─────────── STEP 4: SCOPE SYNC (conditional) ──────────┐
-│                                                        │
-│  IF scope-linked files in git diff:                    │
-│  └── Update affected scope(s) + drift_detector.py     │
-│  ELSE: skip scope update                               │
-│                                                        │
-│  Leave durable artifacts:                              │
-│  - Session log in Scopes/Work/STDD/ or DEV/           │
-│  - Parking lot → task files                            │
-│  - context-summarizer if session was large              │
-│                                                        │
-└────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+  classDef red fill:#ffd6d6,stroke:#cc0000,color:#000
+  classDef green fill:#d6ffe0,stroke:#008a2e,color:#000
+  classDef blue fill:#d6e8ff,stroke:#0b4db3,color:#000
+  classDef gray fill:#f2f2f2,stroke:#666,color:#000
+
+  Start["Lead intake"] --> P1
+  Start --> P2
+  Start --> P3
+  Start --> P4
+
+  subgraph Preflight["Wave 0: parallel preflight (Scopes-first)"]
+    direction LR
+    P1["Route: scope_map.py to anchor scope(s)"]
+    P2["Baseline verification: run existing signal(s)"]
+    P3["Blast radius: GRAPH.md glance"]
+    P4["Optional: bug-scanner for quick hotspots/drift"]
+  end
+
+  P1 --> MergePre["Merge preflight"]
+  P2 --> MergePre
+  P3 --> MergePre
+  P4 --> MergePre
+  MergePre --> Slice["Lead builds Slice Contracts (<= 4)<br/>exclusive ownership + guard/verify per slice"]
+  Slice --> OwnGate["Gate: no overlapping ownership"]
+
+  subgraph RedWave["Wave 1: RED tests (ALL slices parallel)"]
+    direction LR
+    R1["Test-writer slice 1"]
+    R2["Test-writer slice 2"]
+    RN["Test-writer slice N"]
+  end
+  OwnGate --> R1
+  OwnGate --> R2
+  OwnGate --> RN
+  R1 --> Gate1["Gate: full suite<br/>new tests FAIL, baseline stays PASS"]
+  R2 --> Gate1
+  RN --> Gate1
+
+  subgraph GreenWave["Wave 2: GREEN implementation (ALL slices parallel)"]
+    direction LR
+    G1["Implementer slice 1"]
+    G2["Implementer slice 2"]
+    GN["Implementer slice N"]
+  end
+  Gate1 --> G1
+  Gate1 --> G2
+  Gate1 --> GN
+  G1 --> Gate2["Gate: full suite PASS"]
+  G2 --> Gate2
+  GN --> Gate2
+
+  subgraph BlueWave["Wave 3: REFACTOR simplify (ALL slices parallel)"]
+    direction LR
+    B1["code-simplifier slice 1"]
+    B2["code-simplifier slice 2"]
+    BN["code-simplifier slice N"]
+  end
+  Gate2 --> B1
+  Gate2 --> B2
+  Gate2 --> BN
+  B1 --> Gate3["Gate: full suite PASS"]
+  B2 --> Gate3
+  BN --> Gate3
+
+  Gate3 --> Review["Final gate: code-reviewer on full diff"]
+  Review --> ScopeSync["Conditional: update Scopes + validate_scopes/drift gate"]
+  ScopeSync --> Summary["Optional: context-summarizer note (tool-heavy runs)"]
+  Summary --> Hygiene["Hygiene: delete finished Tasks/Planning/Refactors<br/>keep session log + updated Scopes + ADRs/Notes"]
+  Hygiene --> Done["Done"]
+
+  class Start,MergePre,Slice,OwnGate,Gate1,Gate2,Gate3,Review,ScopeSync,Summary,Hygiene,Done gray
+  class R1,R2,RN red
+  class G1,G2,GN green
+  class B1,B2,BN blue
 ```
 
 **Step 2 details:**
-- Each slice exits as **green + simplified** before the next starts (no queues)
-- Refactor is "now" not "later"
-- `code-simplifier` gets a tight Slice Contract: exact file list + guard command
-- The session log entry is mandatory, not optional
+- **Waves, not queues:** RED runs for all slices → gate → GREEN for all slices → gate → REFACTOR for all slices → gate.
+- Gates are deterministic: the orchestrator runs the full suite (or full verification) and routes failures back to the responsible slice.
+- `code-simplifier` gets a tight Slice Contract: exact file list + guard/verify command.
+- After completion, enforce hygiene: delete executed task files and executed planning/refactor-plan artifacts; keep session log + updated Scopes.
 
 ---
 
@@ -327,15 +353,15 @@ If the summary would be long, invoke `context-summarizer` to write a durable not
 When implementing a feature, the lead follows this script:
 
 ```
-1. Route: scope_map.py --query "<goal>" → anchor scope(s)
-2. Slice: break into ≤ 2 active behavior slices with acceptance examples
-3. Per phase (RED → GREEN → REFACTOR):
-   a. Spawn parallel subagents for all slices
-   b. Orchestrator gates with test suite
-4. After all phases: code-reviewer on full diff (ALWAYS, not optional)
-5. Conditional scope sync: only if scope-linked files are in the diff
-6. Leave artifacts: session log + parking lot → task files + context summary
-7. Done
+1. Wave 0 preflight (parallel if possible): route + baseline verify + blast radius + optional bug-scan
+2. Build Slice Contracts (<= 4) with exclusive ownership + verify/guard per slice
+3. Wave 1 RED: spawn all test-writers in one batch; gate with full suite
+4. Wave 2 GREEN: spawn all implementers in one batch; gate with full suite (or full verification)
+5. Wave 3 REFACTOR: spawn all code-simplifiers in one batch; gate with full suite
+6. Final gate: code-reviewer on full diff (always)
+7. Conditional scope sync: update affected Scopes + validate gate when scope-linked files changed
+8. Durable artifacts: session log + optional context summary + any remaining active tasks
+9. Hygiene closure: delete finished Tasks/Planning/Refactors artifacts once work is complete
 ```
 
 This is the engineering lifecycle: **slice → implement → refactor → review → document → validate**.

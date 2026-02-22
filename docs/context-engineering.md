@@ -23,12 +23,25 @@ If the summary would be long, offload details to an artifact file and return onl
 
 ## Delegation Heuristics
 
-Delegate to a subagent when:
+```mermaid
+flowchart TD
+    Task["New Request / Task"] --> Q1{"Is it tool-heavy or mechanical scan?"}
+    Q1 -- Yes --> Subagent["Delegate to narrow Subagent (e.g., bug-scanner)"]
+    Subagent --> Limit{"Output close to line limit?"}
+    Limit -- Yes --> Artifact["Write context to Artifact file"]
+    Artifact --> Lead1["Return Verdict + Pointer to Lead Thread"]
+    Limit -- No --> Lead2["Return Verdict + Summary to Lead Thread"]
+    
+    Q1 -- No --> Lead["Keep in Lead Thread"]
+    Lead --> Synthesis["Synthesize and Edit Code"]
+```
+
+**Delegate to a subagent when:**
 - You need to scan many files or run multiple commands.
 - You need a narrow output (paths, counts, top-N) instead of full explanation.
 - The work is mechanical (grep/rg patterns, link checking, drift checks).
 
-Keep work in the lead thread when:
+**Keep work in the lead thread when:**
 - The work is linear and requires tight iteration (edit -> verify -> edit).
 - The output must be high-context synthesis that depends on user feedback.
 
@@ -50,13 +63,14 @@ After any tool-heavy phase (or any multi-subagent burst), the lead thread should
 - Unknowns (with `[Unknown]`)
 - Next action
 
-## Artifact Offloading Policy
+### Standard Artifact Roots (by type)
 
-Standard artifact roots:
-- `Scopes/Work/Bugs/**`
-- `Scopes/Work/Notes/**`
-- `Scopes/Work/Planning/**`
-- `Scopes/Work/Tasks/**`
-- `Scopes/Research/**`
+If an agent is about to exceed its output limit, it must write an artifact here and return only a pointer.
 
-If an agent is about to exceed its output limit, it must write an artifact and return only a pointer.
+| Artifact Type | Path | Purpose |
+|---|---|---|
+| Bugs | `Scopes/Work/Bugs/**` | Hotspot analysis, bug scans, crash reports. |
+| Notes | `Scopes/Work/Notes/**` | Temporary session notes, context summarization. |
+| Plans | `Scopes/Work/Planning/**` | System architecture, feature refactoring plans. |
+| Tasks | `Scopes/Work/Tasks/**` | Engineer-ready actionable steps to implement. |
+| Research | `Scopes/Research/**` | Tech choices, comparisons (ADRs). |

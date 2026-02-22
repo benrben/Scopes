@@ -9,7 +9,8 @@ Load this file when you need detailed rules beyond `skills/syncing-scopes/SKILL.
 - `Scopes/DEVELOPER_INFO.md` (how to run/test/build; commands + signals)
 - `Scopes/Onboarding/TECH_STACK.md` (stack inventory with evidence)
 - `Scopes/Work/Standards/WRITE_STYLE.md` (engineering standards)
-- Capability scopes: `Scopes/Product/<Area>/<Capability>.md` (exactly 2 mermaid diagrams per substantial capability scope)
+- Capability overview scopes (router): `Scopes/Product/<Area>/<Capability>.md` (router + cross-links; diagrams as needed)
+- Micro scopes (smaller slices): `Scopes/Product/<Area>/<Capability>/<MicroScope>.md` (leaf slices; diagrams as needed)
 - Work artifacts: `Scopes/Work/Planning/**`, `Scopes/Work/Tasks/**`, `Scopes/Work/Bugs/**`, `Scopes/Work/Refactors/**`
 - Research: `Scopes/Research/**`
 - Decisions: `Scopes/Decisions/ADRs/**`
@@ -51,10 +52,10 @@ Prefer the format: `Command -> Signal` and link to the source of truth (config f
 
 Capability scope templates live in `skills/syncing-scopes/references/TEMPLATES.md`.
 Follow them exactly, including:
-- exactly 2 mermaid diagrams in substantial capability scopes
+- include all diagram blocks that apply; delete the ones that don’t (never leave placeholders unchanged)
 - at least 1 end-to-end trace per major path
 
 ## Post-Write Validation (Default)
 
 After writing/updating scopes:
-- `python3 skills/syncing-scopes/scripts/drift_detector.py --stale-only --limit 20`
+- `python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all`

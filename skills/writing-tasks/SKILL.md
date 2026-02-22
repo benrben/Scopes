@@ -19,11 +19,14 @@ Use when you need to break down work into task files that developers (or `develo
 ## Prerequisites
 - Ideally: an upstream plan artifact at `Scopes/Work/Planning/**` or `Scopes/Work/Refactors/**`.
 - Minimum: a clear user intent plus `Scopes/` documentation.
+- **Parallel subagents are MANDATORY** when generating 2+ task files: spawn all in one batch (see `skills/_shared/SCOPES_PROTOCOL.md`). No sequential fallback.
 - Read `skills/_shared/SCOPES_PROTOCOL.md`.
 
 ## Mission Start
 Load `skills/_shared/SCOPES_PROTOCOL.md`.
 Load `skills/_shared/SLICE_CONTRACT.md` for understanding how tasks become slice contracts during development.
+Design patterns (light vocabulary only; keep naming consistent with upstream artifacts):
+- `skills/_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
 - `skills/_shared/SCRIPT_DISCOVERY.md`
@@ -47,6 +50,12 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
 ```
 Read anchor scopes to build context.
 
+Parallel context lanes (optional):
+- Extract plan `## Links` (if present) for anchor scopes + pattern refs.
+- Route to anchor scopes (if no plan).
+- Identify the narrowest verification command from `Scopes/DEVELOPER_INFO.md`.
+Merge into one context bundle before slicing.
+
 ---
 
 ### Step 1: Slice into Work Units (deterministic)
@@ -61,6 +70,7 @@ Each work unit becomes a task file. Each task IS a future Slice Contract for `de
   "acceptance_examples": ["Given X, when Y, then Z"],
   "pattern_reference": "<path to existing implementation to follow>",
   "test_command": "<exact verification command>",
+  "ownership_intent": ["<files/modules this task expects to touch>"],
   "depends_on": ["<other task slugs>"]
 }
 ```
@@ -99,6 +109,10 @@ Write each task to `Scopes/Work/Tasks/<date>-<slug>.md`:
 1. <Step> — follow pattern at `<pattern_reference_path>`
 2. <Step>
 3. <Step>
+
+## Ownership (Files / Modules)
+List the files/modules this task intends to edit. This is an intent declaration used to prevent collisions in parallel work:
+- `<path/or/module>`
 
 ## Pattern Reference
 - **Follow**: [<existing implementation>](path) — <what pattern to use>
@@ -166,6 +180,15 @@ flowchart TD
 
 ---
 
+### Step 5: Gate Task Quality + Collision Check (mandatory)
+
+Before considering tasks “published”, verify:
+- Every task has: acceptance examples, verification command + expected result, pattern reference, and dependencies.
+- Every task has an `## Ownership` section.
+- Independent tasks (no `depends_on`) do not overlap ownership intent (if two tasks touch the same file/module, merge or sequence them).
+
+Tasks should be realistically 1-4 hours each; split anything larger.
+
 ## Parallelism for Large Task Sets
 
 **2-6 task files:** Spawn subagents in a **single tool-call batch** — each generates its assigned task files in parallel.
@@ -179,6 +202,12 @@ flowchart TD
 The lead then reviews all generated tasks for consistency and cross-links.
 
 ---
+
+## Lifecycle / Hygiene (mandatory rule)
+
+`Scopes/Work/Tasks/` is for active work only. After a task is implemented and verified:
+- Delete the completed task file.
+- Record completion in a durable session log or Notes summary.
 
 ## Blocked Runbook
 - No plan and user intent is vague: ask for acceptance examples, set `Verdict: Needs Narrowing`.

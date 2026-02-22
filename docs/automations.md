@@ -37,6 +37,16 @@ python3 skills/syncing-scopes/scripts/scope_map.py \
 
 Goal: prevent merging changes that break evidence navigation.
 
+```mermaid
+flowchart LR
+    Branch["Feature Branch"] --> Work["Developer works & AI edits code"]
+    Work --> Push["Push to Remote"]
+    Push --> CI["CI Pipeline: Pre-Merge Quality Gate"]
+    CI --> Drift["drift_detector --stale-only"]
+    Drift -- "Stale scopes found" --> Block["Merge Blocked ❌"]
+    Drift -- "No drift" --> Merge["Merge Allowed ✅"]
+```
+
 Run:
 ```bash
 python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 20

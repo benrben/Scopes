@@ -26,6 +26,23 @@ Raw codebases are high-entropy: lots of files, lots of local detail, and not eno
 ## How a code assistant should navigate (Scopes-first algorithm)
 When working in a repo that uses Scopes, a copilot should **not** start by grepping code. It should route through Scopes:
 
+```mermaid
+sequenceDiagram
+    participant AI as AI Assistant
+    participant Index as Scopes/INDEX.md
+    participant Graph as Scopes/GRAPH.md
+    participant Scope as Anchor Scope (Product/)
+    participant Code as Source Code
+    
+    AI->>Index: 1. Read Map (Find capability area)
+    AI->>Graph: 2. Read Graph (Check dependencies)
+    AI->>Scope: 3. Open Anchor Scope
+    Scope-->>AI: Extract Traces & Evidence Links
+    AI->>Code: 4. Jump directly to verified code lines
+    Note over AI,Code: Precise, low-token context!
+```
+
+**Step-by-step description:**
 1. **Map**: open `Scopes/INDEX.md` and identify the relevant capability area.
 2. **Graph**: open `Scopes/GRAPH.md` to see dependencies, upstream/downstream scopes, and likely integration points.
 3. **Anchor Scope**: open the primary capability file under `Scopes/Product/**`.

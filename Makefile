@@ -1,4 +1,4 @@
 .PHONY: lint
 
 lint:
-	python3 -m py_compile skills/syncing-scopes/scripts/*.py
+	python3 -m compileall -q skills/*/scripts

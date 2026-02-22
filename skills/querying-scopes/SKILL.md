@@ -32,6 +32,8 @@ Resolve `SKILLS_ROOT` using the shared snippet:
 
 ### Step 0: Instant Route (< 30 seconds)
 
+These checks are independent. **Run them in parallel** and merge into one evidence bundle. Parallel execution is mandatory (see SCOPES_PROTOCOL).
+
 ```bash
 python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
   --query "<question keywords>" --limit 5 --format json
@@ -42,12 +44,15 @@ Result: ranked anchor scopes + code paths + evidence counts.
 **IF zero results AND Scopes/ exists:**
 Don't give up — fall back to codebase search:
 ```bash
-grep -rn "<keywords>" --include="*.ts" --include="*.py" --include="*.go" \
-  --include="*.js" --include="*.md" . | head -20
+rg -n "<keywords>" . -S \
+  -g'*.ts' -g'*.tsx' -g'*.js' -g'*.jsx' -g'*.py' -g'*.go' -g'*.rs' -g'*.md' \
+  -g'!node_modules/**' -g'!.venv/**' -g'!venv/**' | head -20
 ```
 
 **IF zero results AND no Scopes/:**
 Set `Verdict: Needs Sync`, recommend `/sync`.
+
+Optional (fast): glance `Scopes/GRAPH.md` for dependency/blast-radius context on the anchor scope(s).
 
 ---
 
@@ -80,7 +85,7 @@ Spawn `bug-scanner` as a subagent:
 > - **Ownership**: Read-only (no edits)
 > - **Context**: Anchor scope at `{scope_path}`, files to scan: `{entrypoints from scope}`
 > - **Acceptance**: Return findings with severity ratings
-> - **Artifact**: Write findings to `Scopes/Work/Bugs/scan-<area>-<date>.md`
+> - **Artifact**: Write findings to `Scopes/Work/Bugs/bug-scan-<date>-<area>.md`
 
 Merge `bug-scanner` findings into your answer.
 
@@ -112,6 +117,13 @@ git log -1 --format="%ci" -- <code_path>
 ```
 
 ---
+
+### Step 3.5: Gate (mandatory)
+
+Do not finalize an answer unless it includes:
+1. Evidence links into code (or clearly marked `[Unknown]` where evidence is missing)
+2. A freshness note (scope date vs code date)
+3. A clear handoff recommendation (next skill or next command)
 
 ### Step 4: Handoff Recommendations (automatic)
 
@@ -146,6 +158,7 @@ Based on what you found, recommend the appropriate next skill:
 
 **IF diagnostic question** (bug-scanner was invoked):
 - The bug-scanner's findings file IS the artifact
+- Any follow-up task files created from the diagnostic are ephemeral: once implemented, delete the task file and keep durable learnings in a Notes summary instead.
 
 ---
 

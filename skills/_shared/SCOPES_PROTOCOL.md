@@ -57,6 +57,7 @@ Before implementing or planning changes, discover the project's established code
 2. **Read the anchor scope's "Implementation Patterns" section** (if present in `Scopes/Product/**` files) — this documents the established way to extend that capability.
 3. **Read `Scopes/Work/Standards/WRITE_STYLE.md`** — code style and structural conventions.
 4. **Examine existing code in the same area** — find 2-3 existing implementations that are similar to what you're about to build (e.g., if adding a new API endpoint, look at how existing endpoints are structured; if adding a new pipeline stage, look at existing stages).
+5. **Use shared design-pattern vocabulary (optional)** — when naming or comparing design patterns (GoF + common modern patterns), use `skills/_shared/GOF_PATTERNS.md` for consistent names + tradeoffs. Do not force patterns that the codebase doesn’t need.
 
 ### Pattern Categories to Look For
 
@@ -79,7 +80,7 @@ Before implementing or planning changes, discover the project's established code
 
 When a skill specifies Agent Orchestration phases:
 
-0. **Default — parallel per unit**: When a phase's work can be split by area, scope, or independent task, spawn **one agent instance per unit in parallel** (same agent type, different prompt per unit). Use a single agent only when scope is narrow (e.g. 1-3 targets). Skills may override this with a single-stream option for narrow scope.
+0. **Parallel per unit (MANDATORY)**: When a phase's work can be split by area, scope, or independent task, you MUST spawn **one agent instance per unit in parallel** (same agent type, different prompt per unit), in a single tool-call batch. Use a single agent only when scope is narrow (e.g. exactly one slice/target). **Sequential fallback is not permitted** — if there are 2+ units, parallel execution is required. The environment must support spawning multiple subagents in one batch.
 1. **Slice Contracts for every delegation**: Every subagent/teammate MUST receive a Slice Contract (see `skills/_shared/SLICE_CONTRACT.md`). No naked prompts — always include target, ownership, context, acceptance, and artifact requirements.
 2. **Spawn agents as subagents/subtasks** in your environment (e.g., Task tool in Cursor/Claude Code).
 3. **Parallel phases**: Spawn all listed agents at the same time in a single tool-call batch; wait for all to complete.
@@ -89,13 +90,15 @@ When a skill specifies Agent Orchestration phases:
 7. **Deterministic triggers (not judgment calls)**: Agent invocations should be triggered by mechanical thresholds, not subjective decisions. Examples: `code-simplifier` ALWAYS runs in the REFACTOR phase; `code-reviewer` ALWAYS runs as final gate.
 8. **WIP limits**: Never run more than 6 subagents/teammates for scope-filling, 4 concurrent behavior slices for development, or 3 concurrent reviewers. Queue the rest.
 
-### Parallelism Rules
+### Parallelism Rules (Mandatory for All Skills)
 
-⚠️ **Spawn ALL subagents in a SINGLE tool-call batch** for parallelism. Spawning one per turn makes them sequential.
+**Parallel execution is MANDATORY** when a phase has 2+ units (slices, scopes, or tasks). Do not run units sequentially; spawn all subagents in one batch.
+
+⚠️ **Spawn ALL subagents in a SINGLE tool-call batch** for parallelism. Spawning one per turn makes them sequential and violates this protocol.
 
 **Subagents (1 task):** Spawn normally.
-**Agent Teams (2+ tasks):** Preferred for true parallelism.
-**Parallel Subagents (Fallback):** Must spawn ALL in one batch.
+**Agent Teams (2+ tasks):** Preferred for true parallelism. Required when 2+ units.
+**Parallel Subagents:** When 2+ units, MUST spawn ALL in one batch. No sequential fallback.
 - Enable: `{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }` in settings.json
 - Each teammate gets their own Slice Contract with **exclusive file ownership** (no overlapping edits)
 - Lead monitors via shared task list, messages teammates directly if needed

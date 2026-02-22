@@ -24,6 +24,8 @@ Use when the user has an idea that needs to be turned into a plan before impleme
 ## Mission Start
 Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
 Load `skills/_shared/SLICE_CONTRACT.md` for delegation rules.
+Design patterns (light vocabulary only; use to label patterns you actually see/choose in code):
+- `skills/_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
 - `skills/_shared/SCRIPT_DISCOVERY.md`
@@ -34,7 +36,7 @@ Resolve `SKILLS_ROOT` using the shared snippet:
 
 ### Step 0: Rapid Context Bundle (parallel, < 3 min)
 
-These checks are independent. If your environment supports true parallel subagents/teammates, you can run them in parallel (spawn all in one batch). Otherwise, run them one after the other.
+These checks are independent. **Run them in parallel** (spawn all in one batch) and merge results. Parallel execution is mandatory (see SCOPES_PROTOCOL).
 
 **Lane A: Route to anchor scopes**
 ```bash
@@ -57,7 +59,8 @@ find Scopes/Research/ -name "*.md" | xargs grep -li "<idea keywords>" 2>/dev/nul
 # Read anchor scope evidence links → grep for similar patterns in those paths
 ```
 
-**Merge:** context bundle = anchor scopes + prior plans + prior research + pattern references.
+**Merge (mandatory):** context bundle = anchor scopes + prior plans + prior research + pattern references.
+Write the merged bundle into the plan artifact’s `## Links` section so downstream skills don’t re-navigate.
 
 If prior plans exist on a similar topic, read them and build on them instead of starting from scratch.
 
@@ -123,7 +126,19 @@ Write these sections in order:
 
 ---
 
-### Step 2: Risk Analysis Using Anchor Scopes (while writing)
+### Step 2: Gate Plan Completeness (mandatory, before `/tasks`)
+
+Before handing off to `writing-tasks`, run a quick “plan gate” checklist:
+- Every TODO Scope has: (1) pattern reference, (2) verification command, (3) 2-5 acceptance examples, (4) explicit dependencies.
+- No duplicate scopes or overlapping ownership intent (merge/simplify if two scopes would edit the same files).
+- Slices are realistically 1-4 hours each (split anything larger).
+- Risks include mitigations and at least one evidence link where possible.
+
+If the gate fails, revise the plan artifact until it passes.
+
+---
+
+### Step 3: Risk Analysis Using Anchor Scopes (while writing)
 
 As you write TODO Scopes, check the anchor scope's `## Rules & Constraints` and `## Edge Cases` sections:
 - Each rule/constraint → a potential risk if violated
@@ -132,7 +147,7 @@ As you write TODO Scopes, check the anchor scope's `## Rules & Constraints` and 
 
 ---
 
-### Step 3: Downstream Handoff (automatic)
+### Step 4: Downstream Handoff (automatic)
 
 The plan artifact's `## Links` section IS the routing protocol for `writing-tasks`:
 - `writing-tasks` reads `## Links` → extracts anchor scopes, patterns, and risks
@@ -146,6 +161,14 @@ Next: /tasks to convert this plan into task files
 ```
 
 ---
+
+## Lifecycle / Hygiene (mandatory rule)
+
+Plans are not an archive. After the resulting work is implemented:
+- Delete the executed plan file under `Scopes/Work/Planning/`.
+- Delete completed task files under `Scopes/Work/Tasks/`.
+- Delete any executed refactor-plan artifacts derived from this plan.
+- Keep a short durable completion note (and updated Scopes/ADRs/Notes as needed).
 
 ## Blocked Runbook
 - No Scopes/ exists: recommend `/sync` first, set `Verdict: Needs Sync`.
