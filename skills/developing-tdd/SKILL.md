@@ -67,9 +67,9 @@ flowchart TD
 
   subgraph RedWave["Wave 1: RED tests (ALL slices parallel)"]
     direction LR
-    R1["Test-writer slice 1"]
-    R2["Test-writer slice 2"]
-    RN["Test-writer slice N"]
+    R1["slice-developer (RED) slice 1"]
+    R2["slice-developer (RED) slice 2"]
+    RN["slice-developer (RED) slice N"]
   end
   OwnGate --> R1
   OwnGate --> R2
@@ -80,9 +80,9 @@ flowchart TD
 
   subgraph GreenWave["Wave 2: GREEN implementation (ALL slices parallel)"]
     direction LR
-    G1["Implementer slice 1"]
-    G2["Implementer slice 2"]
-    GN["Implementer slice N"]
+    G1["slice-developer (GREEN) slice 1"]
+    G2["slice-developer (GREEN) slice 2"]
+    GN["slice-developer (GREEN) slice N"]
   end
   Gate1 --> G1
   Gate1 --> G2
@@ -104,13 +104,15 @@ flowchart TD
   B2 --> Gate3
   BN --> Gate3
 
-  Gate3 --> Review["Final gate: code-reviewer"]
+  Gate3 --> CovAudit["test-coverage-auditor (quality gate)"]
+  CovAudit --> PatCheck["pattern-conformance-checker"]
+  PatCheck --> Review["Final gate: code-reviewer"]
   Review --> ScopeSync["Conditional scope sync + validate_scopes"]
   ScopeSync --> Log["Write session log + any active tasks"]
   Log --> Hygiene["Hygiene: delete finished Tasks/Planning/Refactors"]
   Hygiene --> Done["Done"]
 
-  class S,MergeP,Slice,OwnGate,Gate1,Gate2,Gate3,Review,ScopeSync,Log,Hygiene,Done gray
+  class S,MergeP,Slice,OwnGate,Gate1,Gate2,Gate3,CovAudit,PatCheck,Review,ScopeSync,Log,Hygiene,Done gray
   class R1,R2,RN red
   class G1,G2,GN green
   class B1,B2,BN blue
@@ -119,6 +121,14 @@ flowchart TD
 ---
 
 ## Workflow
+
+### Step -1: Upstream Artifact Intake (mandatory check)
+
+When invoked from a task file, read the task's anchor scope, pattern reference, verification command, and acceptance examples directly. Use the task's `## Ownership` section as the slice's `impl_files`. **SKIP scope_map routing** (Lane B below). If invoked freestanding (no upstream task), proceed to Step 0 normally.
+
+(See `skills/_shared/SCOPES_PROTOCOL.md` → Upstream Artifact Intake.)
+
+---
 
 ### Step 0: Preflight (orchestrator, < 3 min)
 
@@ -140,7 +150,12 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
 
 **Lane D: Optional bug scan** — If the area is risky or unclear, spawn `bug-scanner` with the anchor scope + likely entrypoints for a fast hotspot/drift check.
 
-**Merge:** anchor scope(s) + baseline + blast radius (+ optional scan) captured.
+**Lane E: Test Harness Check (conditional)** — Runs in parallel with Lanes A-D. If the repo has no test framework or test files:
+1. Set up the minimal test infrastructure: install test runner (from `DEVELOPER_INFO.md` or detect), create test directory structure, write one trivial passing test to verify the harness.
+2. Record the test command in the session log.
+3. Once verified, harness is ready for Step 1 (Slice).
+
+**Merge:** anchor scope(s) + baseline + blast radius (+ optional scan) + harness status captured.
 
 ---
 
@@ -171,22 +186,25 @@ Break the user's goal into **independent behavior slices**. Each slice becomes a
 
 **Max slices per batch:** 4 (queue the rest for the next cycle)
 
+**Single-slice fast-path:** IF only 1 slice → the lead implements the RED/GREEN/REFACTOR phases directly without spawning subagents. Still run `code-reviewer` as the final gate.
+
 ---
 
 ### Step 2: RED Phase — Write Failing Tests (parallel agents)
 
-⚠️ **Spawn ALL test-writer agents in a SINGLE tool-call batch.**
+⚠️ **Spawn ALL `slice-developer` agents in a SINGLE tool-call batch.**
 
-For each slice, spawn a subagent:
+For each slice, spawn a `slice-developer` subagent (see `agents/slice-developer.md`):
 
 > **SLICE CONTRACT — RED PHASE**
+> - **phase**: `RED`
 > - **Target**: Write failing test(s) for: {behavior}
 > - **Ownership**: You may ONLY create/edit: {test_file}
 > - **Acceptance examples**: {acceptance_examples}
 > - **Pattern reference**: Follow the test patterns in {pattern_reference}
 > - **Guard**: After writing, run `{test_command}` — tests MUST FAIL
 > - **⛔ DO NOT write implementation code.** Only test code.
-> - **Artifact**: Return JSON: `{ "slice_id": "...", "test_file": "...", "tests_written": N, "guard_result": "FAIL" }`
+> - **Artifact**: Return JSON receipt per `slice-developer` output contract
 
 Wait for ALL agents to complete.
 
@@ -208,18 +226,19 @@ Wait for ALL agents to complete.
 
 ### Step 3: GREEN Phase — Make Tests Pass (parallel agents)
 
-⚠️ **Spawn ALL implementation agents in a SINGLE tool-call batch.**
+⚠️ **Spawn ALL `slice-developer` agents in a SINGLE tool-call batch.**
 
-For each slice, spawn a subagent:
+For each slice, spawn a `slice-developer` subagent (see `agents/slice-developer.md`):
 
 > **SLICE CONTRACT — GREEN PHASE**
+> - **phase**: `GREEN`
 > - **Target**: Write minimal code to make these tests pass: {test_file}
 > - **Ownership**: You may ONLY edit: {impl_files}. Do NOT edit the test file.
 > - **Acceptance examples**: {acceptance_examples}
 > - **Pattern reference**: Follow implementation patterns in {pattern_reference}
 > - **Guard**: After implementing, run `{test_command}` — tests MUST PASS
 > - **⛔ MINIMAL code only.** No over-engineering. No extra features.
-> - **Artifact**: Return JSON: `{ "slice_id": "...", "files_changed": [...], "guard_result": "PASS" }`
+> - **Artifact**: Return JSON receipt per `slice-developer` output contract
 
 Wait for ALL agents to complete.
 
@@ -233,6 +252,8 @@ Wait for ALL agents to complete.
 - All BASELINE tests still pass
 - If some new tests still fail:
   → Spawn fix agents for ONLY the failing slices (same contract, add the error output as context)
+  → ADD to the fix contract: the test file content (so the fix agent understands what's expected)
+  → ADD to the fix contract: the RED agent's acceptance examples
   → Re-gate after fixes
   → Max 3 fix cycles per slice before escalating to user
 
@@ -252,7 +273,7 @@ For each slice, spawn a `code-simplifier` subagent:
 > - **Ownership**: {impl_files + test_file} — you may edit both implementation and test code
 > - **Guard command**: `{test_command}` — run after every simplification
 > - **Acceptance**: All tests still pass. Code is cleaner. No behavior change.
-> - **Artifact**: Return JSON: `{ "slice_id": "...", "files_simplified": N, "lines_removed": N, "guard_result": "PASS" }`
+> - **Artifact**: Return JSON: `{ "slice_id": "...", "files_simplified": N, "lines_removed": N, "guard_result": "PASS", "files_read": [...], "key_findings": [...] }`
 
 Wait for ALL agents to complete.
 
@@ -277,15 +298,36 @@ Wait for ALL agents to complete.
    <full_test_command>
    ```
 
-2. Spawn `code-reviewer` as a subagent:
+2. Spawn **3 quality-gate agents in a SINGLE tool-call batch** (parallel):
+
+   **Agent 1: `test-coverage-auditor`** (see `agents/test-coverage-auditor.md`):
+   > **SLICE CONTRACT**
+   > - **Target**: Audit test quality for slices: {slice_list}
+   > - **Ownership**: Read-only review of {test_files + impl_files from all slices}
+   > - **Context**: Anchor scope at `{anchor_scope_path}`, acceptance examples from slice contracts
+   > - **Acceptance**: Map acceptance examples to tests. Report behavioral coverage gaps rated >= 7.
+   > - **Artifact**: Return JSON receipt per `test-coverage-auditor` output contract
+
+   **Agent 2: `pattern-conformance-checker`** (see `agents/pattern-conformance-checker.md`):
+   > **SLICE CONTRACT**
+   > - **Target**: Verify pattern conformance of all changes from this TDD session
+   > - **Ownership**: Read-only review of {impl_files from all slices}
+   > - **Context**: Anchor scope, pattern references from slice contracts
+   > - **Acceptance**: Report deviations from established repo patterns
+   > - **Artifact**: Return JSON receipt per `pattern-conformance-checker` output contract
+
+   **Agent 3: `code-reviewer`** (see `agents/code-reviewer.md`):
    > **SLICE CONTRACT**
    > - **Target**: Review all changes from this TDD session
    > - **Ownership**: Read-only review of {all files from all slices}
    > - **Context**: Anchor scope at `{anchor_scope_path}`, slices: `{slice_list}`
-   > - **Acceptance**: Report only findings with confidence ≥ 80%.
-   > - **Artifact**: Return JSON: `{ "findings_count": N, "severity_breakdown": {...}, "scopes_impacted": [...] }`
+   > - **Acceptance**: Report only findings with confidence >= 80. Include drift detection.
+   > - **Artifact**: Return JSON receipt per `code-reviewer` output contract
 
-3. IF reviewer finds high-severity issues → fix cycle, then re-run reviewer.
+3. **Merge gate receipts.** IF any agent reports high-severity issues:
+   - Spawn `slice-developer` (phase: `FIX`) for the affected files
+   - Re-run the failing gate agent(s) only
+   - Max 2 fix cycles before escalating to user
 
 ---
 
@@ -329,20 +371,6 @@ Per slice entry:
 - Delete task files that were completed in this session.
 - If you executed a plan/refactor plan artifact as part of this work, delete the executed artifact and keep a short durable completion note instead.
 - Keep: updated Scopes + session log (+ ADR/Notes as needed).
-
----
-
-## Phase 0 Protocol: When No Tests Exist
-
-If the repo has no test framework or test files:
-
-1. **Do NOT block on test setup.** Run harness setup in parallel with scope lookup (Step 0).
-2. Set up the minimal test infrastructure:
-   - Install test runner (from DEVELOPER_INFO.md or detect)
-   - Create test directory structure
-   - Write one trivial passing test to verify the harness
-3. Record the test command in the session log
-4. Proceed to Step 1 (Slice) once the harness is verified
 
 ---
 

@@ -62,9 +62,9 @@ flowchart TD
 
   subgraph GreenWave["Wave 1: GREEN implementation (ALL slices parallel)"]
     direction LR
-    G1["Implementer slice 1"]
-    G2["Implementer slice 2"]
-    GN["Implementer slice N"]
+    G1["slice-developer (GREEN) slice 1"]
+    G2["slice-developer (GREEN) slice 2"]
+    GN["slice-developer (GREEN) slice N"]
   end
   Slice --> G1
   Slice --> G2
@@ -86,13 +86,15 @@ flowchart TD
   B2 --> Gate2
   BN --> Gate2
 
-  Gate2 --> Review["Final gate: code-reviewer"]
+  Gate2 --> PatCheck["pattern-conformance-checker"]
+  PatCheck --> SilentHunt["silent-failure-hunter"]
+  SilentHunt --> Review["Final gate: code-reviewer"]
   Review --> ScopeSync["Conditional scope sync + validate_scopes"]
   ScopeSync --> Log["Write session log + any active tasks"]
   Log --> Hygiene["Hygiene: delete finished Tasks/Planning/Refactors"]
   Hygiene --> Done["Done"]
 
-  class S,MergeP,VGate,Slice,Gate1,Gate2,Review,ScopeSync,Log,Hygiene,Done gray
+  class S,MergeP,VGate,Slice,Gate1,Gate2,PatCheck,SilentHunt,Review,ScopeSync,Log,Hygiene,Done gray
   class G1,G2,GN green
   class B1,B2,BN blue
 ```
@@ -100,6 +102,14 @@ flowchart TD
 ---
 
 ## Workflow
+
+### Step -1: Upstream Artifact Intake (mandatory check)
+
+When invoked from a task file, read the task's anchor scope, pattern reference, verification command, and acceptance examples directly. Use the task's `## Ownership` section as the slice's `impl_files`. **SKIP scope_map routing** (Lane A below). If invoked freestanding (no upstream task), proceed to Step 0 normally.
+
+(See `skills/_shared/SCOPES_PROTOCOL.md` → Upstream Artifact Intake.)
+
+---
 
 ### Step 0: Smart Preflight (orchestrator, < 3 min)
 
@@ -135,6 +145,8 @@ Record: `baseline = PASS | FAIL (N failures)`.
 - If the best available signal is only “build compiles” or an ambiguous manual step, treat it as **weak** and switch to `developing-tdd` to create a behavior-linked test signal.
 - If baseline fails before your changes, record baseline failures and either narrow the command or switch to TDD to stabilize signal.
 
+**TDD Handoff Protocol:** IF switching to `developing-tdd`, write a handoff note containing: anchor scope, baseline result, files identified, and verification signal tried. Pass as initial context via `## Links` format. The TDD skill reads this and skips preflight re-run for already-gathered data.
+
 ---
 
 ### Step 1: Slice (orchestrator only, < 5 min)
@@ -160,21 +172,24 @@ Break the user's goal into **independent behavior slices**:
 - If two slices need to edit the same file → merge them into one slice
 - Max **4 slices** per batch (queue the rest)
 
+**Single-slice fast-path:** IF only 1 slice → the lead implements directly (no subagent spawn). Skip REFACTOR agent spawn if change is < 20 lines. Still run `code-reviewer` as the final gate.
+
 ---
 
 ### Step 2: IMPLEMENT Phase (parallel agents)
 
-⚠️ **Spawn ALL implementation agents in a SINGLE tool-call batch.**
+⚠️ **Spawn ALL `slice-developer` agents in a SINGLE tool-call batch.**
 
-For each slice, spawn a subagent:
+For each slice, spawn a `slice-developer` subagent (see `agents/slice-developer.md`):
 
-> **SLICE CONTRACT — IMPLEMENT PHASE**
+> **SLICE CONTRACT — GREEN PHASE**
+> - **phase**: `GREEN`
 > - **Target**: Implement: {behavior}
 > - **Ownership**: You may ONLY edit: {impl_files}
 > - **Verification**: Run `{verification_command}` after every edit — must match `{expected_output}`
 > - **Pattern reference**: Follow patterns in {pattern_reference}
 > - **⛔ Make small edits (< 20 lines each), verify after each one.**
-> - **Artifact**: Return JSON: `{ "slice_id": "...", "files_changed": [...], "verification_result": "PASS" }`
+> - **Artifact**: Return JSON receipt per `slice-developer` output contract
 
 Wait for ALL agents to complete.
 
@@ -207,7 +222,7 @@ For each slice, spawn `code-simplifier`:
 > - **Ownership**: {impl_files}
 > - **Guard command**: `{verification_command}` — run after every simplification
 > - **Acceptance**: Verification still passes. Code is cleaner. No behavior change.
-> - **Artifact**: Return JSON: `{ "slice_id": "...", "files_simplified": N, "lines_removed": N }`
+> - **Artifact**: Return JSON: `{ "slice_id": "...", "files_simplified": N, "lines_removed": N, "files_read": [...], "key_findings": [...] }`
 
 Wait for ALL agents to complete.
 
@@ -224,10 +239,21 @@ Wait for ALL agents to complete.
 
 1. **Full verification** one last time.
 
-2. Spawn `code-reviewer` as a subagent:
-   > Review all changes. Confidence ≥ 80 only. Report Scopes impact.
+2. Spawn **3 quality-gate agents in a SINGLE tool-call batch** (parallel):
 
-3. Fix any high-severity findings.
+   **Agent 1: `pattern-conformance-checker`** (see `agents/pattern-conformance-checker.md`):
+   > Verify new code follows established repo patterns. Report deviations.
+
+   **Agent 2: `silent-failure-hunter`** (see `agents/silent-failure-hunter.md`):
+   > Scan changed files for inadequate error handling (empty catches, swallowed errors, misleading fallbacks).
+
+   **Agent 3: `code-reviewer`** (see `agents/code-reviewer.md`):
+   > Review all changes. Confidence >= 80 only. Report Scopes impact. Include drift detection.
+
+3. **Merge gate receipts.** IF any agent reports high-severity issues:
+   - Spawn `slice-developer` (phase: `FIX`) for the affected files
+   - Re-run the failing gate agent(s) only
+   - Max 2 fix cycles before escalating to user
 
 ---
 
@@ -260,7 +286,10 @@ Per slice entry:
 - **Follow-ups**: <parking lot>
 ```
 
-2. Parking lot → task files (only for remaining work; tasks are not an archive)
+2. Parking lot → task files (only for remaining work; tasks are not an archive). Use structured format:
+   ```json
+   [{ "item": "...", "source_slice": "...", "severity": "low|medium|high", "suggested_skill": "/tdd|/develop|/sync" }]
+   ```
 3. Context summary if tool-heavy
 
 ---

@@ -31,6 +31,19 @@ Treat `Scopes/` as the behavioral contract:
 - Use `Scopes/Work/Standards/WRITE_STYLE.md` as the primary style standard.
 - If `CLAUDE.md` exists, follow it (do not invent rules if it doesn't).
 
+## Evidence Drift Detection (Mandatory)
+
+Check if the diff touches files referenced by scope evidence links:
+```bash
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" \
+  --scope <anchor_scope> --stale-only --format json 2>/dev/null || true
+```
+Resolve `SKILLS_ROOT` using `skills/_shared/SCRIPT_DISCOVERY.md`.
+
+If drift is detected (code changed after scope was last updated), add the stale
+scope files to `scopes_impacted` in the receipt and set `Verdict: Needs Sync`
+alongside any other findings.
+
 ## Review Scope
 
 **IF Slice Contract provided:**
@@ -71,6 +84,10 @@ Score every potential issue 0-100 and **ONLY report issues with confidence >= 80
 - Violations explicitly required by `Scopes/Work/Standards/WRITE_STYLE.md` or `CLAUDE.md`
 - Inconsistent patterns that increase maintenance risk in this codebase
 - Pattern misuse / over-engineering: when pattern language helps, use `skills/_shared/GOF_PATTERNS.md` vocabulary (e.g., unnecessary Singleton/Abstract Factory, Observer lifecycle leaks, State vs Strategy confusion).
+- Pattern conformance: new code introducing a "second way" of doing something the codebase already does (see `SCOPES_PROTOCOL.md` § Pattern Conformance Rule)
+
+**Error handling**
+- Silent failures: empty catch blocks, swallowed errors, misleading fallbacks (defer deep analysis to `silent-failure-hunter` if this agent runs in parallel; flag obvious cases here)
 
 **Tests / verification**
 - Missing or broken verification signal for risky behavior changes
@@ -108,12 +125,19 @@ Watchlist: <0-3 medium-confidence risks worth tracking, or "(none)">
 {
   "slice_target": "<what was reviewed>",
   "status": "complete | partial | blocked",
-  "files_reviewed": ["<list of files reviewed>"],
+  "files_read": ["<all files read for context (scope files, standards, code)>"],
+  "files_changed": [],
+  "files_reviewed": ["<list of files reviewed from the diff>"],
+  "key_findings": ["<1-3 most important findings>"],
+  "evidence_count": 0,
+  "unknowns": 0,
   "findings_count": 0,
   "severity_breakdown": {"high": 0, "medium": 0, "low": 0},
   "scopes_impacted": ["<list of scope files that need updating>"],
+  "drift_detected": false,
   "verdict": "Proceed | Blocked | Needs Sync",
   "follow_ups": ["<deferred work items>"],
+  "guard_result": "NOT_RUN",
   "hygiene_deletes": ["<task/plan/refactor-plan files safe to delete after completion>"],
   "watchlist": ["<capped medium-confidence items>"]
 }

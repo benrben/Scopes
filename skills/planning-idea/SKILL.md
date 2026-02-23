@@ -20,6 +20,7 @@ Use when the user has an idea that needs to be turned into a plan before impleme
 - `Scopes/` exists (at least `INDEX.md` and some `Product/**` files).
 - If Scopes are missing, recommend `/sync` first.
 - Read `skills/_shared/SCOPES_PROTOCOL.md`.
+- **Parallel subagents are MANDATORY** for context lanes AND for TODO Scope research (3+ scopes): spawn all in one batch (see SCOPES_PROTOCOL.md). No sequential fallback.
 
 ## Mission Start
 Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
@@ -34,35 +35,63 @@ Resolve `SKILLS_ROOT` using the shared snippet:
 
 ## Workflow: Artifact-First Planning
 
+### Step -1: Upstream Artifact Intake
+
+Before gathering fresh context, check for existing upstream artifacts (reference SCOPES_PROTOCOL.md Upstream Artifact Intake):
+
+1. **Brainstorm notes**: `Scopes/Work/Notes/brainstorm-*.md` — read their `## Links` sections.
+2. **Scan reports**: `Scopes/Work/Scans/` — reuse hotspot data and evidence links.
+3. **Prior plans**: `Scopes/Work/Planning/` — check for plans on the same or overlapping topic.
+
+If upstream artifacts are found:
+- Import their `## Links` entries directly into this plan's `## Links`.
+- Skip context gathering (Step 0 lanes) for any constraints already established by upstream artifacts.
+- Note upstream sources in the Decision Log.
+
+If no upstream artifacts exist, proceed to Step 0 with full context gathering.
+
+---
+
 ### Step 0: Rapid Context Bundle (parallel, < 3 min)
 
-These checks are independent. **Run them in parallel** (spawn all in one batch) and merge results. Parallel execution is mandatory (see SCOPES_PROTOCOL).
+These checks are independent. **Spawn all lanes as parallel subagents in one batch** (mandatory — no sequential fallback). Each lane uses a Slice Contract (see SLICE_CONTRACT.md) and returns a structured receipt.
 
-**Lane A: Route to anchor scopes**
-```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
-  --query "<idea keywords>" --limit 5 --format json
-```
+**Lane A (subagent): Route to anchor scopes**
+- **Slice Contract**: run `scope_map.py --query "<idea keywords>" --limit 5 --format json`, return top anchor scopes with relevance scores.
+- **Receipt**: `{ "anchors": [...], "top_relevance": <score> }`
 
-**Lane B: Check for prior work**
-```bash
-# Prior plans on similar topics
-find Scopes/Work/Planning/ -name "*.md" | xargs grep -li "<idea keywords>" 2>/dev/null
+**Lane B (subagent): Check for prior work**
+- **Slice Contract**: search `Scopes/Work/Planning/` and `Scopes/Research/` for prior plans/research matching idea keywords, read their `## Links` sections.
+- **Receipt**: `{ "prior_plans": [...], "prior_research": [...], "reusable_links": [...] }`
 
-# Prior research
-find Scopes/Research/ -name "*.md" | xargs grep -li "<idea keywords>" 2>/dev/null
-```
+**Lane C (subagent): Find pattern references**
+- **Slice Contract**: read anchor scope evidence links, find 2-3 existing implementations structurally similar to the idea. Return file paths and pattern labels.
+- **Receipt**: `{ "patterns": [{ "path": "...", "label": "...", "relevance": "..." }] }`
 
-**Lane C: Find pattern references**
-```bash
-# Find 2-3 existing implementations that are structurally similar
-# Read anchor scope evidence links → grep for similar patterns in those paths
-```
+**Lane D (subagent): Risk extraction from anchor scopes**
+- **Slice Contract**: read anchor scope `## Rules & Constraints` and `## Edge Cases` sections. Extract potential risks and acceptance-example seeds.
+- **Receipt**: `{ "risks": [...], "edge_cases": [...] }`
 
-**Merge (mandatory):** context bundle = anchor scopes + prior plans + prior research + pattern references.
-Write the merged bundle into the plan artifact’s `## Links` section so downstream skills don’t re-navigate.
+**Merge (mandatory):** Lead stitches all receipts into a context bundle = anchor scopes + prior plans + prior research + pattern references + risk seeds.
+Write the merged bundle into the plan artifact's `## Links` section so downstream skills don't re-navigate.
 
 If prior plans exist on a similar topic, read them and build on them instead of starting from scratch.
+
+---
+
+### Step 0.5: TODO Scope Research (parallel, mandatory for 3+ scopes)
+
+After the context bundle is assembled, if the blueprint will have **3 or more TODO Scopes**, spawn one subagent per TODO Scope in a single batch:
+
+- **Each subagent** (model: `fast`) researches one TODO Scope:
+  - Find the pattern reference (existing implementation to follow).
+  - Gather 2+ acceptance examples from anchor scope edge cases and similar features.
+  - Identify key files to modify/create.
+  - Return a structured receipt: `{ "scope": "<name>", "pattern_ref": "...", "acceptance_examples": [...], "key_files": [...] }`
+
+- **Lead** stitches all receipts into the blueprint's `## TODO Scopes` section.
+
+**Fast-path (1-2 TODO Scopes):** Lead handles research directly without spawning subagents. Use default model for all synthesis.
 
 ---
 
@@ -81,6 +110,7 @@ Write these sections in order:
 - **Prior Plans**: [<plan>](path.md) — <what to reuse>
 - **Prior Research**: [<research>](path.md) — <findings>
 - **Pattern References**: [<implementation>](path) — <what pattern to follow>
+- **Upstream Artifacts**: [<artifact>](path.md) — <what was reused from Step -1>
 - **DEVELOPER_INFO**: [commands](Scopes/DEVELOPER_INFO.md) — verification signals
 
 ## Risk Register
@@ -116,6 +146,24 @@ Write these sections in order:
 | Decision | Rationale | Alternatives Considered |
 |----------|-----------|------------------------|
 | <choice> | <why> | <what else was weighed> |
+
+## Machine-Readable TODO Scope List
+<!-- Consumed by writing-tasks for automated task file generation -->
+```json
+{
+  "todo_scopes": [
+    {
+      "name": "<Scope Name>",
+      "pattern_ref": "<path>",
+      "key_files": ["<file1>", "<file2>"],
+      "verification": "<command>",
+      "acceptance_examples": ["<example1>", "<example2>"],
+      "depends_on": [],
+      "risk_level": "low|medium|high"
+    }
+  ]
+}
+```
 ```
 
 **Rules:**
@@ -128,13 +176,25 @@ Write these sections in order:
 
 ### Step 2: Gate Plan Completeness (mandatory, before `/tasks`)
 
-Before handing off to `writing-tasks`, run a quick “plan gate” checklist:
+Spawn `plan-gate-checker` (see `agents/plan-gate-checker.md`) to validate the blueprint:
+
+> **SLICE CONTRACT — Plan Gate**
+> - **Target**: Validate plan blueprint at `Scopes/Work/Planning/<date>-<idea-slug>.md`
+> - **Ownership**: Read-only on the plan file
+> - **Context**: Check all TODO Scopes for completeness, ownership collisions, and evidence links
+> - **Acceptance**: Return JSON receipt with pass/fail per check
+
+The `plan-gate-checker` validates:
 - Every TODO Scope has: (1) pattern reference, (2) verification command, (3) 2-5 acceptance examples, (4) explicit dependencies.
 - No duplicate scopes or overlapping ownership intent (merge/simplify if two scopes would edit the same files).
+- **Ownership collision check**: verify no two TODO Scopes modify the same files. If overlap is detected, merge the scopes or sequence them with an explicit dependency edge.
+- **Acceptance-example count validation**: reject any TODO Scope with fewer than 2 acceptance examples. Revise until it has at least 2.
+- **New-ground risk flag**: if a TODO Scope has `[No existing pattern — new ground]`, auto-flag it as higher risk in the Risk Register (add a row with Likelihood=Med, Impact=High).
 - Slices are realistically 1-4 hours each (split anything larger).
 - Risks include mitigations and at least one evidence link where possible.
+- All evidence links in the plan reference existing files.
 
-If the gate fails, revise the plan artifact until it passes.
+IF `plan-gate-checker` returns failures, revise the plan artifact and re-run the checker until it passes.
 
 ---
 
@@ -152,6 +212,7 @@ As you write TODO Scopes, check the anchor scope's `## Rules & Constraints` and 
 The plan artifact's `## Links` section IS the routing protocol for `writing-tasks`:
 - `writing-tasks` reads `## Links` → extracts anchor scopes, patterns, and risks
 - `writing-tasks` reads `## TODO Scopes` → converts each into a task file
+- `writing-tasks` reads `## Machine-Readable TODO Scope List` → uses JSON for automated task generation
 - No re-navigation needed — the plan already did the discovery work
 
 Report to user:

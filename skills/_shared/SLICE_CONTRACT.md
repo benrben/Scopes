@@ -77,27 +77,67 @@ This wastes tokens, creates context duplication, and risks coordination failures
 
 ---
 
-## JSON Receipt Format (Agent Output)
+## JSON Receipt Format (Agent Output — Fix X2)
 
-Every subagent/teammate that receives a Slice Contract MUST return a JSON receipt alongside its human-friendly summary. The receipt enables automated orchestration decisions.
+Every subagent/teammate that receives a Slice Contract MUST return a JSON receipt alongside its human-friendly summary. The receipt enables automated orchestration decisions. **No receipt = task is considered incomplete.**
+
+### Universal Receipt Fields (ALL delegations)
+
+Every receipt — regardless of skill or agent type — MUST include these base fields:
 
 ```json
 {
   "slice_target": "<what was worked on>",
   "status": "complete | partial | blocked",
+  "files_read": ["<list of files read for context>"],
   "files_changed": ["<list of files actually modified>"],
+  "key_findings": ["<1-3 bullet-point findings>"],
   "evidence_count": 0,
   "unknowns": 0,
   "verdict": "Proceed | Blocked | Needs Sync | Needs Narrowing",
-  "graph_edges_found": [
-    {"from": "<scope>", "to": "<scope>", "relation": "<type>"}
-  ],
   "follow_ups": ["<deferred work items>"],
   "guard_result": "PASS | FAIL | NOT_RUN"
 }
 ```
 
-The orchestrator reads the receipt to decide next steps:
+### Extended Fields (Domain-Specific)
+
+Agents add domain-specific fields on top of the universal base:
+
+**Scope-filling agents** add:
+```json
+{
+  "graph_edges_found": [{"from": "<scope>", "to": "<scope>", "relation": "<type>"}],
+  "trace_rows": 0,
+  "diagrams": 0
+}
+```
+
+**Evidence-lane agents** (used in brainstorming, planning, querying) add:
+```json
+{
+  "lane": "<A|B|C|D>",
+  "sources": ["<source references>"],
+  "anchor_scopes_found": ["<scope paths discovered>"]
+}
+```
+
+**Research agents** (used in researching-decisions, per-option) add:
+```json
+{
+  "option": "<option name>",
+  "pros": ["<list>"],
+  "cons": ["<list>"],
+  "migration_cost": "low | medium | high",
+  "reversibility": "easy | moderate | hard",
+  "scope_impact": ["<affected scope paths>"]
+}
+```
+
+### Orchestrator Decision Logic
+
+The orchestrator reads receipts to decide next steps:
 - `status: complete` + `guard_result: PASS` → proceed to next phase
 - `status: partial` → check `unknowns` and decide if acceptable
 - `status: blocked` → surface to user with the follow_ups as suggested actions
+- Missing receipt → treat as blocked; request re-run

@@ -24,11 +24,19 @@ And four hard constraints:
 
 | Agent | Role | Phase | Writes Code? | Background? |
 |---|---|---|---|---|
+| `slice-developer` | Implement features (RED/GREEN/FIX) | Implementation (Wave 1+2) | Yes | No |
 | `bug-scanner` | Scan hotspots & security | Investigation | No | No |
 | `code-reviewer` | Review changes (high-confidence) | Review (Final Gate) | No | No |
-| `code-simplifier` | Simplify recent changes | Refinement | Yes | No |
+| `code-simplifier` | Simplify recent changes | Refinement (Wave 3) | Yes | No |
 | `context-summarizer` | Stabilize working set | Support | Docs only | No |
 | `scope-filler` | Fill new scope skeletons | Scope maintenance | Scopes only | No |
+| `refactor-scanner` | Scan for refactor opportunities | Investigation | No | No |
+| `evidence-verifier` | Validate scope evidence links | Scope validation | No | No |
+| `test-coverage-auditor` | Audit test quality post-GREEN | Quality gate | No | No |
+| `silent-failure-hunter` | Hunt error handling issues | Review (Final Gate) | No | No |
+| `scope-investigator` | Deep per-scope analysis | Planning/Research | No | No |
+| `plan-gate-checker` | Validate artifacts against gates | Quality gate | No | No |
+| `pattern-conformance-checker` | Verify pattern conformance | Quality gate | No | No |
 
 ---
 
@@ -55,14 +63,20 @@ Subagents and teammates are about **context isolation**: verbose work (reading 2
 |---|---|---|
 | 1 scope fill | **Subagent** (single) | Low overhead |
 | 2+ scope fills | **Agent Team** (Preferred) | Guaranteed parallelism |
-| Feature Implementation (TDD/Verified) | **Subagents** (parallel batches) | Lead orchestrates, agents do the work |
+| Feature Implementation (TDD/Verified) | **Subagents** (`slice-developer`, parallel batches) | Lead orchestrates, agents do the work |
 | Simple/Tiny edit (< 5 mins) | **Lead only** | Subagent overhead exceeds benefit |
 | Multi-aspect review (security + perf + coverage) | **Agent Team** (3 reviewers) | Each reviewer is independent, can share findings |
+| Final gate review | **Subagents** (`code-reviewer` + `silent-failure-hunter`, parallel) | Independent specialized reviews |
 | Bug investigation with competing hypotheses | **Agent Team** (investigators) | Can debate and disprove each other |
 | Needs user choice / product decision | **Lead only** | Decisions can't be delegated |
 | code-simplifier after implementation | **Subagent** (single) | One focused task, clear ownership |
 | code-reviewer as final gate | **Subagent** (single) | One focused task, clear verdict |
 | Need stable summary after tool-heavy work | **Subagent** (`context-summarizer`) | Context compression |
+| Per-scope investigation (2+ scopes) | **Subagents** (`scope-investigator`, parallel) | One per scope, evidence-lane receipts |
+| Artifact validation after skill completes | **Subagent** (`plan-gate-checker`) | Deterministic gate enforcement |
+| Test quality audit post-GREEN | **Subagent** (`test-coverage-auditor`) | Validates acceptance coverage |
+| Pattern check on new files | **Subagent** (`pattern-conformance-checker`) | Prevents second-pattern drift |
+| Scope evidence validation | **Subagent** (`evidence-verifier`) | Content-level link verification |
 
 ---
 
@@ -297,17 +311,56 @@ flowchart TD
 
 ---
 
-### 4. Planning / Research (Artifact-First)
+### 4. Planning / Research (Parallel Evidence-Backed)
 
 ```
-┌─────────── SINGLE PASS: BLUEPRINT ────────────────────┐
-│                                                        │
-│  scope_map.py --query → anchor scopes (instant route)  │
-│  rg for prior plans + research (parallel)              │
-│  Write plan directly to Scopes/Work/Planning/          │
-│  Plan's ## Links section IS the handoff for next skill │
-│                                                        │
-└────────────────────────────────────────────────────────┘
+┌─────────── STEP -1: UPSTREAM INTAKE ─────────────────┐
+│                                                       │
+│  Check for prior artifacts (brainstorm notes, scan    │
+│  reports, ADRs). Read ## Links sections and skip      │
+│  redundant scope navigation.                          │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────── STEP 0: PARALLEL CONTEXT LANES ───────────┐
+│                                                       │
+│  Lane A: scope_map.py → anchor scopes (subagent)     │
+│  Lane B: prior work scan (subagent)                   │
+│  Lane C: pattern references (lead)                    │
+│  Lane D: risk extraction / web research (subagent)    │
+│                                                       │
+│  ALL subagent lanes spawn in one batch                │
+│  Each returns JSON receipt                            │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────── STEP 0.5: PER-SCOPE RESEARCH (3+) ───────┐
+│                                                       │
+│  For 3+ TODO Scopes / options / hotspots:             │
+│  Spawn one researcher per unit (parallel)             │
+│  Each returns pattern refs + acceptance examples      │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────── STEP 1: WRITE ARTIFACT ───────────────────┐
+│                                                       │
+│  Lead stitches receipts into blueprint/ADR/report     │
+│  ## Links section IS the handoff for next skill       │
+│  Machine-readable JSON block at end for downstream    │
+│                                                       │
+└───────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌─────────── STEP 2: AUTOMATED GATE ───────────────────┐
+│                                                       │
+│  Plan Gate / ADR Gate / Scan Gate (Fix X4)            │
+│  Validates: acceptance examples, pattern refs,        │
+│  ownership collisions, evidence links, output caps    │
+│                                                       │
+└───────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -338,13 +391,19 @@ flowchart TD
 
 3. **Artifact-driven chaining.** The output of one skill feeds the next through `## Links` sections, JSON receipts, and session logs — not through re-navigation.
 
-4. **Deterministic triggers, not judgment calls.** `code-simplifier` ALWAYS runs in the REFACTOR phase. `code-reviewer` always runs as final gate. Scope sync triggers when scope-linked files are in the diff.
+4. **Upstream intake before re-discovery.** Every skill checks for upstream artifacts (plans, scan reports, brainstorm notes, task files, ADRs) before running `scope_map.py` or reading `INDEX.md`. The chain `brainstorm → plan → tasks → develop` should never re-discover context. (See `skills/_shared/SCOPES_PROTOCOL.md` — Upstream Artifact Intake.)
 
-5. **WIP limits prevent coordination breakdown.** Max 6 fillers, max 4 behavior slices, max 3 reviewers.
+5. **Deterministic triggers, not judgment calls.** `slice-developer` ALWAYS runs as RED/GREEN workers. `code-simplifier` ALWAYS runs in the REFACTOR phase. `code-reviewer` + `silent-failure-hunter` always run as the final gate (parallel). `test-coverage-auditor` runs post-GREEN. `pattern-conformance-checker` runs post-GREEN when new files are created. `plan-gate-checker` runs after every artifact-producing skill. `evidence-verifier` runs during scope sync when scope-linked files are in the diff.
 
-6. **Exclusive ownership prevents conflicts.** When using agent teams, no two teammates may edit the same file.
+6. **WIP limits prevent coordination breakdown.** Max 6 fillers, max 4 behavior slices, max 3 reviewers.
 
-7. **JSON receipts enable orchestration.** Every subagent/teammate returns a machine-parseable receipt. The lead uses it to make deterministic next-step decisions.
+7. **Exclusive ownership prevents conflicts.** When using agent teams, no two teammates may edit the same file.
+
+8. **JSON receipts enable orchestration.** Every subagent/teammate returns a universal JSON receipt (see `skills/_shared/SLICE_CONTRACT.md` — Fix X2). The lead uses receipts to make deterministic next-step decisions.
+
+9. **Automated gates replace manual checklists.** Plan Gates, Task Gates, Scan Gates, and ADR Gates use deterministic checks (see `skills/_shared/SCOPES_PROTOCOL.md` — Fix X4) instead of subjective verification.
+
+10. **All skills delegate at 2+ units.** Any phase with 2+ independent work units MUST delegate to parallel agents — this applies to planning/analysis skills too, not just development/sync. (See `skills/_shared/SCOPES_PROTOCOL.md` — Agent Delegation Threshold.)
 
 ---
 
@@ -353,15 +412,17 @@ flowchart TD
 When implementing a feature, the lead follows this script:
 
 ```
-1. Wave 0 preflight (parallel if possible): route + baseline verify + blast radius + optional bug-scan
-2. Build Slice Contracts (<= 4) with exclusive ownership + verify/guard per slice
-3. Wave 1 RED: spawn all test-writers in one batch; gate with full suite
-4. Wave 2 GREEN: spawn all implementers in one batch; gate with full suite (or full verification)
-5. Wave 3 REFACTOR: spawn all code-simplifiers in one batch; gate with full suite
-6. Final gate: code-reviewer on full diff (always)
-7. Conditional scope sync: update affected Scopes + validate gate when scope-linked files changed
-8. Durable artifacts: session log + optional context summary + any remaining active tasks
-9. Hygiene closure: delete finished Tasks/Planning/Refactors artifacts once work is complete
+1.  Wave 0 preflight (parallel if possible): route + baseline verify + blast radius + optional bug-scan
+2.  Build Slice Contracts (<= 4) with exclusive ownership + verify/guard per slice
+3.  Wave 1 RED: spawn all slice-developer agents (phase: RED) in one batch; gate with full suite
+4.  Wave 2 GREEN: spawn all slice-developer agents (phase: GREEN) in one batch; gate with full suite
+4b. Post-GREEN quality gates (parallel): test-coverage-auditor + pattern-conformance-checker (if new files)
+5.  Wave 3 REFACTOR: spawn all code-simplifiers in one batch; gate with full suite
+6.  Final gate (parallel): code-reviewer + silent-failure-hunter on full diff
+6b. Artifact gate: plan-gate-checker on any artifacts produced in this session
+7.  Conditional scope sync: update affected Scopes + evidence-verifier + validate gate
+8.  Durable artifacts: session log + optional context-summarizer + any remaining active tasks
+9.  Hygiene closure: delete finished Tasks/Planning/Refactors artifacts once work is complete
 ```
 
-This is the engineering lifecycle: **slice → implement → refactor → review → document → validate**.
+This is the engineering lifecycle: **slice → implement → audit → refactor → review → document → validate**.

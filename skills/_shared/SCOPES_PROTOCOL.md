@@ -76,6 +76,40 @@ Before implementing or planning changes, discover the project's established code
 
 ---
 
+## Upstream Artifact Intake (Mandatory Check — Fix X1)
+
+Before running `scope_map.py` or reading `INDEX.md`, check if you were invoked with a reference to an upstream artifact (plan, scan report, brainstorm note, task file, ADR). If so:
+
+1. Read the artifact's `## Links` section.
+2. Extract: anchor scopes, pattern references, prior research, verification signals.
+3. **SKIP scope navigation entirely** — the upstream skill already did this work.
+4. Only re-navigate if the artifact's Links section is missing or incomplete.
+
+This applies to ALL skills. The chain `brainstorm → plan → tasks → develop` should never re-discover what a prior skill already found.
+
+---
+
+## Agent Delegation Threshold (Mandatory — Fix X3)
+
+**ANY phase with 2+ independent work units MUST delegate to parallel agents.** This applies to ALL skill types — not just `developing-*` and `syncing-*`.
+
+Independent work units include:
+- Evidence-gathering lanes (research, web search, scope reading, risk extraction)
+- Per-scope investigation (reading + following evidence for different scopes)
+- Per-item research (TODO Scopes, options, hotspots, risk signals, refactor phases)
+- Per-file task generation
+
+**Thresholds:**
+- **1 unit**: lead executes directly (no agent-spawn overhead).
+- **2-3 units**: spawn subagents in one batch. Every subagent gets a Slice Contract.
+- **4+ units**: use agent teams (max 4-6 per batch). Every teammate gets a Slice Contract.
+
+**Model selection guidance:**
+- Use `fast` model for well-scoped, mechanical work (evidence lane searches, pattern-reference lookups, hotspot analysis per module, task file generation from clear upstream TODO Scopes).
+- Use default model for synthesis work (blueprint writing, ADR option analysis, complex investigation, test writing).
+
+---
+
 ## Agent Invocation Rules
 
 When a skill specifies Agent Orchestration phases:
@@ -105,6 +139,19 @@ When a skill specifies Agent Orchestration phases:
 - Always wait for teammates to finish before proceeding: `Wait for your teammates to complete their tasks`
 - Clean up when done: `Clean up the team`
 - Use `TeammateIdle` and `TaskCompleted` hooks for quality gates
+
+---
+
+## Automated Gate Checks (Fix X4)
+
+Skills should use deterministic, scriptable gate checks wherever possible instead of manual "verify the following checklist" steps:
+
+1. **Plan Gate**: verify a plan artifact contains required sections (Links, Risk Register, TODO Scopes with >= 2 acceptance examples each, pattern references, verification commands). Check that no two TODO Scopes share file ownership.
+2. **Task Gate**: verify task files contain required fields (acceptance examples, verification command, ownership, dependencies). Detect ownership collisions across tasks (extract `## Ownership` paths and flag duplicates).
+3. **Scan Gate**: validate output caps (max 5 targets, <= 12 opportunities, every opportunity has at least one proof link). Verify proof-link files exist.
+4. **ADR Gate**: verify ADR contains required sections (Status, Context, Options with >= 2 evidence links each, Consequences, Verification Strategy).
+
+When a gate check fails, the skill MUST revise the artifact until it passes — do not proceed to the next step with a failing gate.
 
 ---
 

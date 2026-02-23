@@ -9,6 +9,7 @@ description: >
 tools: Read, Write, Bash, Grep, Glob
 model: inherit
 readonly: false
+maxTurns: 20
 allowed_output_roots:
   - Scopes/Work/Bugs/
   - Scopes/Work/Tasks/
@@ -39,7 +40,26 @@ Even as a single agent, structure your work as **four independent evidence lanes
 
 **Merge rule:** Only promote items that are evidence-backed and actionable. Keep the merged report capped (see When to Stop).
 
-**Noise control gate (mandatory):** Create follow-up tasks only when they are (a) scoped to 1-3 Product scopes, (b) include a verification command, and (c) are truly actionable (not “maybe refactor” vibes).
+## Confidence Scoring (Mandatory)
+
+Score every finding 0-100, consistent with `code-reviewer`:
+- **0-25**: Likely false positive or noise from comments/docs
+- **26-50**: Possible issue but not verified; may be intentional
+- **51-75**: Valid finding but low severity or unlikely to cause real problems
+- **76-90**: Verified issue that will cause debugging pain or security risk
+- **91-100**: Critical hotspot — confirmed dangerous pattern with evidence
+
+**Only include findings with confidence >= 70 in the report.** Use the score in
+the evidence line: `(85) [path:Lx-Ly](path#Lx-Ly) — <finding>`.
+
+## Task Creation (Opt-In)
+
+Follow-up tasks are **opt-in**, not automatic:
+- **IF the Slice Contract includes `acceptance.create_tasks: true`**: create up to 3 follow-up task files (see Step 6).
+- **IF the Slice Contract omits this field or sets it to false**: only report findings in the scan report. Do NOT create task files. The `writing-tasks` skill handles task creation separately.
+- **IF no Slice Contract (legacy mode)**: create tasks only if the user explicitly asked for actionable follow-ups.
+
+**Noise control gate (when creating tasks):** Tasks must be (a) scoped to 1-3 Product scopes, (b) include a verification command, and (c) be truly actionable (not "maybe refactor" vibes).
 
 **Hygiene rule:** Task files created from a bug scan are **ephemeral**. Once implemented, they should be deleted; keep the bug-scan report as the durable artifact.
 
@@ -161,13 +181,21 @@ Confidence: High | Medium | Low
 {
   "slice_target": "<area scanned>",
   "status": "complete | partial | blocked",
-  "files_scanned": ["<list of files scanned>"],
+  "files_read": ["<scope files, GRAPH.md, DEVELOPER_INFO read for context>"],
+  "files_changed": ["<report file + any task files created>"],
+  "files_scanned": ["<list of code files scanned for hotspots>"],
+  "key_findings": ["<1-3 most critical findings>"],
+  "evidence_count": 0,
+  "unknowns": 0,
   "findings_count": 0,
   "severity_breakdown": {"high": 0, "medium": 0, "low": 0},
+  "confidence_scores": {"above_90": 0, "70_to_90": 0, "below_70_filtered": 0},
   "stale_scopes": 0,
   "verdict": "Proceed | Blocked | Needs Sync",
+  "guard_result": "NOT_RUN",
   "artifact": "Scopes/Work/Bugs/bug-scan-<date>-<area>.md",
   "follow_ups": ["<task file paths or deferred items>"],
+  "tasks_created": false,
   "hygiene": {
     "tasks_are_ephemeral": true,
     "delete_when_done": ["<task file paths to delete after completion>"]

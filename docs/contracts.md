@@ -17,6 +17,10 @@ The goal is deterministic, evidence-first, token-bounded behavior that is regres
 | **Verdict vocabulary** | `Proceed`, `Blocked`, `Needs Sync`, `Needs Narrowing` |
 | **Evidence format** | `[path:Lx-Ly](path#Lx-Ly)` |
 | **Firebreak** | Subagents return results, not history (no tool dumps) |
+| **Upstream intake** | ALL skills check for upstream artifacts before re-discovering context |
+| **Parallel threshold** | 2+ independent work units MUST use parallel agents (all skill types) |
+| **JSON receipts** | Every delegation returns a universal JSON receipt (no receipt = incomplete) |
+| **Automated gates** | Plan/Task/Scan/ADR gates use deterministic checks, not manual review |
 
 ## Artifact Offloading Policy (Mandatory)
 
@@ -83,6 +87,10 @@ Skills MUST include the following headings (verbatim or near-verbatim):
 - Avoid tool dumps; if output would be long, offload to an artifact and return a pointer.
 - When evidence is missing: write `[Unknown]` and stop.
 - Evidence links must not be invented.
+- ALL skills must include upstream artifact intake (check for prior `## Links` before re-navigating).
+- ALL skills with 2+ work units must delegate to parallel agents with Slice Contracts.
+- ALL artifacts must include a `## Links` section in standardized handoff format for downstream consumption.
+- Machine-readable JSON outputs (receipts, task indexes, TODO Scope lists) are mandatory for chaining.
 
 ---
 

@@ -8,7 +8,7 @@ description: >
 tools: Read, Write, Bash, Grep, Glob
 model: inherit
 readonly: false
-maxTurns: 35
+maxTurns: 25
 allowed_output_roots:
   - Scopes/Product/
 ---
@@ -75,7 +75,29 @@ Resolve `SKILLS_ROOT` using:
    - Diagrams are updated (or removed if inapplicable). No placeholder diagrams remain.
    - No placeholders left behind (`path:Lx-Ly`, `TODO`, "Fill with ...") unless marked `[Unknown]`.
    - Confidence reflects what you actually proved.
-7. **Handoff hygiene (note for the orchestrator):** After the sync batch validates, delete any intermediate sync tracking artifacts and delete finished `Scopes/Work/Tasks/**`, executed `Scopes/Work/Planning/**`, and executed `Scopes/Work/Refactors/**` artifacts. Keep updated Scopes + one durable sync note.
+7. **Phase 5 (Validate):** Run `validate_scopes.py` to check structural integrity:
+   ```bash
+   python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" \
+     --scope "<scope-file-path>" 2>/dev/null || true
+   ```
+   If the validator reports missing sections, broken links, or placeholder remnants,
+   fix them before returning the receipt. Report any unfixable issues as `unknowns`.
+8. **Handoff hygiene (note for the orchestrator):** After the sync batch validates, delete any intermediate sync tracking artifacts and delete finished `Scopes/Work/Tasks/**`, executed `Scopes/Work/Planning/**`, and executed `Scopes/Work/Refactors/**` artifacts. Keep updated Scopes + one durable sync note.
+
+## Saved Scope — Links Section (Mandatory)
+
+Every filled scope file must contain (or already have) a `## Links` section near the
+top that references neighboring scopes and key artifacts. This enables chaining and
+keeps scopes navigable:
+```markdown
+## Links (Scope Network)
+- **Upstream**: [Scopes/Product/...](../...) — <why>
+- **Downstream**: [Scopes/Product/...](../...) — <why>
+- **GRAPH**: [Scopes/GRAPH.md](../../GRAPH.md) — <relevant edges>
+- **Related Work**: [Scopes/Work/...](../../Work/...) — <if any>
+```
+If the skeleton already has a Scope Network section, use it; otherwise add `## Links`
+after the description section.
 
 ## When to Stop
 Stop once the scope is "good enough to route engineers":
@@ -83,6 +105,7 @@ Stop once the scope is "good enough to route engineers":
 - At least one end-to-end trace exists
 - The key rules are evidence-backed
 - Unknowns are clearly marked (not hidden)
+- `validate_scopes.py` passes (or unfixable issues are documented as unknowns)
 
 ## Output Contract
 
@@ -108,12 +131,17 @@ Next best step: <one suggestion>
 {
   "slice_target": "<scope path>",
   "status": "complete | partial | blocked",
+  "files_read": ["<source files, related scopes, GRAPH.md read for context>"],
   "files_changed": ["<scope file path>"],
+  "key_findings": ["<1-3 most significant discoveries about this scope>"],
   "evidence_count": 0,
   "unknowns": 0,
   "diagrams": 0,
   "trace_rows": 0,
+  "links_section": true,
+  "validate_result": "PASS | FAIL | NOT_RUN",
   "verdict": "Proceed | Blocked | Needs Sync",
+  "guard_result": "NOT_RUN",
   "graph_edges_found": [
     {"from": "<this scope>", "to": "<related scope>", "relation": "depends_on | calls | shares_data"}
   ],

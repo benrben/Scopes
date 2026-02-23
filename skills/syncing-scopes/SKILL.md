@@ -71,6 +71,12 @@ Intermediate JSON outputs (drift JSON, skeleton JSON, contract JSON) are **tempo
 
 ## Operating Modes
 
+### Step -1: Upstream Artifact Intake
+
+If invoked after a plan or scan that identified stale scopes, read the upstream artifact's `## Links` to know exactly which scopes need updating — **skip `drift_detector`** for those specific scopes (still run it for the rest). Check prior sync summaries under `Scopes/Work/Notes/summary-*-sync.md` before re-syncing recently synced areas to avoid redundant work.
+
+---
+
 ### Generation Mode (Scopes/ is empty or missing)
 
 When `Scopes/` doesn't exist or has no scope files:
@@ -107,6 +113,8 @@ Capture the JSON output — it lists the created files. Treat this JSON as tempo
 
 **Step 3: Build Slice Contracts** (USE THE SCRIPT)
 
+**Pipeline optimization:** Start building Slice Contracts (`slice_contract_builder.py`) AS skeletons are being generated — don't wait for all skeletons to finish. Process each skeleton's contract as soon as it's available.
+
 ```bash
 python3 "$SKILLS_ROOT/syncing-scopes/scripts/slice_contract_builder.py" \
   --from-skeletons <skeleton_output.json> --repo-root .
@@ -114,6 +122,8 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/slice_contract_builder.py" \
 
 This generates one Slice Contract per skeleton, pre-packaged with entrypoints, tech stack, and related scopes.
 Treat contract JSON outputs as temporary (delete after the batch validates).
+
+**Single-scope fast-path:** IF only 1 scope needs sync → the lead fills it directly (no subagent overhead). Skip to Step 5 (Stitch) after filling.
 
 **Step 4: Delegate Filling to scope-filler Agents**
 
@@ -137,8 +147,19 @@ Treat contract JSON outputs as temporary (delete after the batch validates).
 Each filler returns a JSON receipt with `evidence_count`, `unknowns`, `graph_edges_found`.
 
 
+**Step 4.5: Deep Evidence Verification (optional, recommended for critical scopes)**
+
+After fillers complete but before stitching, optionally spawn `evidence-verifier` (see `agents/evidence-verifier.md`) for high-value scopes to validate that evidence links are not just structurally correct but semantically accurate:
+
+> **SLICE CONTRACT — Evidence Verification**
+> - **Target**: Verify evidence links in `{scope_path}`
+> - **Ownership**: Read-only on the scope file and its evidence targets
+> - **Acceptance**: Return JSON receipt classifying links as ok/stale/shifted/broken/deleted
+
+This catches cases where `validate_scopes.py` passes (file exists, lines in range) but the code at those lines has changed meaning. Run for scopes with `unknowns > 0` or high `evidence_count` from filler receipts.
+
 **Step 5: Stitch** (lead only, after all fillers complete)
-1. Read the JSON receipts from all fillers.
+1. Read the JSON receipts from all fillers (and evidence-verifier, if run).
 2. Update `INDEX.md` with all new scope references.
 3. Update `GRAPH.md` with dependency edges from `graph_edges_found` in receipts.
 4. Final validation:
@@ -233,8 +254,10 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all
 | Agent | File | Purpose | Invoked By |
 |---|---|---|---|
 | `scope-filler` | `agents/scope-filler.md` | Fills one scope skeleton with evidence | Subagent (Task tool) or Agent Team teammate |
+| `evidence-verifier` | `agents/evidence-verifier.md` | Deep semantic validation of evidence links (beyond timestamp drift) | Subagent — optional quality gate after filling |
+| `context-summarizer` | `agents/context-summarizer.md` | Generates durable sync summary notes | Subagent — for sync completion notes |
 
-**Note:** There is NO `scope-auditor` or `scope-writer` agent. Filling goes through `scope-filler`; validation goes through `validate_scopes.py` (drift-only view is `drift_detector.py`).
+**Note:** There is NO `scope-auditor` or `scope-writer` agent. Filling goes through `scope-filler`; validation goes through `validate_scopes.py` (drift-only view is `drift_detector.py`). For deep evidence validation beyond timestamps, use `evidence-verifier`.
 
 ---
 

@@ -47,11 +47,25 @@ flowchart TD
 
 ## Parallelization Guidelines
 
+**Mandatory parallel delegation** applies to ALL skill types when 2+ independent work units exist — not just development/sync skills. This includes:
+- Evidence-gathering lanes in planning/brainstorming (scope routing, web research, precedent scan)
+- Per-scope investigation in querying (each scope gets its own subagent)
+- Per-option research in decision-making (each option gets its own researcher)
+- Per-module hotspot analysis in scanning (each module gets its own scanner)
+- Per-file task generation in writing-tasks
+
 Parallelize subagents when they do not depend on each other:
 - `bug-scanner` + `code-reviewer` (independent scan + review)
+- Evidence Lane A + Lane B + Lane D (independent research channels)
+- Per-scope investigators (each reads a different scope)
 
 Sequence subagents when outputs depend on each other:
 - `bug-scanner` -> main agent diagnosis (when scan results drive next steps)
+- Context lanes merge -> blueprint writing (needs all lane receipts)
+
+## Upstream Artifact Intake
+
+Before any skill runs `scope_map.py` or reads `INDEX.md`, it must check for upstream artifacts. The chain `brainstorm → plan → tasks → develop` should never re-discover what a prior skill already found. See `skills/_shared/SCOPES_PROTOCOL.md` — Upstream Artifact Intake.
 
 ## Summarization Checkpoint Pattern
 

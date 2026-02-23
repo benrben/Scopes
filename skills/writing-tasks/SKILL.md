@@ -62,7 +62,7 @@ Merge into one context bundle before slicing.
 
 Break the intent into **work units**, each 1-4 hours of implementation work.
 
-Each work unit becomes a task file. Each task IS a future Slice Contract for `developing-tdd` or `developing-verified`:
+Each work unit becomes a task file. Each task IS a future Slice Contract consumed by `slice-developer` (see `agents/slice-developer.md`) via `developing-tdd` or `developing-verified`:
 
 ```json
 {
@@ -142,9 +142,11 @@ List the files/modules this task intends to edit. This is an intent declaration 
 
 ---
 
-### Step 3: Hygiene Lane (automatic, capped at 3 tasks)
+### Step 3: Hygiene Lane (parallel, capped at 3 tasks)
 
-While reading the code for task generation, collect observations about:
+Spawn the hygiene-scanner agent in the **SAME batch** as task-generation agents in Step 2. It reads code files referenced by the plan and produces up to 3 hygiene task files **in parallel** with the main task generators.
+
+Observations to collect:
 - Dead code / unused imports noticed
 - Missing test coverage gaps
 - Stale scope documentation noticed
@@ -178,22 +180,43 @@ flowchart TD
 - T4: Depends on T3
 ```
 
+Also produce a **machine-readable task index** at `Scopes/Work/Tasks/task-index.json`:
+```json
+[
+  { "slug": "<date>-<slug>", "title": "...", "depends_on": [], "ownership": ["..."], "status": "pending", "skill": "/tdd|/develop" }
+]
+```
+This index is consumable by `developing-*` skills for automated task pickup and collision detection.
+
 ---
 
 ### Step 5: Gate Task Quality + Collision Check (mandatory)
 
-Before considering tasks “published”, verify:
-- Every task has: acceptance examples, verification command + expected result, pattern reference, and dependencies.
+Spawn `plan-gate-checker` (see `agents/plan-gate-checker.md`) to validate all generated task files:
+
+> **SLICE CONTRACT — Task Quality Gate**
+> - **Target**: Validate all task files at `Scopes/Work/Tasks/<date>-*.md`
+> - **Ownership**: Read-only on all generated task files
+> - **Acceptance**: Return JSON receipt with pass/fail per check, per task
+
+The `plan-gate-checker` validates:
+- Every task has: acceptance examples (**minimum 2 per task** — reject tasks with < 2 examples), verification command + expected result, pattern reference, and dependencies.
 - Every task has an `## Ownership` section.
+- **Automated ownership collision detection:** Extract all `## Ownership` paths from generated task files. Check for duplicates. IF duplicates found → merge the conflicting tasks before publishing.
 - Independent tasks (no `depends_on`) do not overlap ownership intent (if two tasks touch the same file/module, merge or sequence them).
+- All evidence links in tasks reference existing files.
+
+IF `plan-gate-checker` returns failures, fix the task files and re-run the checker.
 
 Tasks should be realistically 1-4 hours each; split anything larger.
 
 ## Parallelism for Large Task Sets
 
-**2-6 task files:** Spawn subagents in a **single tool-call batch** — each generates its assigned task files in parallel.
+**Model selection:** Use `fast` for tasks with clear upstream TODO Scopes (pattern reference is known, acceptance examples pre-written). Use default for freestanding tasks requiring discovery.
 
-**6+ task files:** Use an **Agent Team**:
+**2-4 task files:** Spawn subagents in a **single tool-call batch** — each generates its assigned task files in parallel.
+
+**4+ task files:** Use an **Agent Team**:
 > Create an agent team with {N} teammates (max 4). Each teammate generates 2-3 task files from the assigned TODO Scopes. 
 > Each teammate owns their specific task files — no overlapping edits.
 > Each teammate reads the plan's `## Links` section for context.

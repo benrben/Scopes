@@ -37,12 +37,22 @@ Resolve `SKILLS_ROOT` using:
 
 ---
 
-## Workflow: Route → Hotspots → Refactor Opportunities → Report
+## Workflow: Intake → Route → Hotspots → Refactor Opportunities → Report
+
+### Step -1: Upstream Artifact Intake
+
+Before routing, check for upstream artifacts (see SCOPES_PROTOCOL.md § Upstream Artifact Intake):
+1. If invoked from another skill (e.g., after `/query` or `/plan`), read the incoming `## Links` section for pre-resolved anchor scopes, evidence bundles, and constraints.
+2. **Reuse prior scan reports**: If a `Scopes/Work/Refactors/refactor-scan-*-<area>.md` exists and is **< 7 days old**, reuse its hotspot data and scope routing. Skip re-scanning for the scopes it already covers — focus new effort on uncovered areas only.
+3. If no upstream artifact, proceed normally to Step 0.
 
 ### Step 0: Route to anchor scope(s) (< 60s)
 
-If the user provided a scope path, use it as the anchor.
+**Fast-path for single-scope scans**: If the user specified a single scope path, use it directly as the anchor. Skip `scope_map.py` routing. Proceed immediately to Step 1 with that anchor.
+
 Otherwise, route mechanically:
+
+For multi-scope routing:
 
 ```bash
 python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
@@ -94,6 +104,10 @@ For every recommendation, include:
 - **Why** it helps (simplicity, reuse, tests, fewer deps)
 - **Proof links**: `[path:Lx-Ly](path#Lx-Ly)` for the code smell/duplication you’re addressing
 - **Risk**: blast radius from `Scopes/GRAPH.md` + whether tests exist
+- **Migration Safety Rating**: LOW / MED / HIGH per opportunity (consistent with upgraded `refactor-scanner` agent):
+  - **LOW**: single file, no downstream dependents, has test coverage
+  - **MED**: 2-3 files, 1-2 downstream dependents, partial coverage
+  - **HIGH**: 4+ files, 3+ downstream dependents, or no coverage
 - **Safe migration steps** (green-to-green). If files move/rename, include rename guard:
   ```bash
   python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
@@ -131,18 +145,39 @@ Minimum required sections:
   3. ...
 - **Verify**: `<command>`
 - **Scopes to Update**: <scope files likely to need link/evidence updates>
+
+## Links
+- **Anchor Scopes**: [Scopes/Product/...](path)
+- **GRAPH.md**: [Scopes/GRAPH.md](../../GRAPH.md)
+- **Upstream Artifact**: <path to upstream scan/query, if any>
+- **Handoff → planning-refactor**: Pre-resolved anchors, hotspots, and top opportunities for immediate plan generation
 ```
 
-### Gate: Output Caps (mandatory)
+### Gate: Output Caps + Automated Validation (mandatory)
 
-Enforce deterministic caps in the final artifact:
-- Top 5 hotspot targets max
-- <= 12 total opportunities across targets
+**Automated output-cap validation** (run mechanically before finalizing):
+- Top 5 hotspot targets max — if more, truncate and note overflow count
+- <= 12 total opportunities across targets — if more, rank and drop lowest
 - Every opportunity includes proof link(s) and a verify command
 
-### Step 4: Optional follow-up tasks (max 3)
+**Automated proof-link file existence check**:
+For every proof link `[path:Lx-Ly]` in the report, verify the file exists:
+```bash
+test -f "<path>" && echo "OK" || echo "BROKEN: <path>"
+```
+If any link is broken, mark it `[BROKEN]` in the report and add a note recommending `/sync`.
 
-If you find high-value refactors that should be scheduled, write up to 3 task files:
+### Step 3.5: Pattern Conformance Check (optional, recommended)
+
+If the scan found opportunities involving introducing new patterns or reorganizing existing ones, spawn `pattern-conformance-checker` (see `agents/pattern-conformance-checker.md`) in parallel with the report persistence to validate that recommendations don't violate the Pattern Conformance Rule from `SCOPES_PROTOCOL.md`. Include its findings in the report's `## Opportunities` section.
+
+### Step 4: Follow-up tasks (opt-in, max 3)
+
+Follow-up task creation is **opt-in** (consistent with the upgraded `refactor-scanner` agent):
+- Tasks are only created when the Slice Contract sets `acceptance.create_tasks: true` or the user explicitly requests actionable task files.
+- When tasks are NOT requested, list recommendations in the report only.
+
+If creating tasks, write up to 3 task files:
 - `Scopes/Work/Tasks/$(date +%F)-refactor-<slug>.md`
 
 Each task must:
@@ -155,17 +190,23 @@ After the refactor is implemented and verified, delete the refactor task file. I
 
 ---
 
-## Agent Orchestration (Optional, “Use agents right”)
+## Agent Orchestration (Mandatory for 2+ anchor scopes)
 
-If the scan spans multiple anchor scopes or is broad, delegate **per-scope** scanning for context isolation:
+When scanning **2 or more anchor scopes**, you MUST delegate per-scope scanning for context isolation. No sequential fallback.
 
-- Spawn 1 `refactor-scanner` subagent per anchor scope (max 3 in parallel).
-- Each subagent gets a Slice Contract:
-  - `context.anchor_scope` = that scope file
-  - `context.likely_entrypoints` = evidence-linked code entrypoints from the scope
-  - `acceptance.artifact_required` = `Scopes/Work/Refactors/refactor-scan-<date>-<scope-slug>.md`
+When hotspots span **2+ modules**, spawn one subagent per module for per-module hotspot analysis.
 
-Wait for all receipts, then (optionally) write a 1-page rollup report linking the per-scope reports.
+- Spawn 1 `refactor-scanner` subagent per anchor scope (max 3 in parallel — WIP limit enforced).
+- Each subagent gets a full Slice Contract with exclusive ownership:
+
+> **SLICE CONTRACT — Per-Scope Scanner**
+> - **Target**: Scan `{scope_name}` for refactor opportunities
+> - **Ownership**: Exclusive — this scanner owns `{scope_path}` and its evidence files only. No other scanner may read or write to these paths.
+> - **Context**: Anchor scope at `{scope_path}`, likely entrypoints: `{entrypoints from scope}`
+> - **Acceptance**: Return JSON receipt (universal format) + write per-scope report to `Scopes/Work/Refactors/refactor-scan-<date>-<scope-slug>.md`
+> - **WIP Limit**: Max 3 scanners in parallel
+
+Wait for all JSON receipts, then write a 1-page rollup report linking the per-scope reports.
 
 ---
 
@@ -187,7 +228,31 @@ Artifact: `Scopes/Work/Refactors/refactor-scan-<date>-<area>.md`
 Confidence: High | Medium | Low
 ```
 
-### JSON Receipt (mandatory)
+### JSON Receipt (mandatory from lead AND every scanner)
+
+Every scanner subagent MUST return a JSON receipt in this universal format. The lead collects all receipts and includes them in the final output.
+
+**Per-scanner receipt** (universal base fields from upgraded `refactor-scanner`):
+```json
+{
+  "slice_target": "<scope scanned>",
+  "status": "complete | partial | blocked",
+  "files_read": ["<scope files, GRAPH.md read for context>"],
+  "files_changed": ["<report file>"],
+  "key_findings": ["<top opportunities>"],
+  "evidence_count": 0,
+  "unknowns": 0,
+  "hotspots_count": 0,
+  "opportunities_count": 0,
+  "migration_safety": {"low": 0, "med": 0, "high": 0},
+  "proof_links_verified": 0,
+  "proof_links_broken": 0,
+  "tasks_created": false,
+  "artifact": "Scopes/Work/Refactors/refactor-scan-<date>-<scope-slug>.md"
+}
+```
+
+**Lead rollup receipt:**
 ```json
 {
   "slice_target": "<area scanned>",
@@ -196,6 +261,7 @@ Confidence: High | Medium | Low
   "opportunities_count": 0,
   "verdict": "Proceed | Blocked | Needs Sync | Needs Narrowing",
   "artifact": "Scopes/Work/Refactors/refactor-scan-<date>-<area>.md",
+  "scanner_receipts": ["<per-scanner receipts>"],
   "follow_ups": ["<task file paths, or deferred items>"]
 }
 ```

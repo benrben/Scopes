@@ -28,9 +28,20 @@ Resolve `SKILLS_ROOT` using the shared snippet:
 
 ---
 
-## Workflow: Classify → Route → Answer
+## Workflow: Intake → Classify → Route → Answer
+
+### Step -1: Upstream Artifact Intake
+
+Before routing, check for upstream artifacts (see SCOPES_PROTOCOL.md § Upstream Artifact Intake):
+1. If invoked from another skill (e.g., after `/scan` or `/plan`), read the incoming `## Links` section for pre-resolved anchor scopes, evidence bundles, and constraints.
+2. If an upstream artifact exists and is < 7 days old, skip re-routing for the scopes it already covers — reuse its anchor list and evidence links directly.
+3. If no upstream artifact, proceed normally to Step 0.
 
 ### Step 0: Instant Route (< 30 seconds)
+
+Run **two parallel lanes** and merge results before Step 1:
+
+**Lane A: Scope Routing**
 
 These checks are independent. **Run them in parallel** and merge into one evidence bundle. Parallel execution is mandatory (see SCOPES_PROTOCOL).
 
@@ -54,6 +65,18 @@ Set `Verdict: Needs Sync`, recommend `/sync`.
 
 Optional (fast): glance `Scopes/GRAPH.md` for dependency/blast-radius context on the anchor scope(s).
 
+**Lane B: Freshness Pre-Check** (runs in parallel with Lane A)
+
+```bash
+# Scope files last commit dates (all anchor scopes from routing)
+git log -1 --format="%ci" -- <scope_path_1> <scope_path_2> ...
+
+# Code files last commit dates (evidence paths from scopes)
+git log -1 --format="%ci" -- <code_path_1> <code_path_2> ...
+```
+
+Freshness data is ready before answer composition — no separate freshness step needed later.
+
 ---
 
 ### Step 1: Classify Question Type
@@ -71,23 +94,61 @@ Optional (fast): glance `Scopes/GRAPH.md` for dependency/blast-radius context on
 
 ### Step 2: Answer (type-specific)
 
-#### For Explainer / Dependency / Locator / Navigator:
-1. Read the top 1-3 anchor scopes from Step 0
+#### Fast-path: Locator questions ("Where is X?")
+For simple "where is X configured / defined?" questions: a single `scope_map` call + evidence-link follow is sufficient. Skip multi-scope investigation — return the location with a freshness note and exit.
+
+#### For Explainer / Dependency (2+ anchor scopes):
+When the question touches **2 or more anchor scopes**, spawn one `scope-investigator` per anchor scope (see `agents/scope-investigator.md`, max 3 in parallel). Each subagent:
+- Reads its assigned scope and traces execution paths
+- Follows evidence links into code and verifies claims
+- Checks freshness (scope date vs code date)
+- Maps architecture layers touched by the scope
+- Returns a JSON receipt per `scope-investigator` output contract
+
+> **SLICE CONTRACT — Per-Scope Investigator**
+> - **Target**: Investigate `{scope_name}` for question `{question}`
+> - **Ownership**: Exclusive — this investigator owns `{scope_path}` and its evidence files only
+> - **Context**: Anchor scope at `{scope_path}`, question: `{question}`
+> - **investigation_type**: `explainer` or `dependency`
+> - **Acceptance**: Return receipt with findings, evidence bundle, freshness data, and verified evidence count
+> - **WIP Limit**: Max 3 investigators in parallel
+
+The lead merges receipts from all investigators into a unified answer.
+
+#### For single-scope Explainer / Navigator:
+1. Read the anchor scope from Step 0
 2. Follow evidence links into code for verification:
    - Open the linked file:line ranges
    - Confirm the claim in the scope still matches the code
 3. Compose answer with evidence links
 
 #### For Diagnostic ("what's wrong?"):
-Spawn `bug-scanner` as a subagent:
-> **SLICE CONTRACT**
+Spawn **three subagents in parallel**:
+
+**1. `bug-scanner`** (see `agents/bug-scanner.md`):
+> **SLICE CONTRACT — Bug Scanner**
 > - **Target**: Scan `{area}` for bug-prone patterns, security hotspots, and documentation drift
-> - **Ownership**: Read-only (no edits)
+> - **Ownership**: Exclusive read-only on `{scope_path}` and its entrypoints
 > - **Context**: Anchor scope at `{scope_path}`, files to scan: `{entrypoints from scope}`
-> - **Acceptance**: Return findings with severity ratings
+> - **acceptance.create_tasks**: `false` (diagnostics don't auto-create tasks)
+> - **Acceptance**: Return findings with confidence scores (>= 70 only) as JSON receipt
 > - **Artifact**: Write findings to `Scopes/Work/Bugs/bug-scan-<date>-<area>.md`
 
-Merge `bug-scanner` findings into your answer.
+**2. `evidence-verifier`** (see `agents/evidence-verifier.md`):
+> **SLICE CONTRACT — Evidence Verifier**
+> - **Target**: Verify all evidence links in `{scope_path}`
+> - **Ownership**: Exclusive read-only on scope evidence links
+> - **Context**: Scope path `{scope_path}`, evidence link list from scope
+> - **Acceptance**: Return JSON receipt classifying links as ok/stale/shifted/broken/deleted
+
+**3. `silent-failure-hunter`** (see `agents/silent-failure-hunter.md`):
+> **SLICE CONTRACT — Silent Failure Hunter**
+> - **Target**: Scan `{area}` for inadequate error handling
+> - **Ownership**: Exclusive read-only on `{scope_path}` entrypoints
+> - **Context**: Anchor scope at `{scope_path}`, critical paths from scope
+> - **Acceptance**: Return findings with confidence scores as JSON receipt
+
+Merge all three receipts into your answer. The `evidence-verifier` receipt replaces the old freshness-checker role with deeper semantic validation.
 
 #### For Changelog:
 ```bash
@@ -99,7 +160,7 @@ Compare against scope's last-modified date to show drift.
 
 ### Step 3: Freshness Note (mandatory on every scope-backed answer)
 
-Every answer that cites a scope MUST include a freshness note:
+Every answer that cites a scope MUST include a freshness note. Use the dates already collected in Step 0 Lane B:
 
 ```markdown
 > **Freshness**: Scope last updated <scope_date>. Code last changed <code_date>.
@@ -107,23 +168,27 @@ Every answer that cites a scope MUST include a freshness note:
 > <IF drift ≤ 14 days: "✓ Scope appears current.">
 ```
 
-To get the dates:
-```bash
-# Scope file last commit
-git log -1 --format="%ci" -- <scope_path>
-
-# Code files last commit (from scope evidence paths)
-git log -1 --format="%ci" -- <code_path>
-```
-
 ---
 
 ### Step 3.5: Gate (mandatory)
 
-Do not finalize an answer unless it includes:
+Do not finalize an answer unless it passes ALL checks:
+
+**Manual checks:**
 1. Evidence links into code (or clearly marked `[Unknown]` where evidence is missing)
 2. A freshness note (scope date vs code date)
 3. A clear handoff recommendation (next skill or next command)
+
+**Automated checks (run mechanically, no judgment):**
+4. **Evidence file existence**: For every cited evidence link `[path:Lx-Ly]`, verify the file exists:
+   ```bash
+   test -f "<path>" && echo "OK" || echo "BROKEN: <path>"
+   ```
+   If any link is broken, mark it `[BROKEN]` in the answer and recommend `/sync`.
+5. **Automated confidence assignment**: Compute confidence mechanically from signals:
+   - **High**: drift ≤ 14 days AND evidence_count ≥ 2 AND zero broken links
+   - **Medium**: drift 15-30 days OR evidence_count == 1 OR any broken links
+   - **Low**: drift > 30 days OR evidence_count == 0 OR no scope covers the area
 
 ### Step 4: Handoff Recommendations (automatic)
 
@@ -140,24 +205,44 @@ Based on what you found, recommend the appropriate next skill:
 
 ---
 
-## Confidence Levels
+## Confidence Levels (automated — see Gate Step 3.5)
 
-| Level | Criteria |
+| Level | Mechanical Signal |
 |---|---|
-| **High** | Scope evidence links verified in code, dates < 14 days drift |
-| **Medium** | Scope exists but some evidence is `[Unknown]` or dates > 14 days |
-| **Low** | No scope covers this area, or scope is very stale (> 30 days) |
+| **High** | drift ≤ 14 days AND evidence_count ≥ 2 AND zero broken links |
+| **Medium** | drift 15-30 days OR evidence_count == 1 OR any broken links |
+| **Low** | drift > 30 days OR evidence_count == 0 OR no scope covers the area |
 
 ---
 
-## Artifacts (conditional)
+## Artifacts
 
-**IF the question required > 5 minutes of tracing** (complex investigation):
-- Invoke `context-summarizer` to write a research note to `Scopes/Work/Notes/`
-- This prevents re-investigation of the same question in future sessions
+### Research Notes (mandatory when triggered)
 
-**IF diagnostic question** (bug-scanner was invoked):
-- The bug-scanner's findings file IS the artifact
+Write a research note to `Scopes/Work/Notes/query-<date>-<slug>.md` when ANY of these conditions are true:
+- **(a)** Answer required reading **3+ files**
+- **(b)** Question type is **Diagnostic**
+- **(c)** Confidence is **Medium or Low**
+
+Research note MUST include:
+- Question asked and answer summary
+- Evidence links cited
+- Freshness data
+- `## Links` section for downstream consumption:
+  ```markdown
+  ## Links
+  - **Anchor Scopes**: [Scopes/Product/...](path)
+  - **Evidence**: [path:Lx-Ly](path#Lx-Ly) — <what it proves>
+  - **Related Notes**: [Scopes/Work/Notes/...](path)
+  - **Next Skill**: <recommended skill>
+  ```
+
+Invoke `context-summarizer` to write the note. Trigger deterministically: **IF 5+ files read OR 3+ scopes traversed**.
+
+### Diagnostic Artifacts
+- The `bug-scanner`'s findings file IS the primary artifact.
+- The `evidence-verifier`'s receipt is attached to the research note (replaces old freshness-checker).
+- The `silent-failure-hunter`'s receipt highlights error-handling gaps not caught by `bug-scanner`.
 - Any follow-up task files created from the diagnostic are ephemeral: once implemented, delete the task file and keep durable learnings in a Notes summary instead.
 
 ---

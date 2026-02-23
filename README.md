@@ -106,29 +106,51 @@ This repository is the **source package** for Scopes skills/agents you install i
 
 ### Skills (commands)
 
-- `syncing-scopes` — generate/update `Scopes/` from code + git reality
-- `querying-scopes` — answer "how/where/what depends on what" from `Scopes/` + evidence
-- `planning-idea` — turn an idea into a scope-native implementation blueprint
-- `writing-tasks` — convert intent into engineer-ready tasks under `Scopes/Work/Tasks/**`
-- `developing-verified` — implement changes with sandbox verification (no new test files)
-- `developing-tdd` — implement changes via strict TDD (failing test first)
-- `planning-refactor` — plan safe green-to-green refactors with scope link maintenance
-- `scanning-refactor` — scan Scopes + code for refactor/simplification opportunities (report + tasks)
-- `researching-decisions` — compare options and write evidence-backed ADRs
+- `syncing-scopes` — generate/update `Scopes/` from code + git reality (wave model, parallel scope-fillers)
+- `querying-scopes` — answer "how/where/what depends on what" from `Scopes/` + evidence (parallel per-scope investigation)
+- `planning-idea` — turn an idea into a scope-native implementation blueprint (parallel context lanes + per-scope research)
+- `writing-tasks` — convert intent into engineer-ready tasks under `Scopes/Work/Tasks/**` (parallel task generation + hygiene)
+- `developing-verified` — implement changes with sandbox verification (parallel IMPL + REFACTOR waves)
+- `developing-tdd` — implement changes via strict TDD (parallel RED + GREEN + REFACTOR waves)
+- `planning-refactor` — plan safe green-to-green refactors with scope link maintenance (parallel risk signals + phase research)
+- `scanning-refactor` — scan Scopes + code for refactor/simplification opportunities (mandatory parallel per-scope scanning)
+- `researching-decisions` — compare options and write evidence-backed ADRs (parallel per-option research)
+- `brainstorming-project` — interactive design brainstorm with Scopes + patterns + web research (parallel evidence lanes)
 
 ### Shared infrastructure
 
-- `skills/_shared/` — common Scopes-first protocol and session log templates (loaded by skills via progressive disclosure)
+- `skills/_shared/SCOPES_PROTOCOL.md` — Scopes-first startup, upstream artifact intake, agent delegation thresholds, automated gates, parallelism rules
+- `skills/_shared/SLICE_CONTRACT.md` — standardized delegation format with universal JSON receipts
+- `skills/_shared/DEVELOPING_PROTOCOL.md` — shared verification-first loops for developing-* skills
+- `skills/_shared/GOF_PATTERNS.md` — design pattern vocabulary for consistent naming
+- `skills/_shared/SESSION_LOG_TEMPLATES.md` — session log structure templates
+- `skills/_shared/SCRIPT_DISCOVERY.md` — SKILLS_ROOT resolution snippet
 - `skills/_evaluations/` — evaluation scenarios for testing skill effectiveness
 
 ### Agents (roles)
 
-- `code-simplifier` — simplify recent changes without behavior changes
-- `bug-scanner` — hotspot scan + scope context (read-only)
-- `refactor-scanner` — scan for maintainability/refactor opportunities (read-only on source)
-- `code-reviewer` — review diffs and report only high-confidence issues
-- `context-summarizer` — stabilize a working-set summary after tool-heavy phases
-- `scope-filler` — fill new capability scope skeletons using evidence (run one per scope in parallel)
+**Implementation agents:**
+- `slice-developer` — the core coding agent: writes tests (RED), production code (GREEN), or fixes (FIX) for a single behavior slice with exclusive ownership, pattern conformance, and guard command verification (Slice Contract)
+- `code-simplifier` — simplify recent changes without behavior changes (Slice Contract + guard command)
+
+**Review + quality gate agents:**
+- `code-reviewer` — review diffs and report only high-confidence issues (read-only, Slice Contract)
+- `silent-failure-hunter` — hunt for swallowed errors, empty catch blocks, and misleading fallbacks; cross-references scope behavioral promises (read-only, Slice Contract)
+- `test-coverage-auditor` — audit test quality post-GREEN: validates acceptance example coverage, behavioral coverage, and test resilience (read-only, Slice Contract)
+- `pattern-conformance-checker` — verify that new code follows the repo's established patterns for its category (read-only, Slice Contract)
+- `plan-gate-checker` — validate artifacts (plans, tasks, scans, ADRs) against deterministic gate rules from SCOPES_PROTOCOL.md (read-only, Slice Contract)
+
+**Investigation + scanning agents:**
+- `bug-scanner` — hotspot scan + scope context, 4 evidence lanes (Slice Contract, writes to `Scopes/Work/Bugs/`)
+- `refactor-scanner` — scan for maintainability/refactor opportunities, per-scope parallel (Slice Contract, writes to `Scopes/Work/Refactors/`)
+- `scope-investigator` — deep per-scope execution tracing for planning/research/querying skills; one per scope in parallel (read-only, Slice Contract)
+
+**Scope maintenance agents:**
+- `scope-filler` — fill new capability scope skeletons using evidence (one per scope in parallel, Slice Contract)
+- `evidence-verifier` — validate that evidence links in Scope files are still accurate at the content level, beyond timestamp-based drift detection (read-only, Slice Contract)
+
+**Support agents:**
+- `context-summarizer` — stabilize a working-set summary after tool-heavy phases with scope anchoring and `## Links` for downstream chaining (Slice Contract, writes to `Scopes/Work/Notes/`)
 
 ---
 
@@ -233,6 +255,15 @@ Scopes provides:
 That's less context, higher signal, and dramatically less room for guessing.
 
 When you already have a task/plan/research artifact, open it and follow its `## Links` section (anchor scopes, pattern references, verification commands). Use `scope_map.py --query "<keywords>"` if you need a fast route to related scopes.
+
+### Design Principles (All Skills)
+
+Every skill in this package follows four cross-cutting principles:
+
+1. **Upstream Artifact Intake**: before re-discovering context, check for prior artifacts (`## Links` sections). The chain `brainstorm → plan → tasks → develop` never re-navigates.
+2. **Mandatory Parallel Delegation**: any phase with 2+ independent work units delegates to parallel agents with Slice Contracts — this applies to ALL skill types, not just development.
+3. **Universal JSON Receipts**: every subagent returns a structured receipt enabling automated orchestration decisions. No receipt = task incomplete.
+4. **Automated Gates**: Plan Gates, Task Gates, Scan Gates, and ADR Gates use deterministic checks instead of manual checklists.
 
 ---
 
