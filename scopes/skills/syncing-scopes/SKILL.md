@@ -209,7 +209,7 @@ After a sync completes and validates:
 - No `Scopes/` and generation from scratch is not approved: set `Verdict: Needs Narrowing` and ask for permission to generate (do not ask which area — generate all).
 - Evidence links cannot be validated (missing files, permissions): record exact blocker; set `Verdict: Blocked`.
 - Git history unavailable (no git metadata): use filesystem timestamps and direct evidence checks; record limitation.
-- Scripts not found (`$SKILLS_ROOT` unresolvable): set `Verdict: Blocked` and tell user to check installation.
+- Scripts not found (CLI unavailable): set `Verdict: Blocked` and tell user to install the scopes CLI.
 
 ## Output Contract
 
