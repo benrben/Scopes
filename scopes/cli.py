@@ -88,10 +88,8 @@ def _resolve_scopes_root(project_root: Path) -> Path:
 
 
 def _scripts_dir() -> Path:
-    """Return path to scopes/skills/*/scripts directory (root of script locations)."""
-    cli_file = Path(__file__).resolve()
-    scopes_dir = cli_file.parent
-    return scopes_dir
+    """Return path to scopes/scripts/ — all standalone scripts live here."""
+    return Path(__file__).resolve().parent / "scripts"
 
 
 # ─────────────────────────────────────────────────────────────────────────
@@ -374,8 +372,8 @@ def cmd_map(ctx: CliContext, args) -> int:
     """scopes map — Matrix view of scopes (wraps scope_map.py)."""
     try:
         # Import and call scope_map.py
-        scripts_syncing = ctx.scripts_dir / "skills" / "syncing-scopes" / "scripts"
-        sys.path.insert(0, str(scripts_syncing))
+
+        sys.path.insert(0, str(ctx.scripts_dir))
 
         from scope_map import main as scope_map_main  # type: ignore[import]
 
@@ -417,8 +415,8 @@ def cmd_map(ctx: CliContext, args) -> int:
 def cmd_drift(ctx: CliContext, args) -> int:
     """scopes drift — Find stale scope evidence (wraps drift_detector.py)."""
     try:
-        scripts_syncing = ctx.scripts_dir / "skills" / "syncing-scopes" / "scripts"
-        sys.path.insert(0, str(scripts_syncing))
+
+        sys.path.insert(0, str(ctx.scripts_dir))
 
         from drift_detector import main as drift_detector_main  # type: ignore[import]
 
@@ -452,8 +450,8 @@ def cmd_drift(ctx: CliContext, args) -> int:
 def cmd_validate(ctx: CliContext, args) -> int:
     """scopes validate — Validate scope evidence (wraps validate_scopes.py)."""
     try:
-        scripts_syncing = ctx.scripts_dir / "skills" / "syncing-scopes" / "scripts"
-        sys.path.insert(0, str(scripts_syncing))
+
+        sys.path.insert(0, str(ctx.scripts_dir))
 
         from validate_scopes import main as validate_scopes_main  # type: ignore[import]
 
@@ -484,8 +482,8 @@ def cmd_validate(ctx: CliContext, args) -> int:
 def cmd_create(ctx: CliContext, args) -> int:
     """scopes create — Create scope skeleton (wraps scope_skeleton_generator.py)."""
     try:
-        scripts_syncing = ctx.scripts_dir / "skills" / "syncing-scopes" / "scripts"
-        sys.path.insert(0, str(scripts_syncing))
+
+        sys.path.insert(0, str(ctx.scripts_dir))
 
         from scope_skeleton_generator import main as skeleton_main  # type: ignore[import]
 
@@ -546,8 +544,8 @@ def cmd_create(ctx: CliContext, args) -> int:
 def cmd_contract(ctx: CliContext, args) -> int:
     """scopes contract — Build slice contract (wraps slice_contract_builder.py)."""
     try:
-        scripts_syncing = ctx.scripts_dir / "skills" / "syncing-scopes" / "scripts"
-        sys.path.insert(0, str(scripts_syncing))
+
+        sys.path.insert(0, str(ctx.scripts_dir))
 
         from slice_contract_builder import main as contract_main  # type: ignore[import]
 
@@ -580,8 +578,8 @@ def cmd_contract(ctx: CliContext, args) -> int:
 def cmd_trace(ctx: CliContext, args) -> int:
     """scopes trace — Trace scope from entrypoints (wraps scope_trace_stub_from_entrypoints.py)."""
     try:
-        scripts_syncing = ctx.scripts_dir / "skills" / "syncing-scopes" / "scripts"
-        sys.path.insert(0, str(scripts_syncing))
+
+        sys.path.insert(0, str(ctx.scripts_dir))
 
         from scope_trace_stub_from_entrypoints import main as trace_main  # type: ignore[import]
 
@@ -612,8 +610,8 @@ def cmd_trace(ctx: CliContext, args) -> int:
 def cmd_rename(ctx: CliContext, args) -> int:
     """scopes rename — Rename scope with link rewriting (wraps scope_rename_guard.py)."""
     try:
-        scripts_syncing = ctx.scripts_dir / "skills" / "syncing-scopes" / "scripts"
-        sys.path.insert(0, str(scripts_syncing))
+
+        sys.path.insert(0, str(ctx.scripts_dir))
 
         from scope_rename_guard import main as rename_main  # type: ignore[import]
 
@@ -655,8 +653,8 @@ def cmd_move(ctx: CliContext, args) -> int:
 def cmd_hotspot(ctx: CliContext, args) -> int:
     """scopes hotspot — Find hot files (wraps hotspot_matrix.py)."""
     try:
-        scripts_scanning = ctx.scripts_dir / "skills" / "scanning-refactor" / "scripts"
-        sys.path.insert(0, str(scripts_scanning))
+
+        sys.path.insert(0, str(ctx.scripts_dir))
 
         from hotspot_matrix import main as hotspot_main  # type: ignore[import]
 
