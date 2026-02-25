@@ -203,13 +203,55 @@ def _run(cmd: list[str], cwd: str = ".") -> subprocess.CompletedProcess:
 # Commands: Phase 1 — General & Script Bridges
 # ─────────────────────────────────────────────────────────────────────────
 
+_COMMAND_HELP: dict[str, str] = {
+    "map":           "scopes map [--query TEXT] [--limit N] [--area AREA] [--depth N] [--only tree|matrix] [--no-summary] [--no-evidence]\n  Matrix/tree view of all scopes. Use --query to filter by keyword.",
+    "drift":         "scopes drift [--scope X] [--area AREA] [--all] [--stale-only] [--days N] [--limit N]\n  Detect stale scope evidence via git timestamps.",
+    "validate":      "scopes validate [--scope X] [--area AREA] [--all] [--allow-stale]\n  Validate all scope evidence links for structural correctness.",
+    "create":        "scopes create [--scope Area/Name] [--area A] [--capability C] [--item I] [--micro] [--dry-run] [--force]\n  Create one or more scope skeleton files.",
+    "trace":         "scopes trace SCOPE [SCOPE...] [--desc TEXT] [--apply] [--allow-missing-lines]\n  Generate trace-stub tables from entrypoints for the given scopes.",
+    "rename":        "scopes rename --scope X --to Y [--apply] [--dry-run] [--strict]\n  Rename a scope and rewrite all links pointing to it.",
+    "move":          "scopes move --scope X --to Y [--apply] [--dry-run]\n  Alias for rename; implies a directory change.",
+    "contract":      "scopes contract [--from-drift FILE] [--from-skeletons FILE] [--infer] [--scope X] [--limit N]\n  Build a Slice Contract from drift output or skeleton list.",
+    "hotspot":       "scopes hotspot [--top N] [--since-days N] [--ext EXT] [--exclude-dir DIR]\n  Show files with the most git churn over the given window.",
+    "read":          "scopes read --scope X [--section HEADING]\n  Read a scope document. Add --section to extract one section.",
+    "read:evidence": "scopes read:evidence --scope X [--section HEADING]\n  List all evidence links in a scope (or one section).",
+    "read:code":     "scopes read:code --scope X [--section HEADING]\n  Follow every evidence link and return the referenced code snippets.",
+    "search":        "scopes search --query TEXT [--limit N]\n  Full-text search across all scope documents.",
+    "locate":        "scopes locate --intent TEXT [--limit N]\n  Score and rank scopes by how well they match a free-text intent.",
+    "evidence":      "scopes evidence --scope X\n  Full evidence report: each link's target, line range, staleness status.",
+    "backlinks":     "scopes backlinks --scope X\n  List every other scope that references this one.",
+    "status":        "scopes status\n  Project dashboard: scope count, areas, stale count, health.",
+    "areas":         "scopes areas\n  List all scope areas with scope counts.",
+    "orphans":       "scopes orphans\n  Scopes with no incoming references from any other scope.",
+    "unresolved":    "scopes unresolved\n  Evidence links that point to missing or out-of-range files.",
+    "session:start": "scopes session:start --goal TEXT [--scope X]\n  Create a new session log under Scopes/Work/Notes/.",
+    "session:read":  "scopes session:read\n  Print the current (or most recent) session log.",
+    "tasks":         "scopes tasks [--scope X] [--status STATUS]\n  List task files. Filterable by scope or status.",
+    "task:create":   "scopes task:create --scope X --title TEXT\n  Create a new task file anchored to a scope.",
+    "agents":        "scopes agents\n  List all agents with id and description.",
+    "skills":        "scopes skills\n  List all skills with id and description.",
+    "init":          "scopes init\n  Initialize Scopes/ directory structure for a new project.",
+    "sync:status":   "scopes sync:status\n  Sync dashboard: last sync, total scopes, stale count, health.",
+    "history":       "scopes history --scope X [--limit N]\n  Git log for a specific scope file.",
+    "profiles":      "scopes profiles\n  List available project-type profiles.",
+    "templates":     "scopes templates [--type TYPE]\n  List available scope/task/ADR templates.",
+    "scopes":        "scopes scopes [--area AREA] [--limit N]\n  List all scope files. Filter by area.",
+    "version":       "scopes version\n  Print version, project root, scope count, last sync timestamp.",
+    "graph:impact":  "scopes graph:impact --scope X\n  List all scopes that depend on X (direct dependents).",
+}
+
+
 def cmd_help(ctx: CliContext, args) -> int:
     """scopes help [command] — Show help for all or specific command."""
-    # For now, print built-in help
     if hasattr(args, 'command') and args.command:
-        # Detailed help for specific command
-        print(f"Help for: {args.command}")
-        print("(Phase 1 stub)")
+        cmd = args.command
+        if cmd in _COMMAND_HELP:
+            print(f"\n{cmd}\n" + "─" * len(cmd))
+            print(_COMMAND_HELP[cmd])
+        else:
+            print(f"Unknown command: {cmd}")
+            print("Run: scopes help  for a full list")
+            return 1
         return 0
     else:
         # List all commands grouped by category
@@ -1517,6 +1559,51 @@ def cmd_orphans(ctx: CliContext, args) -> int:
         return 1
 
 
+def cmd_graph_impact(ctx: CliContext, args) -> int:
+    """scopes graph:impact scope="X" — Direct and transitive dependents of a scope."""
+    try:
+        scope_name = getattr(args, 'scope', '')
+        if not scope_name:
+            print(_error("--scope required"), file=sys.stderr)
+            return 1
+
+        scope_file = _resolve_scope(ctx.scopes_product, scope_name)
+        scope_rel = str(scope_file.relative_to(ctx.scopes_product)).replace('\\', '/')
+
+        # Build forward-reference map: scope → scopes it references
+        all_files = _all_scope_files(ctx.scopes_product)
+        dependents = []
+
+        for other_file in all_files:
+            if other_file == scope_file:
+                continue
+            try:
+                content = other_file.read_text(encoding="utf-8", errors="ignore")
+                if scope_rel in content or scope_file.stem in content:
+                    dependents.append({
+                        "scope": str(other_file.relative_to(ctx.scopes_product)),
+                        "title": _extract_title(other_file),
+                        "type": "direct",
+                    })
+            except Exception:
+                pass
+
+        result = {
+            "scope": scope_name,
+            "path": scope_rel,
+            "direct_dependents": [d for d in dependents if d["type"] == "direct"],
+            "total": len(dependents),
+        }
+
+        print(_json_out(result) if ctx.format == "json" else
+              f"Impact: {scope_name} — {len(dependents)} direct dependents\n" +
+              "\n".join(f"  {d['scope']}" for d in dependents))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
 def cmd_unresolved(ctx: CliContext, args) -> int:
     """scopes unresolved — Broken evidence links."""
     try:
@@ -1817,6 +1904,10 @@ def main() -> int:
 
     unresolved_parser = subparsers.add_parser("unresolved", help="Broken evidence links")
     unresolved_parser.set_defaults(func=cmd_unresolved)
+
+    graph_impact_parser = subparsers.add_parser("graph:impact", help="What scopes are affected if X changes?")
+    graph_impact_parser.add_argument("--scope", required=True, help="Scope name")
+    graph_impact_parser.set_defaults(func=cmd_graph_impact)
 
     # ─────────────────────────────────────────────────────────────────────
     # Phase 3: Sessions

@@ -58,4 +58,4 @@ Follow them exactly, including:
 ## Post-Write Validation (Default)
 
 After writing/updating scopes:
-- `python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all`
+- `scopes validate --all`
