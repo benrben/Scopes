@@ -17,15 +17,15 @@ Use when the user needs to make a technical decision — choosing between approa
 - "Research this library choice and document the tradeoffs."
 
 ## Prerequisites
-- Read `skills/_shared/SCOPES_PROTOCOL.md` for Scopes-first startup.
+- Read `../_shared/SCOPES_PROTOCOL.md` for Scopes-first startup.
 
 ## Mission Start
-Load `skills/_shared/SCOPES_PROTOCOL.md`.
+Load `../_shared/SCOPES_PROTOCOL.md`.
 Design patterns (Full GoF catalog; use as the shared vocabulary in ADR comparisons):
-- `skills/_shared/GOF_PATTERNS.md` (names, intent, tradeoffs, common confusions)
+- `../_shared/GOF_PATTERNS.md` (names, intent, tradeoffs, common confusions)
 
 Resolve `SKILLS_ROOT` using the shared snippet:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `../_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
@@ -78,7 +78,7 @@ For each option, gather:
 - **Migration cost**: what changes are needed to adopt?
 - **Reversibility**: how easy is it to change course later?
 
-Parallelism (mandatory): See `skills/_shared/SCOPES_PROTOCOL.md`.
+Parallelism (mandatory): See `../_shared/SCOPES_PROTOCOL.md`.
 - If evaluating 2-4 options, you MUST run **one `scope-investigator` per option in parallel** (see `agents/scope-investigator.md`; spawn all in one batch). No sequential fallback.
 - Each investigator gets a full Slice Contract with exclusive option ownership:
 

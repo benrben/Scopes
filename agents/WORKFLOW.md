@@ -44,7 +44,7 @@ And four hard constraints:
 
 Subagents and teammates are about **context isolation**: verbose work (reading 20 files, running test suites, scanning patterns) stays contained. The orchestrator only receives structured JSON receipts.
 
-**Every delegation MUST use a Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`):
+**Every delegation MUST use a Slice Contract** (see `scopes/skills/_shared/SLICE_CONTRACT.md`):
 - **Target**: what to work on
 - **Ownership**: files this agent may edit (exclusive — no overlaps)
 - **Context bundle**: pre-gathered info so the agent doesn't re-discover
@@ -55,7 +55,7 @@ Subagents and teammates are about **context isolation**: verbose work (reading 2
 
 ## When to Use Subagents vs Agent Teams vs Lead-Only
 
-**Parallel execution is MANDATORY** when delegating to 2+ subagents or teammates. All skills follow `skills/_shared/SCOPES_PROTOCOL.md`: no sequential fallback when work is split into multiple units.
+**Parallel execution is MANDATORY** when delegating to 2+ subagents or teammates. All skills follow `scopes/skills/_shared/SCOPES_PROTOCOL.md`: no sequential fallback when work is split into multiple units.
 
 ⚠️ **Spawn ALL subagents in a SINGLE tool-call batch** for parallelism. Spawning one per turn makes them sequential and violates the protocol.
 
@@ -391,7 +391,7 @@ flowchart TD
 
 3. **Artifact-driven chaining.** The output of one skill feeds the next through `## Links` sections, JSON receipts, and session logs — not through re-navigation.
 
-4. **Upstream intake before re-discovery.** Every skill checks for upstream artifacts (plans, scan reports, brainstorm notes, task files, ADRs) before running `scope_map.py` or reading `INDEX.md`. The chain `brainstorm → plan → tasks → develop` should never re-discover context. (See `skills/_shared/SCOPES_PROTOCOL.md` — Upstream Artifact Intake.)
+4. **Upstream intake before re-discovery.** Every skill checks for upstream artifacts (plans, scan reports, brainstorm notes, task files, ADRs) before running `scope_map.py` or reading `INDEX.md`. The chain `brainstorm → plan → tasks → develop` should never re-discover context. (See `scopes/skills/_shared/SCOPES_PROTOCOL.md` — Upstream Artifact Intake.)
 
 5. **Deterministic triggers, not judgment calls.** `slice-developer` ALWAYS runs as RED/GREEN workers. `code-simplifier` ALWAYS runs in the REFACTOR phase. `code-reviewer` + `silent-failure-hunter` always run as the final gate (parallel). `test-coverage-auditor` runs post-GREEN. `pattern-conformance-checker` runs post-GREEN when new files are created. `plan-gate-checker` runs after every artifact-producing skill. `evidence-verifier` runs during scope sync when scope-linked files are in the diff.
 
@@ -399,11 +399,11 @@ flowchart TD
 
 7. **Exclusive ownership prevents conflicts.** When using agent teams, no two teammates may edit the same file.
 
-8. **JSON receipts enable orchestration.** Every subagent/teammate returns a universal JSON receipt (see `skills/_shared/SLICE_CONTRACT.md` — Fix X2). The lead uses receipts to make deterministic next-step decisions.
+8. **JSON receipts enable orchestration.** Every subagent/teammate returns a universal JSON receipt (see `scopes/skills/_shared/SLICE_CONTRACT.md` — Fix X2). The lead uses receipts to make deterministic next-step decisions.
 
-9. **Automated gates replace manual checklists.** Plan Gates, Task Gates, Scan Gates, and ADR Gates use deterministic checks (see `skills/_shared/SCOPES_PROTOCOL.md` — Fix X4) instead of subjective verification.
+9. **Automated gates replace manual checklists.** Plan Gates, Task Gates, Scan Gates, and ADR Gates use deterministic checks (see `scopes/skills/_shared/SCOPES_PROTOCOL.md` — Fix X4) instead of subjective verification.
 
-10. **All skills delegate at 2+ units.** Any phase with 2+ independent work units MUST delegate to parallel agents — this applies to planning/analysis skills too, not just development/sync. (See `skills/_shared/SCOPES_PROTOCOL.md` — Agent Delegation Threshold.)
+10. **All skills use parallel delegation for every task.** Every unit of work MUST be delegated to subagents in a batch — no lead-only execution. This applies to planning/analysis skills too, not just development/sync. (See `scopes/skills/_shared/SCOPES_PROTOCOL.md` — Agent Delegation Threshold.)
 
 ---
 

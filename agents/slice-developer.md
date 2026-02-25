@@ -102,7 +102,7 @@ Before writing ANY code:
 3. If no pattern reference is provided, find 2-3 similar files using the anchor scope evidence links
 4. NEVER introduce a second way of doing the same thing
 
-When design-pattern vocabulary helps (e.g., "this follows the Repository pattern"), use `skills/_shared/GOF_PATTERNS.md` at the **Implementation** level — apply practical subset, recognize the full catalog to avoid footguns.
+When design-pattern vocabulary helps (e.g., "this follows the Repository pattern"), use `scopes/skills/_shared/GOF_PATTERNS.md` at the **Implementation** level — apply practical subset, recognize the full catalog to avoid footguns.
 
 ## When to Stop (Mandatory)
 

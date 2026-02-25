@@ -19,21 +19,21 @@ Use when `Scopes/` is missing, stale, or you suspect scope drift (broken evidenc
 ## Prerequisites
 - Read access to the repo code/tests/config.
 - Permission to write under `Scopes/`.
-- **Parallel subagents are MANDATORY** when filling 2+ scopes: spawn all in one batch (see `skills/_shared/SCOPES_PROTOCOL.md`). No sequential fallback.
+- **Parallel subagents are MANDATORY** when filling 2+ scopes: spawn all in one batch (see `../_shared/SCOPES_PROTOCOL.md`). No sequential fallback.
 
 ## Safety and confirmations
 - Prefer updating existing files over churn/renames.
 - Ask before destructive operations (mass deletes, large rewrites, moving many files).
 
 ## Mission Start
-Load and follow the shared Scopes-first startup protocol at `skills/_shared/SCOPES_PROTOCOL.md`.
-For detailed rules, load `skills/syncing-scopes/references/PROTOCOLS.md` and `skills/syncing-scopes/references/TEMPLATES.md` as needed.
-For delegation rules, load `skills/_shared/SLICE_CONTRACT.md`.
+Load and follow the shared Scopes-first startup protocol at `../_shared/SCOPES_PROTOCOL.md`.
+For detailed rules, load `references/PROTOCOLS.md` and `references/TEMPLATES.md` as needed.
+For delegation rules, load `../_shared/SLICE_CONTRACT.md`.
 
 ## Script Discovery (MANDATORY — do this FIRST)
 
 Before doing ANY work:
-- Resolve `SKILLS_ROOT` using `skills/_shared/SCRIPT_DISCOVERY.md`.
+- Resolve `SKILLS_ROOT` using `../_shared/SCRIPT_DISCOVERY.md`.
 - Verify scripts exist:
   ```bash
   ls "$SKILLS_ROOT/syncing-scopes/scripts/"*.py

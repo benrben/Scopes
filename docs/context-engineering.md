@@ -47,7 +47,7 @@ flowchart TD
 
 ## Parallelization Guidelines
 
-**Mandatory parallel delegation** applies to ALL skill types when 2+ independent work units exist — not just development/sync skills. This includes:
+**Mandatory parallel delegation** applies to ALL skill types for every task — always delegate to subagents in a batch (even for a single unit). No lead-only execution. This includes:
 - Evidence-gathering lanes in planning/brainstorming (scope routing, web research, precedent scan)
 - Per-scope investigation in querying (each scope gets its own subagent)
 - Per-option research in decision-making (each option gets its own researcher)
@@ -65,7 +65,7 @@ Sequence subagents when outputs depend on each other:
 
 ## Upstream Artifact Intake
 
-Before any skill runs `scope_map.py` or reads `INDEX.md`, it must check for upstream artifacts. The chain `brainstorm → plan → tasks → develop` should never re-discover what a prior skill already found. See `skills/_shared/SCOPES_PROTOCOL.md` — Upstream Artifact Intake.
+Before any skill runs `scope_map.py` or reads `INDEX.md`, it must check for upstream artifacts. The chain `brainstorm → plan → tasks → develop` should never re-discover what a prior skill already found. See `scopes/skills/_shared/SCOPES_PROTOCOL.md` — Upstream Artifact Intake.
 
 ## Summarization Checkpoint Pattern
 

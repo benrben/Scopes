@@ -1,6 +1,6 @@
 # Syncing Scopes: Reference Protocols
 
-Load this file when you need detailed rules beyond `skills/syncing-scopes/SKILL.md`.
+Load this file when you need detailed rules beyond `../SKILL.md`.
 
 ## Scopes Root Layout (Canonical)
 
@@ -50,7 +50,7 @@ Prefer the format: `Command -> Signal` and link to the source of truth (config f
 
 ## Template Fidelity
 
-Capability scope templates live in `skills/syncing-scopes/references/TEMPLATES.md`.
+Capability scope templates live in `TEMPLATES.md`.
 Follow them exactly, including:
 - include all diagram blocks that apply; delete the ones that don’t (never leave placeholders unchanged)
 - at least 1 end-to-end trace per major path

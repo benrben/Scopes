@@ -31,5 +31,9 @@ If you maintain your own fork or pinned reference, prefer configuring your insta
 - For Claude Code plugin installs, prefer script paths rooted at `$CLAUDE_PLUGIN_ROOT` so commands work regardless of where the plugin is installed.
 - For manual installs (Cursor/other assistants), use the skills directory in the target project (for example `.cursor/skills/` or `.claude/skills/`).
 
+### Parallel execution (e.g. TDD) in Cursor
+
+Skills like `developing-tdd` require **parallel** subagents (RED/GREEN/REFACTOR waves). In Cursor, parallelism is achieved by the assistant issuing **multiple task/subagent tool calls in the same turn** (e.g. multiple `mcp_task` calls in one response). If the assistant spawns one task, waits for the result, then spawns the next, work runs **sequentially** and the protocol is violated. Ensure the skill and `scopes/skills/_shared/SCOPES_PROTOCOL.md` are loaded so the assistant sees the Cursor-specific rule: *same turn = same batch = parallel*.
+
 If you need a single variable for helper scripts (used in skill/agent docs), use:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `scopes/skills/_shared/SCRIPT_DISCOVERY.md`

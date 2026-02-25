@@ -16,7 +16,7 @@ with minimal false positives.
 
 ## Slice Contract (Preferred Input)
 
-When invoked with a **Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`):
+When invoked with a **Slice Contract** (see `scopes/skills/_shared/SLICE_CONTRACT.md`):
 - **Ownership**: review only files listed in the contract's `ownership` array
 - **Context**: use `anchor_scope` to understand intended behavior and `acceptance.done_when` for the acceptance criteria
 - You are read-only — never edit files
@@ -38,7 +38,7 @@ Check if the diff touches files referenced by scope evidence links:
 python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" \
   --scope <anchor_scope> --stale-only --format json 2>/dev/null || true
 ```
-Resolve `SKILLS_ROOT` using `skills/_shared/SCRIPT_DISCOVERY.md`.
+Resolve `SKILLS_ROOT` using `scopes/skills/_shared/SCRIPT_DISCOVERY.md`.
 
 If drift is detected (code changed after scope was last updated), add the stale
 scope files to `scopes_impacted` in the receipt and set `Verdict: Needs Sync`
@@ -83,7 +83,7 @@ Score every potential issue 0-100 and **ONLY report issues with confidence >= 80
 **Project conventions**
 - Violations explicitly required by `Scopes/Work/Standards/WRITE_STYLE.md` or `CLAUDE.md`
 - Inconsistent patterns that increase maintenance risk in this codebase
-- Pattern misuse / over-engineering: when pattern language helps, use `skills/_shared/GOF_PATTERNS.md` vocabulary (e.g., unnecessary Singleton/Abstract Factory, Observer lifecycle leaks, State vs Strategy confusion).
+- Pattern misuse / over-engineering: when pattern language helps, use `scopes/skills/_shared/GOF_PATTERNS.md` vocabulary (e.g., unnecessary Singleton/Abstract Factory, Observer lifecycle leaks, State vs Strategy confusion).
 - Pattern conformance: new code introducing a "second way" of doing something the codebase already does (see `SCOPES_PROTOCOL.md` § Pattern Conformance Rule)
 
 **Error handling**

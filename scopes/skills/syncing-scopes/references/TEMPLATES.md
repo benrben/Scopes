@@ -302,7 +302,7 @@ Keep engineering changes consistent, maintainable, and easy to review. Reduce du
 - **Composition over inheritance**: keep building blocks small and swappable.
 - **Functional core, imperative shell**: isolate IO (DB/network/files) from pure business logic.
 - **Adapter at boundaries**: map external shapes (HTTP/DB/vendor) into internal domain models once.
-- **GoF vocabulary (optional)**: use consistent pattern names + tradeoffs (`skills/_shared/GOF_PATTERNS.md`) when it helps communication; don’t cargo-cult patterns.
+- **GoF vocabulary (optional)**: use consistent pattern names + tradeoffs (`../../_shared/GOF_PATTERNS.md`) when it helps communication; don’t cargo-cult patterns.
 - **Small interfaces**: depend on minimal contracts; avoid “god” services/modules.
 - **Consistency beats cleverness**: prefer the repo’s established patterns over novelty.
 

@@ -42,14 +42,14 @@ You help the user brainstorm solutions that fit this repository: you use `Scopes
 - The user asked for a narrow factual answer about the repo: use `querying-scopes`.
 
 ## Mission Start (Mandatory)
-1. Load `skills/_shared/SCOPES_PROTOCOL.md` (Scopes-first startup).
-2. Load `skills/_shared/GOF_PATTERNS.md` (pattern vocabulary + tradeoffs).
-3. Resolve `SKILLS_ROOT` using `skills/_shared/SCRIPT_DISCOVERY.md`.
+1. Load `../_shared/SCOPES_PROTOCOL.md` (Scopes-first startup).
+2. Load `../_shared/GOF_PATTERNS.md` (pattern vocabulary + tradeoffs).
+3. Resolve `SKILLS_ROOT` using `../_shared/SCRIPT_DISCOVERY.md`.
 
 If `Scopes/` is missing, set `Verdict: Needs Sync` and recommend `syncing-scopes` before continuing.
 
 ### Prerequisites
-- **Parallel subagents are MANDATORY** for evidence lanes: spawn Lanes A, B, and D as subagents in one batch (see `skills/_shared/SCOPES_PROTOCOL.md`). No sequential fallback.
+- **Parallel subagents are MANDATORY** for evidence lanes: spawn Lanes A, B, and D as subagents in one batch (see `../_shared/SCOPES_PROTOCOL.md`). No sequential fallback.
 - Lane C (pattern fit) stays with the lead agent since it's a doc lookup.
 
 ---
@@ -75,7 +75,7 @@ find Scopes/Work/Notes/ -name "brainstorm-*.md" | xargs grep -li "<topic keyword
 ```
 IF found for a similar topic: load prior Top 3 and constraints — build on them instead of starting from scratch.
 
-Also check for upstream artifacts (plan, scan report, ADR) that may provide anchor scopes and constraints. If found, read their `## Links` section and skip Lane A routing (see `skills/_shared/SCOPES_PROTOCOL.md` Upstream Artifact Intake).
+Also check for upstream artifacts (plan, scan report, ADR) that may provide anchor scopes and constraints. If found, read their `## Links` section and skip Lane A routing (see `../_shared/SCOPES_PROTOCOL.md` Upstream Artifact Intake).
 
 ### Mini Format (Use This Default)
 1. 2 min: goal + constraints.
@@ -112,7 +112,7 @@ Use `scope-investigator` (see `agents/scope-investigator.md`) for deep evidence 
 - Collect 2-5 concrete precedent links (paths) that show "how this repo already does it".
 
 ### Lane C: Pattern Fit (Design Pattern Doc) ⟨lead agent⟩
-- Use `skills/_shared/GOF_PATTERNS.md` to label candidate shapes (Strategy/Adapter/Facade/etc.) only when it clarifies tradeoffs.
+- Use `../_shared/GOF_PATTERNS.md` to label candidate shapes (Strategy/Adapter/Facade/etc.) only when it clarifies tradeoffs.
 - Prefer "simpler than patterns" when the doc suggests the pattern would be overkill.
 - For each option you propose, answer:
   - What pattern name fits (if any)?

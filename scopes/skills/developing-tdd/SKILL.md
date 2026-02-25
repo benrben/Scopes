@@ -19,20 +19,20 @@ Use when you need to implement something with new tests. If no new tests are nee
 ## Prerequisites
 - The repo has a working test runner (from `Scopes/DEVELOPER_INFO.md` or detectable).
 - Permission to create/modify test files.
-- **Parallel subagents are MANDATORY**: the environment MUST support spawning multiple subagents in a single batch. Sequential fallback is not permitted. See `skills/_shared/SCOPES_PROTOCOL.md`.
-- Read `skills/_shared/SCOPES_PROTOCOL.md` and `skills/_shared/DEVELOPING_PROTOCOL.md`.
+- **Parallel subagents are MANDATORY**: the environment MUST support spawning multiple subagents in a single batch. Sequential fallback is not permitted. See `../_shared/SCOPES_PROTOCOL.md`.
+- Read `../_shared/SCOPES_PROTOCOL.md` and `../_shared/DEVELOPING_PROTOCOL.md`.
 
 ## Mission Start
 Load and follow the shared protocols:
-- `skills/_shared/SCOPES_PROTOCOL.md` (Scopes-first startup)
-- `skills/_shared/DEVELOPING_PROTOCOL.md` (verification-first loops)
-- `skills/_shared/SLICE_CONTRACT.md` (delegation format)
-- `skills/_shared/SESSION_LOG_TEMPLATES.md` (session log structure for TDD)
+- `../_shared/SCOPES_PROTOCOL.md` (Scopes-first startup)
+- `../_shared/DEVELOPING_PROTOCOL.md` (verification-first loops)
+- `../_shared/SLICE_CONTRACT.md` (delegation format)
+- `../_shared/SESSION_LOG_TEMPLATES.md` (session log structure for TDD)
 Design patterns (practical subset in implementation; recognize full GoF catalog to avoid misapplication):
-- `skills/_shared/GOF_PATTERNS.md`
+- `../_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `../_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
@@ -126,13 +126,13 @@ flowchart TD
 
 When invoked from a task file, read the task's anchor scope, pattern reference, verification command, and acceptance examples directly. Use the task's `## Ownership` section as the slice's `impl_files`. **SKIP scope_map routing** (Lane B below). If invoked freestanding (no upstream task), proceed to Step 0 normally.
 
-(See `skills/_shared/SCOPES_PROTOCOL.md` → Upstream Artifact Intake.)
+(See `../_shared/SCOPES_PROTOCOL.md` → Upstream Artifact Intake.)
 
 ---
 
 ### Step 0: Preflight (orchestrator, < 3 min)
 
-These checks are independent. **Run them in parallel** (spawn all in one batch); merge the outputs. Parallel execution is mandatory for this skill (see SCOPES_PROTOCOL).
+These checks are independent. **Run them in parallel** (spawn all in one batch); merge the outputs. Parallel execution is mandatory for this skill (see SCOPES_PROTOCOL). **In Cursor:** issue one `mcp_task` (or run) per lane (A–E as applicable) in the same turn so they run in parallel; do not run lanes one after another.
 
 **Lane A: Baseline** — Run existing tests:
 ```bash
@@ -186,13 +186,13 @@ Break the user's goal into **independent behavior slices**. Each slice becomes a
 
 **Max slices per batch:** 4 (queue the rest for the next cycle)
 
-**Single-slice fast-path:** IF only 1 slice → the lead implements the RED/GREEN/REFACTOR phases directly without spawning subagents. Still run `code-reviewer` as the final gate.
+**Single-slice fast-path:** IF only 1 slice → the lead may implement RED/GREEN/REFACTOR directly (no subagents), or spawn one subagent for consistency. Still run `code-reviewer` as the final gate. **In Cursor:** to keep behavior consistent with multi-slice runs, you may spawn one `mcp_task` (slice-developer) per phase instead of the lead implementing directly.
 
 ---
 
 ### Step 2: RED Phase — Write Failing Tests (parallel agents)
 
-⚠️ **Spawn ALL `slice-developer` agents in a SINGLE tool-call batch.**
+⚠️ **Spawn ALL `slice-developer` agents in a SINGLE tool-call batch.** In Cursor: issue one `mcp_task` per slice in the same turn (same response); do not spawn one, wait, then spawn the next.
 
 For each slice, spawn a `slice-developer` subagent (see `agents/slice-developer.md`):
 
@@ -226,7 +226,7 @@ Wait for ALL agents to complete.
 
 ### Step 3: GREEN Phase — Make Tests Pass (parallel agents)
 
-⚠️ **Spawn ALL `slice-developer` agents in a SINGLE tool-call batch.**
+⚠️ **Spawn ALL `slice-developer` agents in a SINGLE tool-call batch.** In Cursor: issue one `mcp_task` per slice in the same turn; do not spawn one, wait, then spawn the next.
 
 For each slice, spawn a `slice-developer` subagent (see `agents/slice-developer.md`):
 
@@ -264,7 +264,7 @@ Wait for ALL agents to complete.
 
 ### Step 4: REFACTOR Phase — Simplify (parallel agents)
 
-⚠️ **Spawn ALL simplifier agents in a SINGLE tool-call batch.**
+⚠️ **Spawn ALL simplifier agents in a SINGLE tool-call batch.** In Cursor: issue one `mcp_task` per slice in the same turn; do not spawn one, wait, then spawn the next.
 
 For each slice, spawn a `code-simplifier` subagent:
 
@@ -298,7 +298,7 @@ Wait for ALL agents to complete.
    <full_test_command>
    ```
 
-2. Spawn **3 quality-gate agents in a SINGLE tool-call batch** (parallel):
+2. Spawn **3 quality-gate agents in a SINGLE tool-call batch** (parallel). **In Cursor:** issue three `mcp_task` calls in the same turn (one per agent).
 
    **Agent 1: `test-coverage-auditor`** (see `agents/test-coverage-auditor.md`):
    > **SLICE CONTRACT**

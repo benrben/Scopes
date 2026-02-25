@@ -4,6 +4,8 @@ These are optional “set-and-forget” workflows you can run on a schedule or i
 
 > Note: This repo is the *skills package*. The paths below assume you run the scripts from a project repo where `Scopes/` exists.
 
+Before running any helper scripts, resolve `SKILLS_ROOT` (see `scopes/skills/_shared/SCRIPT_DISCOVERY.md`).
+
 ---
 
 ## 1) Drift Audit (Weekly)
@@ -12,7 +14,7 @@ Goal: catch scope drift early (before a big “sync everything” day).
 
 Run:
 ```bash
-python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 50
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-only --limit 50
 ```
 
 Follow-up:
@@ -26,7 +28,7 @@ Goal: route from a task/plan/research artifact to anchor scopes with minimal con
 
 Run:
 ```bash
-python3 skills/syncing-scopes/scripts/scope_map.py \
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
   --from-artifact Scopes/Work/Tasks/<file>.md \
   --depth 3 --only tree
 ```
@@ -49,7 +51,7 @@ flowchart LR
 
 Run:
 ```bash
-python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 20
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --stale-only --limit 20
 ```
 
 If stale scopes are reported, update the affected scopes before merge.

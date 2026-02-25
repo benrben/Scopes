@@ -38,7 +38,7 @@ Before writing the summary note:
    python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
      --query "<topic keywords>" --limit 3 --format json
    ```
-   Resolve `SKILLS_ROOT` using `skills/_shared/SCRIPT_DISCOVERY.md`.
+   Resolve `SKILLS_ROOT` using `scopes/skills/_shared/SCRIPT_DISCOVERY.md`.
 
 2. **Include scope references** in the summary note's `## Links` section
    so downstream skills can self-route without re-navigating.

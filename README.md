@@ -90,7 +90,7 @@ What it enforces:
 - **Graph, not just tree**: keep `INDEX.md` and `GRAPH.md` as the canonical navigation surfaces.
 - **Token-efficiency by design**: prefer the smallest scope slice needed to answer or implement.
 
-Helper scripts included under `skills/syncing-scopes/scripts/`:
+Helper scripts included under `scopes/skills/syncing-scopes/scripts/`:
 - `scope_map.py` — compact scope matrix view (areas/scopes/graph) with JSON output
 - `drift_detector.py` — stale evidence detection via git timestamps
 - `scope_skeleton_generator.py` — generate fill-ready capability scope skeletons from LLM-provided names
@@ -106,6 +106,8 @@ This repository is the **source package** for Scopes skills/agents you install i
 
 ### Skills (commands)
 
+- `scopes` — umbrella router: pick the right sub-skill when you’re not sure which one to run
+- Sub-skills live under `scopes/skills/` and are loaded by the `scopes` router:
 - `syncing-scopes` — generate/update `Scopes/` from code + git reality (wave model, parallel scope-fillers)
 - `querying-scopes` — answer "how/where/what depends on what" from `Scopes/` + evidence (parallel per-scope investigation)
 - `planning-idea` — turn an idea into a scope-native implementation blueprint (parallel context lanes + per-scope research)
@@ -119,13 +121,13 @@ This repository is the **source package** for Scopes skills/agents you install i
 
 ### Shared infrastructure
 
-- `skills/_shared/SCOPES_PROTOCOL.md` — Scopes-first startup, upstream artifact intake, agent delegation thresholds, automated gates, parallelism rules
-- `skills/_shared/SLICE_CONTRACT.md` — standardized delegation format with universal JSON receipts
-- `skills/_shared/DEVELOPING_PROTOCOL.md` — shared verification-first loops for developing-* skills
-- `skills/_shared/GOF_PATTERNS.md` — design pattern vocabulary for consistent naming
-- `skills/_shared/SESSION_LOG_TEMPLATES.md` — session log structure templates
-- `skills/_shared/SCRIPT_DISCOVERY.md` — SKILLS_ROOT resolution snippet
-- `skills/_evaluations/` — evaluation scenarios for testing skill effectiveness
+- `scopes/skills/_shared/SCOPES_PROTOCOL.md` — Scopes-first startup, upstream artifact intake, agent delegation thresholds, automated gates, parallelism rules
+- `scopes/skills/_shared/SLICE_CONTRACT.md` — standardized delegation format with universal JSON receipts
+- `scopes/skills/_shared/DEVELOPING_PROTOCOL.md` — shared verification-first loops for developing-* skills
+- `scopes/skills/_shared/GOF_PATTERNS.md` — design pattern vocabulary for consistent naming
+- `scopes/skills/_shared/SESSION_LOG_TEMPLATES.md` — session log structure templates
+- `scopes/skills/_shared/SCRIPT_DISCOVERY.md` — SKILLS_ROOT resolution snippet
+- `scopes/skills/_evaluations/` — evaluation scenarios for testing skill effectiveness
 
 ### Agents (roles)
 
@@ -183,6 +185,8 @@ Once installed, all commands are available under the `/scopes:` namespace:
 | `/scopes:refactor <target>` | Plan a safe, incremental refactor |
 | `/scopes:tasks <intent>` | Convert intent into engineer-ready task files |
 
+If your assistant environment doesn’t support `/scopes:` slash commands (or you’re unsure which command to pick), invoke the `scopes` router skill and describe your goal — it routes to the right sub-skill.
+
 This package can be installed as a Claude Code plugin; keep the installed skills aligned with your preferred distribution/update process.
 
 ### Option B: Manual skill copy (Cursor, other assistants)
@@ -193,12 +197,13 @@ This repo is the source; your *project* is the target. Typical targets:
 - Claude: `.claude/skills/`
 - Other setups: `.agent/skills/`
 
-Copy or sync this repo's `skills/` (and optionally `agents/`) into your target skills directory.
+Copy or sync this repo's `scopes/` (and optionally `agents/`) into your target project.
 
 Example (Cursor):
 ```bash
 mkdir -p .cursor/skills
-cp -R /path/to/Scopes/skills/* .cursor/skills/
+cp -R /path/to/Scopes/scopes .cursor/skills/
+cp -R /path/to/Scopes/agents .cursor/
 ```
 
 ### After installation: Run `syncing-scopes`
@@ -210,7 +215,7 @@ Generate or repair `Scopes/` so the rest of the system has a trustworthy map to 
 /scopes:sync
 
 # Manual install:
-# Ask your assistant to use the syncing-scopes skill
+# Ask your assistant to use `scopes` (router) and say “sync scopes docs”
 ```
 
 ### Use Scopes-first workflows day to day
@@ -287,17 +292,17 @@ make lint
 
 What this enforces:
 - Skills and agents follow `docs/contracts.md` (frontmatter, budgets, stop conditions, verdict vocabulary, output contracts).
-- Package consistency: README lists match `skills/*` + `agents/*`; commands reference valid skills; canonical protocol references exist.
+- Package consistency: README lists match `scopes/skills/**` + `agents/*`; commands reference valid skills; canonical protocol references exist.
 
 ## Pre-Merge Validation (For Repos With `Scopes/`)
 
 Before merging changes that touch `Scopes/**` or files referenced by scope evidence:
 
 ```bash
-python3 skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 20
+python3 scopes/skills/syncing-scopes/scripts/drift_detector.py --all --stale-only --limit 20
 ```
 
 ## Canonical Paths + Compatibility Aliases
 
-- Canonical shared protocol: `skills/_shared/SCOPES_PROTOCOL.md`
+- Canonical shared protocol: `scopes/skills/_shared/SCOPES_PROTOCOL.md`
  

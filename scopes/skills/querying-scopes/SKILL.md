@@ -21,10 +21,10 @@ Use when the user asks questions about how the codebase works, what depends on w
 - If Scopes are completely missing, recommend `/sync` first.
 
 ## Mission Start
-Load `skills/_shared/SCOPES_PROTOCOL.md`.
+Load `../_shared/SCOPES_PROTOCOL.md`.
 
 Resolve `SKILLS_ROOT` using the shared snippet:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `../_shared/SCRIPT_DISCOVERY.md`
 
 ---
 

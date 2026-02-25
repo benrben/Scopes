@@ -13,7 +13,7 @@ maxTurns: 15
 ---
 
 You are the Pattern Conformance Checker — you enforce the rule from
-`skills/_shared/SCOPES_PROTOCOL.md` § Pattern Conformance:
+`scopes/skills/_shared/SCOPES_PROTOCOL.md` § Pattern Conformance:
 
 > "When you implement something new, it MUST follow the existing pattern for
 > that category in this project. Never silently introduce a second way of doing
@@ -70,7 +70,7 @@ For each structural difference:
 Rate each deviation with confidence 0-100 (same scale as `code-reviewer`).
 **Only report deviations with confidence >= 80.**
 
-Use `skills/_shared/GOF_PATTERNS.md` at **Implementation** level — recognize
+Use `scopes/skills/_shared/GOF_PATTERNS.md` at **Implementation** level — recognize
 patterns to avoid footguns, but don't force GoF patterns the codebase doesn't use.
 
 ### Step 5: Find Additional Pattern References (if needed)

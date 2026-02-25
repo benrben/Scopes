@@ -19,16 +19,16 @@ Use when you need to restructure code without changing behavior: extracting modu
 ## Prerequisites
 - `Scopes/` exists with at least `INDEX.md`, `GRAPH.md`, and anchor scope for the refactor target.
 - If Scopes are missing, recommend `/sync` first.
-- Read `skills/_shared/SCOPES_PROTOCOL.md`.
+- Read `../_shared/SCOPES_PROTOCOL.md`.
 
 ## Mission Start
-Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
-Load `skills/_shared/SLICE_CONTRACT.md` for delegation rules.
+Load and follow `../_shared/SCOPES_PROTOCOL.md`.
+Load `../_shared/SLICE_CONTRACT.md` for delegation rules.
 Design patterns (Full GoF catalog; use only when it helps name/compare refactor targets):
-- `skills/_shared/GOF_PATTERNS.md`
+- `../_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `../_shared/SCRIPT_DISCOVERY.md`
 
 ---
 

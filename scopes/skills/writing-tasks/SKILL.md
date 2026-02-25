@@ -19,17 +19,17 @@ Use when you need to break down work into task files that developers (or `develo
 ## Prerequisites
 - Ideally: an upstream plan artifact at `Scopes/Work/Planning/**` or `Scopes/Work/Refactors/**`.
 - Minimum: a clear user intent plus `Scopes/` documentation.
-- **Parallel subagents are MANDATORY** when generating 2+ task files: spawn all in one batch (see `skills/_shared/SCOPES_PROTOCOL.md`). No sequential fallback.
-- Read `skills/_shared/SCOPES_PROTOCOL.md`.
+- **Parallel subagents are MANDATORY** when generating 2+ task files: spawn all in one batch (see `../_shared/SCOPES_PROTOCOL.md`). No sequential fallback.
+- Read `../_shared/SCOPES_PROTOCOL.md`.
 
 ## Mission Start
-Load `skills/_shared/SCOPES_PROTOCOL.md`.
-Load `skills/_shared/SLICE_CONTRACT.md` for understanding how tasks become slice contracts during development.
+Load `../_shared/SCOPES_PROTOCOL.md`.
+Load `../_shared/SLICE_CONTRACT.md` for understanding how tasks become slice contracts during development.
 Design patterns (light vocabulary only; keep naming consistent with upstream artifacts):
-- `skills/_shared/GOF_PATTERNS.md`
+- `../_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `../_shared/SCRIPT_DISCOVERY.md`
 
 ---
 

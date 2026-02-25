@@ -38,7 +38,7 @@ Every skill/agent evaluation should include checks for:
   "query": "Update Scopes to reflect the current state of the codebase.",
   "files": ["(a repo with an existing but stale Scopes/ directory)"],
   "checks": [
-    {"id": "uses-protocol", "weight": 2, "desc": "Mission Start references skills/_shared/SCOPES_PROTOCOL.md"},
+    {"id": "uses-protocol", "weight": 2, "desc": "Mission Start references ../_shared/SCOPES_PROTOCOL.md"},
     {"id": "records-base-ref", "weight": 2, "desc": "Records BASE_REF; does not assume commits are allowed"},
     {"id": "mode-selection", "weight": 2, "desc": "Selects Full vs Light mode deterministically; records mode and any intentional partial coverage"},
     {"id": "runs-validators", "weight": 3, "desc": "Runs drift_detector.py (or records blockers)"},

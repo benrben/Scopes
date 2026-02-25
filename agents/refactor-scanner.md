@@ -29,7 +29,7 @@ When used by `skills/scanning-refactor`, the orchestrator may run **one refactor
 
 ## Slice Contract (Preferred Input)
 
-When invoked with a Slice Contract (see `skills/_shared/SLICE_CONTRACT.md`):
+When invoked with a Slice Contract (see `scopes/skills/_shared/SLICE_CONTRACT.md`):
 - **Target**: scan only the slice target and its `context.likely_entrypoints`
 - **Scope context**: use `context.anchor_scope` as the behavior/ownership contract
 - **Artifact**: write findings to `acceptance.artifact_required`
@@ -44,7 +44,7 @@ default to a narrow scan (top 5 hotspots max).
 
 ### Helper Script Paths
 Resolve `SKILLS_ROOT` using:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `scopes/skills/_shared/SCRIPT_DISCOVERY.md`
 
 ## Workflow
 
@@ -80,7 +80,7 @@ For each hotspot target, find 1–3 opportunities:
 - Reduce branching/nesting (early returns, smaller functions)
 - Clarify boundaries/public APIs
 - Structure change (only if you can prove repeated cross-import churn or unclear ownership)
-If an opportunity maps cleanly to a GoF pattern, name it for clarity (e.g., Strategy/Adapter/Decorator) and keep the recommendation incremental. Use `skills/_shared/GOF_PATTERNS.md` for consistent naming and tradeoffs.
+If an opportunity maps cleanly to a GoF pattern, name it for clarity (e.g., Strategy/Adapter/Decorator) and keep the recommendation incremental. Use `scopes/skills/_shared/GOF_PATTERNS.md` for consistent naming and tradeoffs.
 
 **Migration Safety Rating (mandatory per opportunity):**
 

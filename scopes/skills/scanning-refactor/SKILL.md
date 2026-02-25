@@ -23,17 +23,17 @@ Use when the user asks for:
 ## Prerequisites
 - `Scopes/` exists with at least `INDEX.md` and `GRAPH.md`.
 - If Scopes are missing or obviously stale, recommend `syncing-scopes` first and set `Verdict: Needs Sync`.
-- Read `skills/_shared/SCOPES_PROTOCOL.md`.
+- Read `../_shared/SCOPES_PROTOCOL.md`.
 
 ## Mission Start
 Load and follow:
-- `skills/_shared/SCOPES_PROTOCOL.md`
-- `skills/_shared/SLICE_CONTRACT.md` (if delegating to agents)
+- `../_shared/SCOPES_PROTOCOL.md`
+- `../_shared/SLICE_CONTRACT.md` (if delegating to agents)
 Design patterns (Full GoF catalog; use only when it helps communicate a recommendation):
-- `skills/_shared/GOF_PATTERNS.md`
+- `../_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `../_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
@@ -97,7 +97,7 @@ For each target file/module, find **1–3 opportunities** only (avoid a giant wi
 - **Clarify boundaries**: define stable public API surface; push details behind it.
 - **Simplify control flow**: early returns, smaller functions, fewer flags.
 - **Project structure change (only if justified)**: reorganize modules by capability/layer when current layout causes repeated cross-imports or “god” directories.
-If a recommendation corresponds to a GoF pattern, name it (e.g., Strategy/Adapter/Decorator) for clarity — but keep it evidence-backed and avoid adding abstraction for its own sake. Use `skills/_shared/GOF_PATTERNS.md` for consistent naming.
+If a recommendation corresponds to a GoF pattern, name it (e.g., Strategy/Adapter/Decorator) for clarity — but keep it evidence-backed and avoid adding abstraction for its own sake. Use `../_shared/GOF_PATTERNS.md` for consistent naming.
 
 For every recommendation, include:
 - **What** you would change (concrete, name the new module/function boundaries)

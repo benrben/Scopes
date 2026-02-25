@@ -19,17 +19,17 @@ Use when the user has an idea that needs to be turned into a plan before impleme
 ## Prerequisites
 - `Scopes/` exists (at least `INDEX.md` and some `Product/**` files).
 - If Scopes are missing, recommend `/sync` first.
-- Read `skills/_shared/SCOPES_PROTOCOL.md`.
+- Read `../_shared/SCOPES_PROTOCOL.md`.
 - **Parallel subagents are MANDATORY** for context lanes AND for TODO Scope research (3+ scopes): spawn all in one batch (see SCOPES_PROTOCOL.md). No sequential fallback.
 
 ## Mission Start
-Load and follow `skills/_shared/SCOPES_PROTOCOL.md`.
-Load `skills/_shared/SLICE_CONTRACT.md` for delegation rules.
+Load and follow `../_shared/SCOPES_PROTOCOL.md`.
+Load `../_shared/SLICE_CONTRACT.md` for delegation rules.
 Design patterns (light vocabulary only; use to label patterns you actually see/choose in code):
-- `skills/_shared/GOF_PATTERNS.md`
+- `../_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `../_shared/SCRIPT_DISCOVERY.md`
 
 ---
 

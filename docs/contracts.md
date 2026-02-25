@@ -18,7 +18,7 @@ The goal is deterministic, evidence-first, token-bounded behavior that is regres
 | **Evidence format** | `[path:Lx-Ly](path#Lx-Ly)` |
 | **Firebreak** | Subagents return results, not history (no tool dumps) |
 | **Upstream intake** | ALL skills check for upstream artifacts before re-discovering context |
-| **Parallel threshold** | 2+ independent work units MUST use parallel agents (all skill types) |
+| **Parallel threshold** | Every task MUST use parallel agents — delegate all units via subagent batch (all skill types) |
 | **JSON receipts** | Every delegation returns a universal JSON receipt (no receipt = incomplete) |
 | **Automated gates** | Plan/Task/Scan/ADR gates use deterministic checks, not manual review |
 
@@ -60,7 +60,7 @@ If a result would exceed the output contract line limit:
 ### Required YAML Frontmatter (Top of File)
 
 Each skill file MUST start with YAML frontmatter that includes:
-- `name`: must match the folder name (e.g. `skills/querying-scopes/` -> `name: querying-scopes`)
+- `name`: must match the folder name (e.g. `scopes/skills/querying-scopes/` -> `name: querying-scopes`)
 - `description`: 1-2 sentence summary of when to use it
 
 ### Required Sections (Headings)
@@ -71,7 +71,7 @@ Skills MUST include the following headings (verbatim or near-verbatim):
 2. `## Prerequisites`
 3. `## Safety and confirmations` (or `## Safety and constraints`)
 4. `## Mission Start`
-   - MUST reference the canonical shared protocol path: ``skills/_shared/SCOPES_PROTOCOL.md``
+   - MUST reference the canonical shared protocol path: ``scopes/skills/_shared/SCOPES_PROTOCOL.md``
 5. `## Kickoff` (a single next question)
 6. `## Scope Connections` (inputs/outputs + typical handoffs)
 7. `## When to Stop` (Mandatory)

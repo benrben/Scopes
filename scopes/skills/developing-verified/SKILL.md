@@ -18,20 +18,20 @@ Use when existing tests, scripts, or commands can verify your changes. If you ne
 
 ## Prerequisites
 - The repo has at least one runnable verification signal (tests, build, scripts, REPL).
-- **Parallel subagents are MANDATORY**: the environment MUST support spawning multiple subagents in a single batch. Sequential fallback is not permitted. See `skills/_shared/SCOPES_PROTOCOL.md`.
-- Read `skills/_shared/SCOPES_PROTOCOL.md` and `skills/_shared/DEVELOPING_PROTOCOL.md`.
+- **Parallel subagents are MANDATORY**: the environment MUST support spawning multiple subagents in a single batch. Sequential fallback is not permitted. See `../_shared/SCOPES_PROTOCOL.md`.
+- Read `../_shared/SCOPES_PROTOCOL.md` and `../_shared/DEVELOPING_PROTOCOL.md`.
 
 ## Mission Start
 Load and follow the shared protocols:
-- `skills/_shared/SCOPES_PROTOCOL.md` (Scopes-first startup)
-- `skills/_shared/DEVELOPING_PROTOCOL.md` (verification-first loops)
-- `skills/_shared/SLICE_CONTRACT.md` (delegation format)
-- `skills/_shared/SESSION_LOG_TEMPLATES.md` (session log structure for Verified)
+- `../_shared/SCOPES_PROTOCOL.md` (Scopes-first startup)
+- `../_shared/DEVELOPING_PROTOCOL.md` (verification-first loops)
+- `../_shared/SLICE_CONTRACT.md` (delegation format)
+- `../_shared/SESSION_LOG_TEMPLATES.md` (session log structure for Verified)
 Design patterns (practical subset in implementation; recognize full GoF catalog to avoid misapplication):
-- `skills/_shared/GOF_PATTERNS.md`
+- `../_shared/GOF_PATTERNS.md`
 
 Resolve `SKILLS_ROOT` using the shared snippet:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `../_shared/SCRIPT_DISCOVERY.md`
 
 ---
 
@@ -107,7 +107,7 @@ flowchart TD
 
 When invoked from a task file, read the task's anchor scope, pattern reference, verification command, and acceptance examples directly. Use the task's `## Ownership` section as the slice's `impl_files`. **SKIP scope_map routing** (Lane A below). If invoked freestanding (no upstream task), proceed to Step 0 normally.
 
-(See `skills/_shared/SCOPES_PROTOCOL.md` → Upstream Artifact Intake.)
+(See `../_shared/SCOPES_PROTOCOL.md` → Upstream Artifact Intake.)
 
 ---
 

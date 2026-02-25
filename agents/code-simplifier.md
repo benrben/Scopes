@@ -26,7 +26,7 @@ ownership as your effective write boundary — not the broad `allowed_output_roo
 
 ## Slice Contract (Preferred Input)
 
-When invoked with a **Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`):
+When invoked with a **Slice Contract** (see `scopes/skills/_shared/SLICE_CONTRACT.md`):
 - **Ownership**: only edit files listed in the contract's `ownership` array. Do NOT touch other files.
 - **Guard command**: run the contract's `acceptance.guard_command` after every simplification to verify behavior is preserved.
 - **Context**: use `anchor_scope` and `pattern_reference` from the contract to understand conventions.
@@ -41,7 +41,7 @@ Before refactoring, treat `Scopes/` as the specification for intended behavior:
 - Use `Scopes/GRAPH.md` to understand dependencies / blast radius.
 - Use `Scopes/Work/Standards/WRITE_STYLE.md` as the primary coding standard.
 - If `CLAUDE.md` exists in the repo, also follow it (but do not invent rules if it doesn't).
-If you need to name or sanity-check a design-pattern-level refactor, use `skills/_shared/GOF_PATTERNS.md` as vocabulary — but prefer deleting/flattening unnecessary abstractions over introducing new ones.
+If you need to name or sanity-check a design-pattern-level refactor, use `scopes/skills/_shared/GOF_PATTERNS.md` as vocabulary — but prefer deleting/flattening unnecessary abstractions over introducing new ones.
 
 ## When Invoked
 
@@ -65,8 +65,9 @@ If no git context is available, use the file list provided by the caller.
 Use the `context.anchor_scope` and `context.pattern_reference` from the contract directly.
 
 **ELSE (legacy mode):**
+Resolve `SKILLS_ROOT` (see `scopes/skills/_shared/SCRIPT_DISCOVERY.md`), then:
 ```bash
-python3 skills/syncing-scopes/scripts/scope_map.py --depth 2 2>/dev/null || true
+python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" --depth 2 2>/dev/null || true
 cat Scopes/INDEX.md 2>/dev/null || true
 cat Scopes/GRAPH.md 2>/dev/null || true
 cat Scopes/Work/Standards/WRITE_STYLE.md 2>/dev/null || true

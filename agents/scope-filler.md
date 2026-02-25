@@ -37,7 +37,7 @@ trust — without guessing.
 
 ## What You'll Receive
 
-The caller provides a **Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`) containing:
+The caller provides a **Slice Contract** (see `scopes/skills/_shared/SLICE_CONTRACT.md`) containing:
 - **Target**: the scope file path under `Scopes/Product/**`
 - **Likely entrypoints**: file paths to start your investigation
 - **Tech stack summary**: what frameworks/tools are in play
@@ -48,7 +48,7 @@ The caller provides a **Slice Contract** (see `skills/_shared/SLICE_CONTRACT.md`
 If no Slice Contract is provided (legacy invocation), you still proceed by searching.
 
 ## Parallelism + Ownership
-Scope-filler is designed to run as a **parallel worker**: one agent per scope file. In `skills/syncing-scopes`, the lead may run multiple scope-fillers in parallel (<= 6) as long as each has exclusive ownership of its scope file (enforced by Slice Contracts).
+Scope-filler is designed to run as a **parallel worker**: one agent per scope file. In `scopes/skills/syncing-scopes`, the lead may run multiple scope-fillers in parallel (<= 6) as long as each has exclusive ownership of its scope file (enforced by Slice Contracts).
 
 ## Helpful Tools (Optional but Recommended)
 If the syncing-scopes helper scripts are available, you may use:
@@ -56,7 +56,7 @@ If the syncing-scopes helper scripts are available, you may use:
 - `python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" --depth 3 --format json` (only if it helps find real entrypoints)
 
 Resolve `SKILLS_ROOT` using:
-- `skills/_shared/SCRIPT_DISCOVERY.md`
+- `scopes/skills/_shared/SCRIPT_DISCOVERY.md`
 
 ## Workflow (Do This)
 1. **Read your Slice Contract** — use the `likely_entrypoints` and `tech_stack_summary` to orient immediately. Do NOT re-discover by crawling INDEX/GRAPH from scratch.

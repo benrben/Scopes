@@ -57,7 +57,7 @@ Before implementing or planning changes, discover the project's established code
 2. **Read the anchor scope's "Implementation Patterns" section** (if present in `Scopes/Product/**` files) — this documents the established way to extend that capability.
 3. **Read `Scopes/Work/Standards/WRITE_STYLE.md`** — code style and structural conventions.
 4. **Examine existing code in the same area** — find 2-3 existing implementations that are similar to what you're about to build (e.g., if adding a new API endpoint, look at how existing endpoints are structured; if adding a new pipeline stage, look at existing stages).
-5. **Use shared design-pattern vocabulary (optional)** — when naming or comparing design patterns (GoF + common modern patterns), use `skills/_shared/GOF_PATTERNS.md` for consistent names + tradeoffs. Do not force patterns that the codebase doesn’t need.
+5. **Use shared design-pattern vocabulary (optional)** — when naming or comparing design patterns (GoF + common modern patterns), use `GOF_PATTERNS.md` for consistent names + tradeoffs. Do not force patterns that the codebase doesn’t need.
 
 ### Pattern Categories to Look For
 
@@ -91,7 +91,7 @@ This applies to ALL skills. The chain `brainstorm → plan → tasks → develop
 
 ## Agent Delegation Threshold (Mandatory — Fix X3)
 
-**ANY phase with 2+ independent work units MUST delegate to parallel agents.** This applies to ALL skill types — not just `developing-*` and `syncing-*`.
+**Every task MUST use parallel execution.** Delegate to agents for every unit of work — no lead-only execution. This applies to ALL skill types — not just `developing-*` and `syncing-*`.
 
 Independent work units include:
 - Evidence-gathering lanes (research, web search, scope reading, risk extraction)
@@ -99,8 +99,8 @@ Independent work units include:
 - Per-item research (TODO Scopes, options, hotspots, risk signals, refactor phases)
 - Per-file task generation
 
-**Thresholds:**
-- **1 unit**: lead executes directly (no agent-spawn overhead).
+**Thresholds (parallel mandatory in all cases):**
+- **1 unit**: spawn one subagent in a single batch (still use parallel delegation; no lead executes directly).
 - **2-3 units**: spawn subagents in one batch. Every subagent gets a Slice Contract.
 - **4+ units**: use agent teams (max 4-6 per batch). Every teammate gets a Slice Contract.
 
@@ -114,8 +114,8 @@ Independent work units include:
 
 When a skill specifies Agent Orchestration phases:
 
-0. **Parallel per unit (MANDATORY)**: When a phase's work can be split by area, scope, or independent task, you MUST spawn **one agent instance per unit in parallel** (same agent type, different prompt per unit), in a single tool-call batch. Use a single agent only when scope is narrow (e.g. exactly one slice/target). **Sequential fallback is not permitted** — if there are 2+ units, parallel execution is required. The environment must support spawning multiple subagents in one batch.
-1. **Slice Contracts for every delegation**: Every subagent/teammate MUST receive a Slice Contract (see `skills/_shared/SLICE_CONTRACT.md`). No naked prompts — always include target, ownership, context, acceptance, and artifact requirements.
+0. **Parallel per unit (MANDATORY)**: For every task/phase, you MUST use parallel execution: spawn **one agent instance per unit** (same agent type, different prompt per unit), in a single tool-call batch. This applies to 1 unit as well as 2+ — never have the lead execute work directly; always delegate via subagents in a batch. **Sequential fallback is not permitted.** The environment must support spawning subagents in a batch.
+1. **Slice Contracts for every delegation**: Every subagent/teammate MUST receive a Slice Contract (see `SLICE_CONTRACT.md`). No naked prompts — always include target, ownership, context, acceptance, and artifact requirements.
 2. **Spawn agents as subagents/subtasks** in your environment (e.g., Task tool in Cursor/Claude Code).
 3. **Parallel phases**: Spawn all listed agents at the same time in a single tool-call batch; wait for all to complete.
 4. **Sequential phases**: Wait for the previous phase's outputs before spawning the next.
@@ -126,19 +126,17 @@ When a skill specifies Agent Orchestration phases:
 
 ### Parallelism Rules (Mandatory for All Skills)
 
-**Parallel execution is MANDATORY** when a phase has 2+ units (slices, scopes, or tasks). Do not run units sequentially; spawn all subagents in one batch.
+**Parallel execution is MANDATORY for every task.** Every unit of work must be delegated to a subagent in a batch — no lead-only execution, no sequential execution of units.
 
 ⚠️ **Spawn ALL subagents in a SINGLE tool-call batch** for parallelism. Spawning one per turn makes them sequential and violates this protocol.
 
-**Subagents (1 task):** Spawn normally.
-**Agent Teams (2+ tasks):** Preferred for true parallelism. Required when 2+ units.
-**Parallel Subagents:** When 2+ units, MUST spawn ALL in one batch. No sequential fallback.
-- Enable: `{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }` in settings.json
-- Each teammate gets their own Slice Contract with **exclusive file ownership** (no overlapping edits)
-- Lead monitors via shared task list, messages teammates directly if needed
-- Always wait for teammates to finish before proceeding: `Wait for your teammates to complete their tasks`
-- Clean up when done: `Clean up the team`
-- Use `TeammateIdle` and `TaskCompleted` hooks for quality gates
+**Subagents (1 task):** Still spawn via parallel batch (one subagent). Do not have the lead execute the task directly.
+**Agent Teams (2+ tasks):** Spawn all in one batch. Required when 2+ units.
+**Parallel Subagents:** Always spawn in one batch. No sequential fallback.
+
+**Claude Code:** Enable `{ "env": { "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1" } }` in settings.json. Each teammate gets their own Slice Contract with **exclusive file ownership**. Lead monitors via shared task list; wait for teammates to complete; clean up when done; use `TeammateIdle` and `TaskCompleted` hooks for quality gates.
+
+**Cursor:** Cursor does not use agent teams. To get true parallel execution, the lead MUST issue **multiple `mcp_task` (or equivalent) tool calls in the same turn** — one per slice/subagent. Do NOT spawn one task, wait for its result, then spawn the next (that is sequential and violates the protocol). Same turn = same tool-call batch = parallel. Each task gets a Slice Contract and exclusive file ownership.
 
 ---
 

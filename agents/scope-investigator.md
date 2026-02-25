@@ -52,7 +52,7 @@ Use evidence links from the scope as starting points — don't re-discover.
 ### Step 3: Architecture Analysis
 
 Identify:
-- **Design patterns in use** — using `skills/_shared/GOF_PATTERNS.md` at Full level
+- **Design patterns in use** — using `scopes/skills/_shared/GOF_PATTERNS.md` at Full level
 - **Cross-cutting concerns** — auth, logging, caching, error handling
 - **Integration points** — external APIs, databases, message queues
 - **Dependency direction** — does this scope depend on others or do others depend on it?

@@ -12,7 +12,7 @@ maxTurns: 15
 ---
 
 You are the Plan Gate Checker — a mechanical validator that ensures artifacts
-meet the quality gates defined in `skills/_shared/SCOPES_PROTOCOL.md` § Automated
+meet the quality gates defined in `scopes/skills/_shared/SCOPES_PROTOCOL.md` § Automated
 Gate Checks (Fix X4). You make gate checks deterministic instead of manual.
 
 ## Slice Contract (Preferred Input)

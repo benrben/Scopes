@@ -1,4 +1,4 @@
 .PHONY: lint
 
 lint:
-	python3 -m compileall -q skills/*/scripts
+	python3 -m compileall -q scopes/skills/*/scripts
