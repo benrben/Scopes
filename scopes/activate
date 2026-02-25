@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+# scopes/activate — Install the scopes CLI as a multi-repo-aware personal tool.
+#
+# Usage (from anywhere, with any copy of the scopes/ folder):
+#   bash path/to/scopes/activate          # install
+#   source path/to/scopes/activate        # install + activate PATH for current shell
+#
+# How the installed wrapper works (per-repo resolution):
+#   1. Walk up from $PWD looking for a local scopes/cli.py.
+#   2. If found → run that repo's cli.py (respects per-repo version/customizations).
+#   3. If not found → fall back to the global copy at ~/.local/share/scopes/cli.py.
+#
+# This means `scopes` always uses the version that belongs to the repo you're in.
+# Idempotent: re-running upgrades the global fallback if the source version is newer.
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SRC_CLI="$SCRIPT_DIR/cli.py"
+SRC_SCRIPTS="$SCRIPT_DIR/scripts"
+
+INSTALL_DIR="$HOME/.local/share/scopes"
+INSTALLED_CLI="$INSTALL_DIR/cli.py"
+BIN_DIR="$HOME/.local/bin"
+WRAPPER="$BIN_DIR/scopes"
+
+# ── 1. Verify source cli.py exists ────────────────────────────────────────
+if [[ ! -f "$SRC_CLI" ]]; then
+  echo "ERROR: cli.py not found at $SRC_CLI" >&2
+  echo "       Expected cli.py to be a sibling of the activate script." >&2
+  exit 1
+fi
+
+# ── 2. Read source version ────────────────────────────────────────────────
+SRC_VERSION="$(grep -m1 'VERSION = ' "$SCRIPT_DIR/scripts/cli_helpers.py" 2>/dev/null \
+  | tr -d ' "' | cut -d= -f2 || echo "unknown")"
+
+# ── 3. Install / upgrade global fallback ──────────────────────────────────
+NEEDS_INSTALL=true
+if [[ -f "$INSTALLED_CLI" ]]; then
+  INST_VERSION="$(grep -m1 'VERSION = ' "$INSTALL_DIR/scripts/cli_helpers.py" 2>/dev/null \
+    | tr -d ' "' | cut -d= -f2 || echo "")"
+  if [[ "$INST_VERSION" == "$SRC_VERSION" ]]; then
+    NEEDS_INSTALL=false
+  else
+    echo "↑ Upgrading global fallback: v$INST_VERSION → v$SRC_VERSION"
+  fi
+fi
+
+if [[ "$NEEDS_INSTALL" == true ]]; then
+  mkdir -p "$INSTALL_DIR"
+  cp "$SRC_CLI" "$INSTALLED_CLI"
+  if [[ -d "$SRC_SCRIPTS" ]]; then
+    mkdir -p "$INSTALL_DIR/scripts"
+    cp -r "$SRC_SCRIPTS/." "$INSTALL_DIR/scripts/"
+  fi
+fi
+
+# ── 4. Write the smart multi-repo wrapper ─────────────────────────────────
+mkdir -p "$BIN_DIR"
+cat > "$WRAPPER" << 'WRAPPER_EOF'
+#!/usr/bin/env bash
+# Walk up from $PWD to find the nearest local scopes/cli.py.
+# Falls back to the globally installed copy if none is found.
+
+_find_local_cli() {
+  local dir="$PWD"
+  while [[ "$dir" != "/" ]]; do
+    if [[ -f "$dir/scopes/cli.py" ]]; then
+      echo "$dir/scopes/cli.py"
+      return 0
+    fi
+    dir="$(dirname "$dir")"
+  done
+  return 1
+}
+
+LOCAL_CLI="$(_find_local_cli 2>/dev/null || true)"
+
+if [[ -n "$LOCAL_CLI" ]]; then
+  exec python3 "$LOCAL_CLI" "$@"
+else
+  exec python3 "GLOBAL_CLI_PLACEHOLDER" "$@"
+fi
+WRAPPER_EOF
+
+# Substitute the actual global path (can't use single-quote heredoc for this)
+sed -i '' "s|GLOBAL_CLI_PLACEHOLDER|$INSTALLED_CLI|" "$WRAPPER"
+chmod +x "$WRAPPER"
+
+# ── 5. Activate PATH for current shell ────────────────────────────────────
+export PATH="$BIN_DIR:$PATH"
+
+if [[ "$NEEDS_INSTALL" == true ]]; then
+  echo "✓ scopes CLI v$SRC_VERSION installed"
+  echo "  Wrapper: $WRAPPER"
+  echo "  Global fallback: $INSTALL_DIR"
+  echo ""
+  echo "  Behaviour: uses the local repo's scopes/cli.py when inside a repo,"
+  echo "  falls back to the global copy otherwise."
+  echo ""
+  echo "  To make permanent, add to ~/.zshrc or ~/.bashrc:"
+  echo "    export PATH=\"\$HOME/.local/bin:\$PATH\""
+else
+  echo "✓ scopes CLI v$SRC_VERSION already installed at $WRAPPER"
+fi

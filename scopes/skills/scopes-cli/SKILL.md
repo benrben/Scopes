@@ -340,3 +340,32 @@ scopes help <command>             # Detailed help
 scopes <command> --help           # Argparse help for command
 scopes version                    # Version + project info
 ```
+
+## Installation (if `scopes` command not found)
+
+The CLI is a local script — not a pip package. Run the `activate` script that lives
+alongside `cli.py` in the `scopes/` folder, wherever it has been placed:
+
+```bash
+# Locate the activate script relative to this SKILL.md file, then run it:
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+bash "$SKILL_DIR/../../activate"
+```
+
+Or, if you know the path to the `scopes/` folder:
+
+```bash
+bash path/to/scopes/activate          # install wrapper
+source path/to/scopes/activate        # install + export SCOPES_DIR for current shell
+```
+
+**Recommended agent pre-check** — put this at the top of any runbook:
+
+```bash
+SKILL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+command -v scopes &>/dev/null || bash "$SKILL_DIR/../../activate"
+```
+
+The script is fully location-independent and idempotent — safe to run on every boot.
+`cli.py` is always resolved relative to the `activate` script itself, so it works
+whether `scopes/` lives in a repo root, a skills dir, a submodule, or anywhere else.
