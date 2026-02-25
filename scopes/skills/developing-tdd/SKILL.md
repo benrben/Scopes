@@ -31,9 +31,6 @@ Load and follow the shared protocols:
 Design patterns (practical subset in implementation; recognize full GoF catalog to avoid misapplication):
 - `../_shared/GOF_PATTERNS.md`
 
-Resolve `SKILLS_ROOT` using the shared snippet:
-- `../_shared/SCRIPT_DISCOVERY.md`
-
 ---
 
 ## Architecture (Wave Model)
@@ -142,7 +139,7 @@ Record: `baseline = PASS | FAIL (N failures)`.
 
 **Lane B: Route** — Find anchor scope(s):
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+scopes map \
   --query "<user goal keywords>" --limit 5 --format json
 ```
 
@@ -339,7 +336,7 @@ git diff --name-only | xargs -I{} rg -l "{}" Scopes/Product/ 2>/dev/null
 
 **IF output is non-empty** (scope-linked files changed):
 1. Update affected scope(s) — refresh evidence links, update traces
-2. Run: `python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all`
+2. Run: `scopes validate --all`
 
 **ELSE:** Skip scope update entirely.
 

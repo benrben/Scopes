@@ -34,14 +34,12 @@ When invoked without a contract, validate all scopes under `Scopes/Product/**`.
 Run the timestamp-based pre-filter to focus effort:
 
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" \
+scopes drift \
   --scope <scope-path> --stale-only --format json
 ```
 
 If no stale items found AND no `likely_entrypoints` overlap with scope evidence,
 return early with `links_stale: 0, links_broken: 0`.
-
-Resolve `SKILLS_ROOT` using `scopes/skills/_shared/SCRIPT_DISCOVERY.md`.
 
 ### Step 2: Extract Evidence Links
 

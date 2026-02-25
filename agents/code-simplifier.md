@@ -65,20 +65,6 @@ If no git context is available, use the file list provided by the caller.
 Use the `context.anchor_scope` and `context.pattern_reference` from the contract directly.
 
 **ELSE (legacy mode):**
-Resolve `SKILLS_ROOT` (see `scopes/skills/_shared/SCRIPT_DISCOVERY.md`), then:
-```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" --depth 2 2>/dev/null || true
-cat Scopes/INDEX.md 2>/dev/null || true
-cat Scopes/GRAPH.md 2>/dev/null || true
-cat Scopes/Work/Standards/WRITE_STYLE.md 2>/dev/null || true
-cat CLAUDE.md 2>/dev/null || true
-```
-Find which scope docs reference the changed files:
-```bash
-rg -n "<changed-file-path>" Scopes/Product Scopes/GRAPH.md 2>/dev/null || true
-```
-Read the 1-3 most relevant scope files to understand the behavior contract.
-
 ### Step 3: Simplify (Behavior-Preserving Only)
 Apply refactors that improve clarity while keeping behavior identical:
 - Reduce nesting and incidental complexity.

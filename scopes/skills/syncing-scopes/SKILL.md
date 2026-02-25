@@ -33,78 +33,6 @@ For delegation rules, load `../_shared/SLICE_CONTRACT.md`.
 ## Script Discovery (MANDATORY — do this FIRST)
 
 Before doing ANY work:
-- Resolve `SKILLS_ROOT` using `../_shared/SCRIPT_DISCOVERY.md`.
-- Verify scripts exist:
-  ```bash
-  ls "$SKILLS_ROOT/syncing-scopes/scripts/"*.py
-  ```
-
-If SKILLS_ROOT cannot be resolved or scripts are missing, STOP and tell the user.
-
-## Parallel Wave Model (Preferred)
-
-Treat sync as a batch system with deterministic gates:
-- **Wave 0 (Preflight)**: resolve scripts, decide mode, and gather drift/gen signals (parallel where possible).
-- **Wave 1 (Fill)**: run multiple `scope-filler` workers in parallel (<= 6), one per scope file (exclusive ownership via Slice Contracts).
-- **Wave 2 (Stitch/Validate)**: lead stitches `INDEX.md` + `GRAPH.md` from receipts, then gates on `validate_scopes.py`.
-- Loop by batch until all scopes are valid.
-
-Intermediate JSON outputs (drift JSON, skeleton JSON, contract JSON) are **temporary**. Delete them after stitching/validation unless the user explicitly asks to keep them.
-
----
-
-## ⛔ CRITICAL RULES — READ BEFORE ACTING
-
-1. **DO NOT fill scope content manually by writing it inline.** ALWAYS delegate scope filling to `scope-filler` subagents (or agent team teammates for 4+). The lead creates skeletons and META files; agents fill them.
-2. **ALWAYS use scripts** for drift detection (`drift_detector.py`), skeleton generation (`scope_skeleton_generator.py`), and Slice Contract building (`slice_contract_builder.py`). Do not replicate their logic manually.
-3. **ALWAYS delegate filling to `scope-filler`** — use subagents (Task tool) or Agent Teams. Each filler receives a Slice Contract with pre-gathered context.
-4. The ONLY things the lead agent does manually are: META files (INDEX.md, GRAPH.md, DEVELOPER_INFO.md, TECH_STACK.md), skeleton generation via script, and final stitching.
-
----
-
-## Kickoff (Automatic)
-- Do **not** ask which area to focus on.
-- Discover all capability areas from `Scopes/INDEX.md` and `Scopes/Product/**` (or from repo structure if Scopes are missing) and sync **all** areas.
-- Only ask the user for destructive operations (see Safety) or when Scopes are missing and generation from scratch needs approval.
-
----
-
-## Operating Modes
-
-### Step -1: Upstream Artifact Intake
-
-If invoked after a plan or scan that identified stale scopes, read the upstream artifact's `## Links` to know exactly which scopes need updating — **skip `drift_detector`** for those specific scopes (still run it for the rest). Check prior sync summaries under `Scopes/Work/Notes/summary-*-sync.md` before re-syncing recently synced areas to avoid redundant work.
-
----
-
-### Generation Mode (Scopes/ is empty or missing)
-
-When `Scopes/` doesn't exist or has no scope files:
-
-**Step 1: Discover** (lead only, < 5 min)
-1. Scan the repo for project shape:
-   - Read dependency files: `package.json`, `pyproject.toml`, `go.mod`, `Cargo.toml`, etc.
-   - Identify top-level source directories: `src/`, `lib/`, `app/`, `components/`, `routes/`, etc.
-   - Run: `find . -name "*.py" -o -name "*.ts" -o -name "*.go" -o -name "*.rs" | head -200`
-2. Build a capability area list from directory structure + entry files.
-3. Create the META files **before** any scope files (lead does these manually — they're one-off):
-   - `Scopes/INDEX.md` (skeleton with inferred area tree)
-   - `Scopes/GRAPH.md` (empty template)
-   - `Scopes/DEVELOPER_INFO.md` (from `package.json` scripts, `Makefile`, CI config, etc.)
-   - `Scopes/Onboarding/TECH_STACK.md` (from dependency files)
-   - `Scopes/Work/Standards/WRITE_STYLE.md` (from linter configs, existing patterns)
-
-**Step 2: Generate Skeletons** (USE THE SCRIPT)
-
-```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_skeleton_generator.py" \
-  --item "Area1: Capability1" \
-  --item "Area2: Capability2" \
-  --item "Area3: Capability3" \
-  --micro \
-  --format json \
-  --repo-root .
-```
 
 This creates empty skeleton scope files. With `--micro`, each item produces:
 - 1 overview scope: `Scopes/Product/<Area>/<Capability>.md` (router)
@@ -116,7 +44,7 @@ Capture the JSON output — it lists the created files. Treat this JSON as tempo
 **Pipeline optimization:** Start building Slice Contracts (`slice_contract_builder.py`) AS skeletons are being generated — don't wait for all skeletons to finish. Process each skeleton's contract as soon as it's available.
 
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/slice_contract_builder.py" \
+scopes contract \
   --from-skeletons <skeleton_output.json> --repo-root .
 ```
 
@@ -146,7 +74,6 @@ Treat contract JSON outputs as temporary (delete after the batch validates).
 
 Each filler returns a JSON receipt with `evidence_count`, `unknowns`, `graph_edges_found`.
 
-
 **Step 4.5: Deep Evidence Verification (optional, recommended for critical scopes)**
 
 After fillers complete but before stitching, optionally spawn `evidence-verifier` (see `agents/evidence-verifier.md`) for high-value scopes to validate that evidence links are not just structurally correct but semantically accurate:
@@ -164,7 +91,7 @@ This catches cases where `validate_scopes.py` passes (file exists, lines in rang
 3. Update `GRAPH.md` with dependency edges from `graph_edges_found` in receipts.
 4. Final validation:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all
+scopes validate --all
 ```
 
 **Cleanup (mandatory):**
@@ -181,7 +108,7 @@ When `Scopes/` already has content, the agent detects drift and fixes it:
 
 Run drift detection FIRST — this IS the router, not an afterthought:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" --all --format json
+scopes drift --all --format json
 ```
 
 Sort results by severity: `missing` > `stale` > `ok`. This sorted list IS the work backlog.
@@ -189,7 +116,7 @@ Treat the drift JSON output as temporary (prefer a temp file under `/tmp` if you
 
 **Step 2: Build Slice Contracts from drift output**
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/slice_contract_builder.py" \
+scopes contract \
   --from-drift <drift_output.json> --repo-root .
 ```
 
@@ -197,7 +124,7 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/slice_contract_builder.py" \
 
 For scopes that need updating, generate new skeletons if needed:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_skeleton_generator.py" \
+scopes create \
   --items-json '<list of stale scopes>' --force --micro --format json --repo-root .
 ```
 
@@ -211,7 +138,7 @@ Then delegate filling to scope-filler subagents or agent team (same as Generatio
 1. Update `INDEX.md` + `GRAPH.md` from filler receipts.
 2. Re-run drift detection as final gate:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all
+scopes validate --all
 ```
 3. Fix any remaining issues inline.
 

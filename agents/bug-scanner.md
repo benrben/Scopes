@@ -68,10 +68,6 @@ Follow-up tasks are **opt-in**, not automatic:
 - Stop once you have written the report and captured drift/broken-link summary counts.
 - If `Scopes/` is missing, stop early and set `Verdict: Needs Sync`.
 
-### Helper Script Paths
-Resolve `SKILLS_ROOT` using:
-- `scopes/skills/_shared/SCRIPT_DISCOVERY.md`
-
 ### Step 1: Static Hotspot Scan
 
 **IF Slice Contract provided:**
@@ -104,10 +100,8 @@ Read the `context.anchor_scope` directly — no navigation needed.
 
 **ELSE:**
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" --depth 2
+scopes map --depth 2
 ```
-If `scope_map.py` is not available, fall back to:
-```bash
 find Scopes/Product -name "*.md" -maxdepth 3 | head -15
 ```
 Then read the relevant scope file to understand intended behavior.
@@ -115,11 +109,9 @@ Then read the relevant scope file to understand intended behavior.
 ### Step 3: Evidence Freshness
 Check if documentation around the bug area is stale:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" \
+scopes drift \
   --area <area> --stale-only
 ```
-If `drift_detector.py` is not available, compare file timestamps:
-```bash
 git log -1 --format="%ai" -- <scope-file>
 git log -1 --format="%ai" -- <source-file>
 ```
@@ -127,7 +119,7 @@ git log -1 --format="%ai" -- <source-file>
 ### Step 4: Blast Radius
 Use GRAPH.md to understand what depends on the affected component:
 ```bash
-grep -A5 "<component>" Scopes/GRAPH.md
+scopes graph:impact scope="<component>"
 ```
 
 ### Step 5: Persist Findings

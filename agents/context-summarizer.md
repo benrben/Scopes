@@ -35,11 +35,9 @@ Before writing the summary note:
 
 1. **Route to anchor scope(s)** — if not provided in the Slice Contract:
    ```bash
-   python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+   scopes map \
      --query "<topic keywords>" --limit 3 --format json
    ```
-   Resolve `SKILLS_ROOT` using `scopes/skills/_shared/SCRIPT_DISCOVERY.md`.
-
 2. **Include scope references** in the summary note's `## Links` section
    so downstream skills can self-route without re-navigating.
 

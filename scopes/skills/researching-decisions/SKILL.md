@@ -24,9 +24,6 @@ Load `../_shared/SCOPES_PROTOCOL.md`.
 Design patterns (Full GoF catalog; use as the shared vocabulary in ADR comparisons):
 - `../_shared/GOF_PATTERNS.md` (names, intent, tradeoffs, common confusions)
 
-Resolve `SKILLS_ROOT` using the shared snippet:
-- `../_shared/SCRIPT_DISCOVERY.md`
-
 ---
 
 ## Workflow
@@ -50,7 +47,7 @@ Run **3 explicit parallel evidence lanes** (mandatory, not optional):
 
 **Lane A: Scope Route**
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+scopes map \
   --query "<decision topic>" --limit 5 --format json
 ```
 

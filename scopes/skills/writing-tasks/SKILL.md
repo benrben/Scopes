@@ -28,9 +28,6 @@ Load `../_shared/SLICE_CONTRACT.md` for understanding how tasks become slice con
 Design patterns (light vocabulary only; keep naming consistent with upstream artifacts):
 - `../_shared/GOF_PATTERNS.md`
 
-Resolve `SKILLS_ROOT` using the shared snippet:
-- `../_shared/SCRIPT_DISCOVERY.md`
-
 ---
 
 ## Workflow: Artifact-Driven Intake
@@ -45,7 +42,7 @@ Resolve `SKILLS_ROOT` using the shared snippet:
 
 **ELSE (freestanding task request):**
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+scopes map \
   --query "<intent keywords>" --limit 5 --format json
 ```
 Read anchor scopes to build context.

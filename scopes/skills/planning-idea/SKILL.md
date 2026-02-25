@@ -28,9 +28,6 @@ Load `../_shared/SLICE_CONTRACT.md` for delegation rules.
 Design patterns (light vocabulary only; use to label patterns you actually see/choose in code):
 - `../_shared/GOF_PATTERNS.md`
 
-Resolve `SKILLS_ROOT` using the shared snippet:
-- `../_shared/SCRIPT_DISCOVERY.md`
-
 ---
 
 ## Workflow: Artifact-First Planning

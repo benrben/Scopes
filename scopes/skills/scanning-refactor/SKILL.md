@@ -32,9 +32,6 @@ Load and follow:
 Design patterns (Full GoF catalog; use only when it helps communicate a recommendation):
 - `../_shared/GOF_PATTERNS.md`
 
-Resolve `SKILLS_ROOT` using:
-- `../_shared/SCRIPT_DISCOVERY.md`
-
 ---
 
 ## Workflow: Intake → Route → Hotspots → Refactor Opportunities → Report
@@ -55,7 +52,7 @@ Otherwise, route mechanically:
 For multi-scope routing:
 
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+scopes map \
   --query "<refactor goal keywords>" --limit 5 --format json
 ```
 
@@ -68,7 +65,7 @@ Parallelism note: routing and hotspot generation are independent. **Run Step 0 (
 Generate candidate refactor hotspots (size/churn/TODO density):
 
 ```bash
-python3 "$SKILLS_ROOT/scanning-refactor/scripts/hotspot_matrix.py" \
+scopes hotspot \
   --repo-root . --since-days 90 --top 20 --format json
 ```
 
@@ -110,7 +107,7 @@ For every recommendation, include:
   - **HIGH**: 4+ files, 3+ downstream dependents, or no coverage
 - **Safe migration steps** (green-to-green). If files move/rename, include rename guard:
   ```bash
-  python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
+  scopes rename \
     --map '{"Scopes/Product/Old.md":"Scopes/Product/New.md"}' --apply --repo-root .
   ```
 

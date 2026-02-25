@@ -27,9 +27,6 @@ Load `../_shared/SLICE_CONTRACT.md` for delegation rules.
 Design patterns (Full GoF catalog; use only when it helps name/compare refactor targets):
 - `../_shared/GOF_PATTERNS.md`
 
-Resolve `SKILLS_ROOT` using the shared snippet:
-- `../_shared/SCRIPT_DISCOVERY.md`
-
 ---
 
 ## Workflow: Risk-Driven Refactor Planning
@@ -173,13 +170,13 @@ Before touching production code, capture existing behavior:
 ### Rename Guard (Automatic)
 After file movements, run:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
+scopes rename \
   --map '{"Scopes/Product/Old.md":"Scopes/Product/New.md"}' --apply --repo-root .
 ```
 
 ### Rename Guard Preview (Dry-Run)
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
+scopes rename \
   --map '{"Scopes/Product/Old.md":"Scopes/Product/New.md"}' --repo-root .
 ```
 This shows which Scopes links would break and how they'd be fixed.
@@ -256,7 +253,7 @@ For blueprints with fewer than 4 phases, lead handles research directly.
 If the refactor involves file movements, run the rename guard in dry-run mode and include the output in the plan:
 
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_rename_guard.py" \
+scopes rename \
   --map '{"Scopes/Product/Old.md":"Scopes/Product/New.md"}' --repo-root .
 ```
 

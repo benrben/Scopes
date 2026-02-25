@@ -58,12 +58,12 @@ Scope maintenance is triggered **conditionally**, not unconditionally:
 git diff --name-only | xargs -I{} rg -l "{}" Scopes/Product/ 2>/dev/null
 ```
 
-- **IF output is non-empty** (scope-linked files were changed): update affected scopes + run `validate_scopes.py` as the gate
+- **IF output is non-empty** (scope-linked files were changed): update affected scopes + run `scopes validate` as the gate
 - **IF output is empty**: skip scope update entirely — not every code change needs a scope update
 - **IF behavior changed** (not just internal refactor): always update, even if the grep is empty
 
 After scope edits, validate:
-- `python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" --all`
+- `scopes validate --all`
 
 ## Artifact Persistence (Mandatory)
 

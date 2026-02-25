@@ -23,9 +23,6 @@ Use when the user asks questions about how the codebase works, what depends on w
 ## Mission Start
 Load `../_shared/SCOPES_PROTOCOL.md`.
 
-Resolve `SKILLS_ROOT` using the shared snippet:
-- `../_shared/SCRIPT_DISCOVERY.md`
-
 ---
 
 ## Workflow: Intake → Classify → Route → Answer
@@ -46,7 +43,7 @@ Run **two parallel lanes** and merge results before Step 1:
 These checks are independent. **Run them in parallel** and merge into one evidence bundle. Parallel execution is mandatory (see SCOPES_PROTOCOL).
 
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+scopes map \
   --query "<question keywords>" --limit 5 --format json
 ```
 

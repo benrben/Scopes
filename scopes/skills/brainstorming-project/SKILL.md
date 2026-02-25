@@ -44,8 +44,6 @@ You help the user brainstorm solutions that fit this repository: you use `Scopes
 ## Mission Start (Mandatory)
 1. Load `../_shared/SCOPES_PROTOCOL.md` (Scopes-first startup).
 2. Load `../_shared/GOF_PATTERNS.md` (pattern vocabulary + tradeoffs).
-3. Resolve `SKILLS_ROOT` using `../_shared/SCRIPT_DISCOVERY.md`.
-
 If `Scopes/` is missing, set `Verdict: Needs Sync` and recommend `syncing-scopes` before continuing.
 
 ### Prerequisites
@@ -88,7 +86,7 @@ Also check for upstream artifacts (plan, scan report, ADR) that may provide anch
 Use `scope-investigator` (see `agents/scope-investigator.md`) for deep evidence gathering:
 - Route to 1-3 anchor scopes:
   ```bash
-  python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+  scopes map \
     --query "<user topic keywords>" --limit 5 --format json
   ```
 - For each anchor scope, spawn a `scope-investigator`:

@@ -42,10 +42,6 @@ default to a narrow scan (top 5 hotspots max).
 - Stop once the report is written and a JSON receipt is returned.
 - If `Scopes/` is missing, stop early with `Verdict: Needs Sync`.
 
-### Helper Script Paths
-Resolve `SKILLS_ROOT` using:
-- `scopes/skills/_shared/SCRIPT_DISCOVERY.md`
-
 ## Workflow
 
 ### Step 1: Load scope context (minimum)
@@ -56,7 +52,7 @@ Read `context.anchor_scope` and skim `Scopes/GRAPH.md` for blast radius.
 **ELSE:**
 Use fast route to pick 1–2 anchor scopes:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
+scopes map \
   --query "<target keywords>" --limit 5 --format json
 ```
 
@@ -64,7 +60,7 @@ python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
 
 Run:
 ```bash
-python3 "$SKILLS_ROOT/scanning-refactor/scripts/hotspot_matrix.py" \
+scopes hotspot \
   --repo-root . --since-days 90 --top 20 --format json
 ```
 

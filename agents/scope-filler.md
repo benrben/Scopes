@@ -52,11 +52,8 @@ Scope-filler is designed to run as a **parallel worker**: one agent per scope fi
 
 ## Helpful Tools (Optional but Recommended)
 If the syncing-scopes helper scripts are available, you may use:
-- `python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_trace_stub_from_entrypoints.py" --scope <scope.md> --apply`
-- `python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" --depth 3 --format json` (only if it helps find real entrypoints)
-
-Resolve `SKILLS_ROOT` using:
-- `scopes/skills/_shared/SCRIPT_DISCOVERY.md`
+- `scopes trace --scope <scope.md> --apply`
+- `scopes map --depth 3 --format json` (only if it helps find real entrypoints)
 
 ## Workflow (Do This)
 1. **Read your Slice Contract** — use the `likely_entrypoints` and `tech_stack_summary` to orient immediately. Do NOT re-discover by crawling INDEX/GRAPH from scratch.
@@ -77,7 +74,7 @@ Resolve `SKILLS_ROOT` using:
    - Confidence reflects what you actually proved.
 7. **Phase 5 (Validate):** Run `validate_scopes.py` to check structural integrity:
    ```bash
-   python3 "$SKILLS_ROOT/syncing-scopes/scripts/validate_scopes.py" \
+   scopes validate \
      --scope "<scope-file-path>" 2>/dev/null || true
    ```
    If the validator reports missing sections, broken links, or placeholder remnants,

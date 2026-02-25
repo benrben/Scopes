@@ -9,10 +9,15 @@ Skills reference this file instead of duplicating these sections.
 
 Before any kickoff questions, planning, or code edits:
 
+**Pre-flight check:**
+```bash
+scopes version
+```
+If the CLI is not available, STOP and tell the user to install it.
+
 **Fast Route (preferred):**
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/scope_map.py" \
-  --query "<goal keywords>" --limit 5 --format json
+scopes map --query "<goal keywords>" --limit 5
 ```
 This instantly returns ranked anchor scopes + code paths + evidence counts. Use this instead of manually reading INDEX.md when you have a clear goal.
 
@@ -22,7 +27,7 @@ This instantly returns ranked anchor scopes + code paths + evidence counts. Use 
 3. Select only the relevant anchor scope(s) under `Scopes/Product/**` (usually 1-3). Do not read all scope files.
 4. Follow the anchor scope's **Usage & Flow Traces** and **Code Evidence** links into code/tests/config. Code evidence is source of truth if scope prose lags.
 5. Use `Scopes/DEVELOPER_INFO.md`, `Scopes/Onboarding/TECH_STACK.md`, and `Scopes/Work/Standards/WRITE_STYLE.md` as support docs for commands/tooling/refactor standards.
-6. If `Scopes/INDEX.md` or `Scopes/GRAPH.md` is missing/stale, treat that as drift and recommend `syncing-scopes` before proceeding.
+6. If `Scopes/INDEX.md` or `Scopes/GRAPH.md` is missing/stale, treat that as drift and recommend running `scopes sync` before proceeding.
 
 ## Required Reads (Before Acting)
 

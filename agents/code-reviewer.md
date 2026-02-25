@@ -35,11 +35,9 @@ Treat `Scopes/` as the behavioral contract:
 
 Check if the diff touches files referenced by scope evidence links:
 ```bash
-python3 "$SKILLS_ROOT/syncing-scopes/scripts/drift_detector.py" \
+scopes drift \
   --scope <anchor_scope> --stale-only --format json 2>/dev/null || true
 ```
-Resolve `SKILLS_ROOT` using `scopes/skills/_shared/SCRIPT_DISCOVERY.md`.
-
 If drift is detected (code changed after scope was last updated), add the stale
 scope files to `scopes_impacted` in the receipt and set `Verdict: Needs Sync`
 alongside any other findings.
