@@ -31,7 +31,7 @@ from textwrap import dedent
 # Constants
 # ─────────────────────────────────────────────────────────────────────────
 
-VERSION = "0.1.0"
+VERSION = "0.5.0"  # Phase 1-5 complete, Phase 6 in progress
 SCOPES_DIR_NAME = "Scopes"
 INDEX_FILE_NAME = "INDEX.md"
 
@@ -658,6 +658,921 @@ def _extract_title(file_path: Path) -> str:
 
 
 # ─────────────────────────────────────────────────────────────────────────
+# Phase 2: Core Brain Commands Helpers
+# ─────────────────────────────────────────────────────────────────────────
+
+def _parse_frontmatter(content: str) -> dict:
+    """Parse YAML frontmatter from markdown, return dict."""
+    lines = content.split('\n')
+    if not lines[0].startswith('---'):
+        return {}
+    
+    end_idx = 1
+    for i in range(1, len(lines)):
+        if lines[i].startswith('---'):
+            end_idx = i
+            break
+    
+    fm = {}
+    for line in lines[1:end_idx]:
+        if ':' in line:
+            k, v = line.split(':', 1)
+            fm[k.strip()] = v.strip().strip('"\'')
+    return fm
+
+
+def _extract_section(content: str, section_name: str) -> str:
+    """Extract markdown section by heading name."""
+    pattern = rf"^##\s+{re.escape(section_name)}\s*\n(.*?)(?=^##|\Z)"
+    match = re.search(pattern, content, re.MULTILINE | re.DOTALL)
+    return match.group(1).strip() if match else ""
+
+
+def _read_lines(file_path: Path, start: int = 1, end: int = None) -> str:
+    """Read specific line range from a file."""
+    try:
+        lines = file_path.read_text(encoding="utf-8", errors="ignore").splitlines()
+        if end is None:
+            end = len(lines)
+        return '\n'.join(lines[max(0, start-1):end])
+    except Exception:
+        return ""
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 2: Scope Reading Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_read(ctx: CliContext, args) -> int:
+    """scopes read scope="X" — Read scope document content."""
+    try:
+        scope_name = getattr(args, 'scope', '')
+        if not scope_name:
+            print(_error("scope= parameter required"), file=sys.stderr)
+            return 1
+        
+        scope_file = _resolve_scope(ctx.scopes_product, scope_name)
+        content = scope_file.read_text(encoding="utf-8", errors="ignore")
+        
+        if hasattr(args, 'section') and args.section:
+            content = _extract_section(content, args.section)
+        
+        if ctx.format == "json":
+            sections = re.findall(r"^##\s+(.+)$", content, re.MULTILINE)
+            print(_json_out({
+                "scope": scope_name,
+                "path": str(scope_file.relative_to(ctx.scopes_root)),
+                "content": content,
+                "sections": sections,
+            }))
+        else:
+            print(content)
+        
+        return 0
+    except FileNotFoundError as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_read_evidence(ctx: CliContext, args) -> int:
+    """scopes read:evidence scope="X" — Extract evidence links."""
+    try:
+        scope_name = getattr(args, 'scope', '')
+        scope_file = _resolve_scope(ctx.scopes_product, scope_name)
+        content = scope_file.read_text(encoding="utf-8", errors="ignore")
+        
+        if hasattr(args, 'section') and args.section:
+            content = _extract_section(content, args.section)
+        
+        # Parse evidence links: [text](path#L10-L20)
+        evidence_re = re.compile(r"\[([^\]]+)\]\(([^)#\s]+)(?:#L(\d+)(?:-L(\d+))?)?\)")
+        links = []
+        for match in evidence_re.finditer(content):
+            text, target, start_line, end_line = match.groups()
+            if not target.endswith('.md'):
+                links.append({
+                    "target": target,
+                    "start_line": int(start_line) if start_line else None,
+                    "end_line": int(end_line) if end_line else None,
+                    "display": text,
+                })
+        
+        print(_json_out(links) if ctx.format == "json" else
+              '\n'.join(f"{l['target']}:{l['start_line']}-{l['end_line']}" for l in links))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_read_code(ctx: CliContext, args) -> int:
+    """scopes read:code scope="X" — Follow evidence links, return code snippets."""
+    try:
+        scope_name = getattr(args, 'scope', '')
+        scope_file = _resolve_scope(ctx.scopes_product, scope_name)
+        content = scope_file.read_text(encoding="utf-8", errors="ignore")
+        
+        if hasattr(args, 'section') and args.section:
+            content = _extract_section(content, args.section)
+        
+        evidence_re = re.compile(r"\[([^\]]+)\]\(([^)#\s]+)(?:#L(\d+)(?:-L(\d+))?)?\)")
+        code_blocks = []
+        
+        for match in evidence_re.finditer(content):
+            text, target, start_line, end_line = match.groups()
+            if target.endswith('.md'):
+                continue
+            
+            target_path = ctx.project_root / target
+            if not target_path.exists():
+                code_blocks.append({
+                    "file": target,
+                    "status": "missing",
+                    "code": None,
+                })
+                continue
+            
+            try:
+                start = int(start_line) if start_line else 1
+                end = int(end_line) if end_line else None
+                code = _read_lines(target_path, start, end)
+                code_blocks.append({
+                    "file": target,
+                    "lines": (start, end or len(target_path.read_text().splitlines())),
+                    "code": code,
+                    "status": "ok",
+                })
+            except Exception:
+                code_blocks.append({
+                    "file": target,
+                    "status": "error",
+                })
+        
+        print(_json_out(code_blocks))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 2: Search Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_search(ctx: CliContext, args) -> int:
+    """scopes search --query "term" — Full-text search across scopes."""
+    try:
+        query = getattr(args, 'query', '')
+        limit = getattr(args, 'limit', 0)
+        if not query:
+            print(_error("--query parameter required"), file=sys.stderr)
+            return 1
+        
+        all_files = _all_scope_files(ctx.scopes_product)
+        results = []
+        
+        for scope_file in all_files:
+            content = scope_file.read_text(encoding="utf-8", errors="ignore")
+            for line_no, line in enumerate(content.splitlines(), 1):
+                if query.lower() in line.lower():
+                    results.append({
+                        "scope": str(scope_file.relative_to(ctx.scopes_product)),
+                        "line": line_no,
+                        "text": line.strip(),
+                    })
+        
+        if limit:
+            results = results[:limit]
+        
+        print(_json_out(results))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_locate(ctx: CliContext, args) -> int:
+    """scopes locate --intent "..." — Intent-based scope routing."""
+    try:
+        intent = getattr(args, 'intent', '')
+        if not intent:
+            print(_error("--intent parameter required"), file=sys.stderr)
+            return 1
+        
+        # Simple tokenization and matching
+        terms = set(t.lower() for t in re.findall(r'\w+', intent) if len(t) > 2)
+        all_files = _all_scope_files(ctx.scopes_product)
+        
+        scored = []
+        for scope_file in all_files:
+            try:
+                content = scope_file.read_text(encoding="utf-8", errors="ignore").lower()
+                title = _extract_title(scope_file).lower()
+                score = sum(2 if t in title else (1 if t in content else 0) for t in terms)
+                if score > 0:
+                    scored.append({
+                        "scope": str(scope_file.relative_to(ctx.scopes_product)),
+                        "title": _extract_title(scope_file),
+                        "score": score,
+                    })
+            except Exception:
+                pass
+        
+        scored.sort(key=lambda x: x['score'], reverse=True)
+        limit = getattr(args, 'limit', 5)
+        print(_json_out(scored[:limit]))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 2: Evidence & Links Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_evidence(ctx: CliContext, args) -> int:
+    """scopes evidence scope="X" — Full evidence report for a scope."""
+    try:
+        scope_name = getattr(args, 'scope', '')
+        scope_file = _resolve_scope(ctx.scopes_product, scope_name)
+        content = scope_file.read_text(encoding="utf-8", errors="ignore")
+        
+        evidence_re = re.compile(r"\[([^\]]+)\]\(([^)#\s]+)(?:#L(\d+)(?:-L(\d+))?)?\)")
+        links = []
+        
+        for match in evidence_re.finditer(content):
+            text, target, start_line, end_line = match.groups()
+            if target.endswith('.md'):
+                continue
+            
+            target_path = ctx.project_root / target
+            exists = target_path.exists()
+            stale = False
+            
+            if exists and start_line:
+                try:
+                    lines = target_path.read_text().splitlines()
+                    in_range = int(start_line) <= len(lines)
+                except Exception:
+                    in_range = False
+            else:
+                in_range = True
+            
+            links.append({
+                "target": target,
+                "lines": (int(start_line) if start_line else None, int(end_line) if end_line else None),
+                "exists": exists,
+                "in_range": in_range,
+                "display": text,
+            })
+        
+        print(_json_out(links))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_backlinks(ctx: CliContext, args) -> int:
+    """scopes backlinks scope="X" — Find scopes that reference this one."""
+    try:
+        scope_name = getattr(args, 'scope', '')
+        scope_file = _resolve_scope(ctx.scopes_product, scope_name)
+        scope_rel = str(scope_file.relative_to(ctx.scopes_product)).replace('.md', '').replace('\\', '/')
+        
+        all_files = _all_scope_files(ctx.scopes_product)
+        backlinks = []
+        
+        for other_file in all_files:
+            if other_file == scope_file:
+                continue
+            try:
+                content = other_file.read_text(encoding="utf-8", errors="ignore")
+                if scope_rel in content or scope_name in content:
+                    backlinks.append({
+                        "scope": str(other_file.relative_to(ctx.scopes_product)),
+                        "title": _extract_title(other_file),
+                    })
+            except Exception:
+                pass
+        
+        print(_json_out(backlinks))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 3: Session Management Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_session_start(ctx: CliContext, args) -> int:
+    """scopes session:start --scope "X" --goal "..." — Create session log."""
+    try:
+        scope_name = getattr(args, 'scope', '')
+        goal = getattr(args, 'goal', '')
+        
+        # Create session in Scopes/Work/Notes/
+        notes_dir = ctx.scopes_root / "Work" / "Notes"
+        notes_dir.mkdir(parents=True, exist_ok=True)
+        
+        from datetime import date as Date
+        today = Date.today().isoformat()
+        topic = scope_name.replace('/', '-').lower() or 'session'
+        session_file = notes_dir / f"session-{today}-{topic}.md"
+        
+        content = dedent(f"""---
+date: {today}
+goal: {goal}
+scope: {scope_name}
+---
+
+# Session: {goal or 'Work'} on {scope_name}
+
+## Findings
+
+## Decisions
+
+## Next
+""").strip()
+        
+        session_file.write_text(content)
+        
+        # Update current session pointer
+        scopes_state = ctx.scopes_root.parent / ".scopes"
+        scopes_state.mkdir(exist_ok=True)
+        (scopes_state / "current_session").write_text(str(session_file))
+        
+        if ctx.format == "json":
+            print(_json_out({
+                "session": str(session_file.relative_to(ctx.scopes_root)),
+                "status": "created",
+            }))
+        else:
+            print(f"✓ Session created: {session_file}")
+        
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_session_read(ctx: CliContext, args) -> int:
+    """scopes session:read — Read current or specified session log."""
+    try:
+        scopes_state = ctx.scopes_root.parent / ".scopes"
+        current_file = scopes_state / "current_session"
+        
+        if current_file.exists():
+            session_path = Path(current_file.read_text().strip())
+        else:
+            # Find most recent session
+            notes_dir = ctx.scopes_root / "Work" / "Notes"
+            sessions = sorted(notes_dir.glob("session-*.md"), reverse=True) if notes_dir.exists() else []
+            if not sessions:
+                print(_error("No sessions found"), file=sys.stderr)
+                return 1
+            session_path = sessions[0]
+        
+        if not session_path.exists():
+            print(_error(f"Session not found: {session_path}"), file=sys.stderr)
+            return 1
+        
+        content = session_path.read_text(encoding="utf-8", errors="ignore")
+        print(content)
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 3: Task Management Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_tasks(ctx: CliContext, args) -> int:
+    """scopes tasks — List all task files."""
+    try:
+        tasks_dir = ctx.scopes_root / "Work" / "Tasks"
+        if not tasks_dir.exists():
+            print(_json_out([]))
+            return 0
+        
+        status_filter = getattr(args, 'status', '')
+        scope_filter = getattr(args, 'scope', '')
+        
+        tasks_list = []
+        for task_file in sorted(tasks_dir.glob("**/*.md")):
+            try:
+                content = task_file.read_text(encoding="utf-8", errors="ignore")
+                fm = _parse_frontmatter(content)
+                
+                if status_filter and fm.get('status') != status_filter:
+                    continue
+                if scope_filter and scope_filter not in fm.get('scope', ''):
+                    continue
+                
+                tasks_list.append({
+                    "id": task_file.stem,
+                    "title": fm.get('title', task_file.stem),
+                    "scope": fm.get('scope', ''),
+                    "status": fm.get('status', 'pending'),
+                    "path": str(task_file.relative_to(ctx.scopes_root)),
+                })
+            except Exception:
+                pass
+        
+        print(_json_out(tasks_list))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_task_create(ctx: CliContext, args) -> int:
+    """scopes task:create --scope "X" --title "..." — Create task file."""
+    try:
+        scope = getattr(args, 'scope', '')
+        title = getattr(args, 'title', '')
+        
+        if not title:
+            print(_error("--title required"), file=sys.stderr)
+            return 1
+        
+        tasks_dir = ctx.scopes_root / "Work" / "Tasks"
+        tasks_dir.mkdir(parents=True, exist_ok=True)
+        
+        from datetime import date as Date
+        today = Date.today().isoformat()
+        task_id = title.lower().replace(' ', '-')[:30]
+        task_file = tasks_dir / f"{task_id}.md"
+        
+        content = dedent(f"""---
+title: {title}
+scope: {scope}
+status: pending
+created: {today}
+---
+
+# Task: {title}
+
+## Scope
+{scope}
+
+## Description
+
+## Acceptance Criteria
+
+## Notes
+""").strip()
+        
+        task_file.write_text(content)
+        
+        if ctx.format == "json":
+            print(_json_out({"id": task_id, "status": "created"}))
+        else:
+            print(f"✓ Task created: {task_file}")
+        
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 3: Agent & Skill Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_agents(ctx: CliContext, args) -> int:
+    """scopes agents — List all agents."""
+    try:
+        agents_dir = ctx.scopes_root.parent / "agents"
+        if not agents_dir.exists():
+            print(_json_out([]))
+            return 0
+        
+        agents_list = []
+        for agent_file in sorted(agents_dir.glob("*.md")):
+            if agent_file.name == "WORKFLOW.md":
+                continue
+            try:
+                content = agent_file.read_text(encoding="utf-8", errors="ignore")
+                fm = _parse_frontmatter(content)
+                agents_list.append({
+                    "id": agent_file.stem,
+                    "name": fm.get('name', agent_file.stem),
+                    "description": fm.get('description', ''),
+                })
+            except Exception:
+                pass
+        
+        print(_json_out(agents_list))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_skills(ctx: CliContext, args) -> int:
+    """scopes skills — List all skills."""
+    try:
+        skills_dir = ctx.scopes_root / "skills"
+        if not skills_dir.exists():
+            print(_json_out([]))
+            return 0
+        
+        skills_list = []
+        for skill_dir in sorted(skills_dir.iterdir()):
+            if not skill_dir.is_dir() or skill_dir.name.startswith('_'):
+                continue
+            
+            skill_file = skill_dir / "SKILL.md"
+            if skill_file.exists():
+                try:
+                    content = skill_file.read_text(encoding="utf-8", errors="ignore")
+                    fm = _parse_frontmatter(content)
+                    skills_list.append({
+                        "id": skill_dir.name,
+                        "name": fm.get('name', skill_dir.name),
+                        "description": fm.get('description', ''),
+                    })
+                except Exception:
+                    pass
+        
+        print(_json_out(skills_list))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 3: Init Command
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_init(ctx: CliContext, args) -> int:
+    """scopes init — Initialize Scopes structure for a new project."""
+    try:
+        scopes_root = ctx.scopes_root
+        
+        # Create directories
+        dirs = [
+            scopes_root / "Product",
+            scopes_root / "Work" / "Tasks",
+            scopes_root / "Work" / "Notes",
+            scopes_root / "Work" / "Bugs",
+            scopes_root / "Work" / "Planning",
+            scopes_root / "Onboarding",
+            ctx.scopes_root.parent / ".scopes",
+        ]
+        
+        for d in dirs:
+            d.mkdir(parents=True, exist_ok=True)
+        
+        # Create INDEX.md template
+        index_file = scopes_root / "INDEX.md"
+        if not index_file.exists():
+            index_file.write_text(dedent("""---
+title: Scopes Index
+description: Knowledge graph for this project
+---
+
+# Scopes Index
+
+## Areas
+
+### (Add your areas here)
+
+Use `scopes map` to view all scopes.
+""").strip())
+        
+        # Create GRAPH.md template
+        graph_file = scopes_root / "GRAPH.md"
+        if not graph_file.exists():
+            graph_file.write_text(dedent("""---
+title: Scopes Dependency Graph
+description: Cross-scope relationships
+---
+
+# Dependency Graph
+
+| From | To | Type | Evidence |
+|------|----|----|----------|
+
+Use `scopes graph` to update this.
+""").strip())
+        
+        # Create .gitignore entry
+        gitignore_file = ctx.project_root / ".gitignore"
+        gitignore_content = gitignore_file.read_text() if gitignore_file.exists() else ""
+        if ".scopes/" not in gitignore_content:
+            gitignore_content += "\n.scopes/\n"
+            gitignore_file.write_text(gitignore_content)
+        
+        if ctx.format == "json":
+            print(_json_out({"status": "initialized", "scopes_root": str(scopes_root)}))
+        else:
+            print("✓ Scopes structure initialized")
+            print(f"  Created: {scopes_root}/Product/")
+            print(f"  Created: {scopes_root}/Work/Tasks/")
+            print(f"  Next: Run `scopes create --scope Area/Feature`")
+        
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 4: Sync & History Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_sync_status(ctx: CliContext, args) -> int:
+    """scopes sync:status — Sync dashboard."""
+    try:
+        scopes_state = ctx.scopes_root.parent / ".scopes"
+        last_sync_file = scopes_state / "last_sync"
+        last_sync = last_sync_file.read_text().strip() if last_sync_file.exists() else "never"
+        
+        all_scopes = _all_scope_files(ctx.scopes_product)
+        
+        # Count stale (simple check: modified long ago)
+        stale_count = 0
+        try:
+            result = _run(["git", "log", "-1", "--format=%aI", str(ctx.scopes_root)],
+                         cwd=str(ctx.project_root))
+            if result.returncode == 0:
+                last_sync = result.stdout.strip()[:19]
+        except Exception:
+            pass
+        
+        status = {
+            "last_sync": last_sync,
+            "total_scopes": len(all_scopes),
+            "stale_scopes": stale_count,
+            "health": "good" if stale_count == 0 else "warning",
+        }
+        
+        print(_json_out(status) if ctx.format == "json" else 
+              f"Last sync: {last_sync}\nTotal: {len(all_scopes)}\nHealth: {status['health']}")
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_history(ctx: CliContext, args) -> int:
+    """scopes history scope="X" — Git log for a scope file."""
+    try:
+        scope_name = getattr(args, 'scope', '')
+        scope_file = _resolve_scope(ctx.scopes_product, scope_name)
+        limit = getattr(args, 'limit', 10)
+        
+        result = _run(
+            ["git", "log", f"--oneline", f"-{limit}", str(scope_file)],
+            cwd=str(ctx.project_root)
+        )
+        
+        if result.returncode == 0:
+            commits = []
+            for line in result.stdout.strip().split('\n'):
+                if line:
+                    parts = line.split(' ', 1)
+                    commits.append({
+                        "hash": parts[0] if parts else "",
+                        "message": parts[1] if len(parts) > 1 else "",
+                    })
+            print(_json_out(commits))
+        else:
+            print(_json_out([]))
+        
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 5: Profile & Template Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_profiles(ctx: CliContext, args) -> int:
+    """scopes profiles — List available profiles."""
+    try:
+        profiles = [
+            {
+                "id": "python-api",
+                "name": "Python API",
+                "description": "Python API with routes, models, services",
+            },
+            {
+                "id": "fullstack",
+                "name": "Full Stack",
+                "description": "Frontend + backend + database",
+            },
+            {
+                "id": "data-pipeline",
+                "name": "Data Pipeline",
+                "description": "Data processing and ETL workflows",
+            },
+        ]
+        
+        print(_json_out(profiles))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_templates(ctx: CliContext, args) -> int:
+    """scopes templates — List available templates."""
+    try:
+        templates = [
+            {
+                "id": "capability",
+                "name": "Capability Scope",
+                "type": "scope",
+                "description": "Standard capability scope template",
+            },
+            {
+                "id": "micro",
+                "name": "Micro-scope",
+                "type": "scope",
+                "description": "Small focused scope",
+            },
+            {
+                "id": "task",
+                "name": "Task",
+                "type": "task",
+                "description": "Work task template",
+            },
+            {
+                "id": "adr",
+                "name": "Architecture Decision Record",
+                "type": "adr",
+                "description": "ADR for major decisions",
+            },
+        ]
+        
+        template_type = getattr(args, 'type', '')
+        if template_type:
+            templates = [t for t in templates if t['type'] == template_type]
+        
+        print(_json_out(templates))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Phase 2: Status & Info Commands
+# ─────────────────────────────────────────────────────────────────────────
+
+def cmd_status(ctx: CliContext, args) -> int:
+    """scopes status — Project dashboard."""
+    try:
+        all_scopes = _all_scope_files(ctx.scopes_product)
+        
+        # Extract areas
+        areas = {}
+        for scope_file in all_scopes:
+            area = scope_file.relative_to(ctx.scopes_product).parts[0] if scope_file.relative_to(ctx.scopes_product).parts else "Root"
+            areas[area] = areas.get(area, 0) + 1
+        
+        status = {
+            "project_root": str(ctx.project_root),
+            "scope_count": len(all_scopes),
+            "areas": areas,
+            "stale_count": 0,
+            "health": "good",
+        }
+        
+        print(_json_out(status))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_areas(ctx: CliContext, args) -> int:
+    """scopes areas — List all scope areas."""
+    try:
+        all_scopes = _all_scope_files(ctx.scopes_product)
+        
+        areas_dict = {}
+        for scope_file in all_scopes:
+            rel = scope_file.relative_to(ctx.scopes_product)
+            if rel.parts:
+                area = rel.parts[0]
+                if area not in areas_dict:
+                    areas_dict[area] = 0
+                areas_dict[area] += 1
+        
+        areas_list = [{"name": k, "scope_count": v} for k, v in sorted(areas_dict.items())]
+        print(_json_out(areas_list))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_orphans(ctx: CliContext, args) -> int:
+    """scopes orphans — Scopes with no incoming references."""
+    try:
+        all_scopes = _all_scope_files(ctx.scopes_product)
+        orphans = []
+        
+        for scope_file in all_scopes:
+            scope_name = scope_file.relative_to(ctx.scopes_product).as_posix()
+            
+            # Check if any other scope references this one
+            has_backlink = False
+            for other_file in all_scopes:
+                if other_file == scope_file:
+                    continue
+                try:
+                    content = other_file.read_text(encoding="utf-8", errors="ignore")
+                    if scope_name in content or scope_file.stem in content:
+                        has_backlink = True
+                        break
+                except Exception:
+                    pass
+            
+            if not has_backlink:
+                orphans.append({
+                    "scope": scope_name,
+                    "title": _extract_title(scope_file),
+                })
+        
+        print(_json_out(orphans))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+def cmd_unresolved(ctx: CliContext, args) -> int:
+    """scopes unresolved — Broken evidence links."""
+    try:
+        all_scopes = _all_scope_files(ctx.scopes_product)
+        unresolved = []
+        
+        evidence_re = re.compile(r"\[([^\]]+)\]\(([^)#\s]+)(?:#L(\d+)(?:-L(\d+))?)?\)")
+        
+        for scope_file in all_scopes:
+            content = scope_file.read_text(encoding="utf-8", errors="ignore")
+            for match in evidence_re.finditer(content):
+                text, target, start_line, end_line = match.groups()
+                if target.endswith('.md'):
+                    continue
+                
+                target_path = ctx.project_root / target
+                if not target_path.exists():
+                    unresolved.append({
+                        "scope": str(scope_file.relative_to(ctx.scopes_product)),
+                        "target": target,
+                        "status": "missing",
+                    })
+                elif start_line:
+                    try:
+                        lines = target_path.read_text().splitlines()
+                        if int(start_line) > len(lines):
+                            unresolved.append({
+                                "scope": str(scope_file.relative_to(ctx.scopes_product)),
+                                "target": target,
+                                "status": "out_of_range",
+                            })
+                    except Exception:
+                        pass
+        
+        print(_json_out(unresolved))
+        return 0
+    except Exception as e:
+        print(_error(str(e)), file=sys.stderr)
+        return 1
+
+
+# ─────────────────────────────────────────────────────────────────────────
+# Helpers: Content Extraction
+# ─────────────────────────────────────────────────────────────────────────
+
+def _extract_title(file_path: Path) -> str:
+    """Extract first H1 heading from markdown file."""
+    try:
+        content = file_path.read_text(encoding="utf-8", errors="ignore")
+        match = re.search(r"^#\s+(.+)$", content, re.MULTILINE)
+        return match.group(1) if match else ""
+    except Exception:
+        return ""
+
+
+# ─────────────────────────────────────────────────────────────────────────
 # Main Entry Point
 # ─────────────────────────────────────────────────────────────────────────
 
@@ -842,6 +1757,125 @@ def main() -> int:
     hotspot_parser.add_argument("--ext", action="append", help="File extensions (repeatable)")
     hotspot_parser.add_argument("--exclude-dir", action="append", help="Exclude dirs (repeatable)")
     hotspot_parser.set_defaults(func=cmd_hotspot)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 2: Scope Reading
+    # ─────────────────────────────────────────────────────────────────────
+
+    read_parser = subparsers.add_parser("read", help="Read scope document")
+    read_parser.add_argument("--scope", required=True, help="Scope name")
+    read_parser.add_argument("--section", default="", help="Section name")
+    read_parser.set_defaults(func=cmd_read)
+
+    read_evidence_parser = subparsers.add_parser("read:evidence", help="Extract evidence links")
+    read_evidence_parser.add_argument("--scope", required=True, help="Scope name")
+    read_evidence_parser.add_argument("--section", default="", help="Section name")
+    read_evidence_parser.set_defaults(func=cmd_read_evidence)
+
+    read_code_parser = subparsers.add_parser("read:code", help="Follow evidence, get code snippets")
+    read_code_parser.add_argument("--scope", required=True, help="Scope name")
+    read_code_parser.add_argument("--section", default="", help="Section name")
+    read_code_parser.set_defaults(func=cmd_read_code)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 2: Search
+    # ─────────────────────────────────────────────────────────────────────
+
+    search_parser = subparsers.add_parser("search", help="Full-text search")
+    search_parser.add_argument("--query", required=True, help="Search query")
+    search_parser.add_argument("--limit", type=int, default=10, help="Limit results")
+    search_parser.set_defaults(func=cmd_search)
+
+    locate_parser = subparsers.add_parser("locate", help="Intent-based routing")
+    locate_parser.add_argument("--intent", required=True, help="What you want to do")
+    locate_parser.add_argument("--limit", type=int, default=5, help="Limit results")
+    locate_parser.set_defaults(func=cmd_locate)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 2: Evidence & Links
+    # ─────────────────────────────────────────────────────────────────────
+
+    evidence_parser = subparsers.add_parser("evidence", help="Evidence report")
+    evidence_parser.add_argument("--scope", required=True, help="Scope name")
+    evidence_parser.set_defaults(func=cmd_evidence)
+
+    backlinks_parser = subparsers.add_parser("backlinks", help="Find referencing scopes")
+    backlinks_parser.add_argument("--scope", required=True, help="Scope name")
+    backlinks_parser.set_defaults(func=cmd_backlinks)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 2: Status & Info
+    # ─────────────────────────────────────────────────────────────────────
+
+    subparsers.add_parser("status", help="Project dashboard").set_defaults(func=cmd_status)
+
+    areas_parser = subparsers.add_parser("areas", help="List all areas")
+    areas_parser.set_defaults(func=cmd_areas)
+
+    orphans_parser = subparsers.add_parser("orphans", help="Scopes with no backlinks")
+    orphans_parser.set_defaults(func=cmd_orphans)
+
+    unresolved_parser = subparsers.add_parser("unresolved", help="Broken evidence links")
+    unresolved_parser.set_defaults(func=cmd_unresolved)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 3: Sessions
+    # ─────────────────────────────────────────────────────────────────────
+
+    session_start_parser = subparsers.add_parser("session:start", help="Create session log")
+    session_start_parser.add_argument("--scope", default="", help="Scope anchor")
+    session_start_parser.add_argument("--goal", required=True, help="Session goal")
+    session_start_parser.set_defaults(func=cmd_session_start)
+
+    subparsers.add_parser("session:read", help="Read current session").set_defaults(func=cmd_session_read)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 3: Tasks
+    # ─────────────────────────────────────────────────────────────────────
+
+    tasks_parser = subparsers.add_parser("tasks", help="List tasks")
+    tasks_parser.add_argument("--scope", default="", help="Filter by scope")
+    tasks_parser.add_argument("--status", default="", help="Filter by status")
+    tasks_parser.set_defaults(func=cmd_tasks)
+
+    task_create_parser = subparsers.add_parser("task:create", help="Create task")
+    task_create_parser.add_argument("--scope", required=True, help="Scope name")
+    task_create_parser.add_argument("--title", required=True, help="Task title")
+    task_create_parser.set_defaults(func=cmd_task_create)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 3: Agents & Skills
+    # ─────────────────────────────────────────────────────────────────────
+
+    subparsers.add_parser("agents", help="List agents").set_defaults(func=cmd_agents)
+    subparsers.add_parser("skills", help="List skills").set_defaults(func=cmd_skills)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 3: Init
+    # ─────────────────────────────────────────────────────────────────────
+
+    subparsers.add_parser("init", help="Initialize Scopes structure").set_defaults(func=cmd_init)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 4: Sync & History
+    # ─────────────────────────────────────────────────────────────────────
+
+    subparsers.add_parser("sync:status", help="Sync dashboard").set_defaults(func=cmd_sync_status)
+
+    history_parser = subparsers.add_parser("history", help="Git history for scope")
+    history_parser.add_argument("--scope", required=True, help="Scope name")
+    history_parser.add_argument("--limit", type=int, default=10, help="Limit commits")
+    history_parser.set_defaults(func=cmd_history)
+
+    # ─────────────────────────────────────────────────────────────────────
+    # Phase 5: Profiles & Templates
+    # ─────────────────────────────────────────────────────────────────────
+
+    subparsers.add_parser("profiles", help="List available profiles").set_defaults(func=cmd_profiles)
+
+    templates_parser = subparsers.add_parser("templates", help="List available templates")
+    templates_parser.add_argument("--type", default="", help="Filter by type")
+    templates_parser.set_defaults(func=cmd_templates)
 
     # ─────────────────────────────────────────────────────────────────────
     # Parse arguments and execute
